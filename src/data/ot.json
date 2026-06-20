@@ -1,0 +1,235 @@
+{
+  "hospitalName": "Mikki Megha Hospital",
+  "lastUpdated": "2026-06-20T05:00:00Z",
+  "announcements": [
+    "All OT staff must complete hand hygiene protocol before entering the sterile zone.",
+    "OT schedule is subject to change based on emergency cases — check with nursing station.",
+    "Post-operative patients will be shifted to Recovery Room immediately after procedure.",
+    "Equipment sterilisation log must be signed before every procedure.",
+    "Emergency OT (OT-6) is available 24 × 7 for trauma and critical cases.",
+    "All implants and consumables must be verified against the surgery checklist.",
+    "Relatives may meet patients in the pre-op holding area between 7:30 AM – 8:00 AM only.",
+    "OT block visiting is strictly restricted. Only authorised personnel are allowed."
+  ],
+  "entries": [
+    {
+      "id": "ot-001",
+      "roomNo": "OT-1",
+      "type": "General Surgery",
+      "procedureName": "Laparoscopic Appendectomy",
+      "patientName": "Ramesh Kumar Sharma",
+      "patientAge": 34,
+      "patientGender": "M",
+      "doctor": "Dr. Arun Mehta",
+      "assistants": [
+        "Dr. Priya Nair",
+        "Dr. Sandeep Rao"
+      ],
+      "anaesthetist": "Dr. Kavitha Pillai",
+      "scheduledTime": "08:00",
+      "estimatedDuration": 90,
+      "status": "completed",
+      "notes": "Routine procedure. Patient stable post-op."
+    },
+    {
+      "id": "ot-002",
+      "roomNo": "OT-2",
+      "type": "Orthopaedic",
+      "procedureName": "Total Knee Replacement",
+      "patientName": "Sunita Devi Yadav",
+      "patientAge": 62,
+      "patientGender": "F",
+      "doctor": "Dr. Vikram Singh",
+      "assistants": [
+        "Dr. Ananya Krishnan"
+      ],
+      "anaesthetist": "Dr. Arjun Rao",
+      "scheduledTime": "09:00",
+      "estimatedDuration": 150,
+      "status": "in-progress",
+      "notes": "Bilateral TKR. Using cemented implant."
+    },
+    {
+      "id": "ot-003",
+      "roomNo": "OT-3",
+      "type": "Cardiac Surgery",
+      "procedureName": "Coronary Artery Bypass Graft (CABG)",
+      "patientName": "Jagdish Prasad Verma",
+      "patientAge": 58,
+      "patientGender": "M",
+      "doctor": "Dr. Priya Sharma",
+      "assistants": [
+        "Dr. Rajiv Menon",
+        "Dr. Sunita Bose",
+        "Dr. Harish Chandra"
+      ],
+      "anaesthetist": "Dr. Kavitha Pillai",
+      "scheduledTime": "08:30",
+      "estimatedDuration": 240,
+      "status": "in-progress",
+      "notes": "Triple vessel disease. On-pump CABG."
+    },
+    {
+      "id": "ot-004",
+      "roomNo": "OT-4",
+      "type": "Gynaecology",
+      "procedureName": "Laparoscopic Hysterectomy",
+      "patientName": "Meena Rani Gupta",
+      "patientAge": 48,
+      "patientGender": "F",
+      "doctor": "Dr. Lakshmi Devi",
+      "assistants": [
+        "Dr. Reema Shah"
+      ],
+      "anaesthetist": "Dr. Arjun Rao",
+      "scheduledTime": "11:00",
+      "estimatedDuration": 120,
+      "status": "preparing",
+      "notes": "Patient allergic to penicillin. Alternative antibiotic prescribed."
+    },
+    {
+      "id": "ot-005",
+      "roomNo": "OT-5",
+      "type": "Neurosurgery",
+      "procedureName": "Lumbar Microdiscectomy",
+      "patientName": "Bharat Kumar Tripathi",
+      "patientAge": 45,
+      "patientGender": "M",
+      "doctor": "Dr. Kavitha Pillai",
+      "assistants": [
+        "Dr. Arjun Rao"
+      ],
+      "anaesthetist": "Dr. Priya Nair",
+      "scheduledTime": "12:00",
+      "estimatedDuration": 110,
+      "status": "scheduled",
+      "notes": "L4-L5 prolapsed disc. Spinal anaesthesia planned."
+    },
+    {
+      "id": "ot-006",
+      "roomNo": "OT-2",
+      "type": "Orthopaedic",
+      "procedureName": "Open Reduction Internal Fixation (ORIF)",
+      "patientName": "Deepak Kumar Jain",
+      "patientAge": 29,
+      "patientGender": "M",
+      "doctor": "Dr. Vikram Singh",
+      "assistants": [
+        "Dr. Ananya Krishnan"
+      ],
+      "anaesthetist": "Dr. Arjun Rao",
+      "scheduledTime": "14:00",
+      "estimatedDuration": 90,
+      "status": "scheduled",
+      "notes": "Distal radius fracture. Post-TKR slot."
+    },
+    {
+      "id": "ot-007",
+      "roomNo": "OT-1",
+      "type": "General Surgery",
+      "procedureName": "Inguinal Hernia Repair",
+      "patientName": "Sanjay Agarwal",
+      "patientAge": 52,
+      "patientGender": "M",
+      "doctor": "Dr. Arun Mehta",
+      "assistants": [
+        "Dr. Sandeep Rao"
+      ],
+      "anaesthetist": "Dr. Kavitha Pillai",
+      "scheduledTime": "13:30",
+      "estimatedDuration": 75,
+      "status": "scheduled",
+      "notes": "Bilateral mesh repair planned."
+    },
+    {
+      "id": "ot-008",
+      "roomNo": "OT-6",
+      "type": "Emergency / Trauma",
+      "procedureName": "Exploratory Laparotomy",
+      "patientName": "Rakesh Narayan Tiwari",
+      "patientAge": 38,
+      "patientGender": "M",
+      "doctor": "Dr. Arun Mehta",
+      "assistants": [
+        "Dr. Priya Nair",
+        "Dr. Sandeep Rao"
+      ],
+      "anaesthetist": "Dr. Arjun Rao",
+      "scheduledTime": "10:15",
+      "estimatedDuration": 180,
+      "status": "in-progress",
+      "notes": "Blunt abdominal trauma. Emergency case admitted via casualty."
+    },
+    {
+      "id": "ot-009",
+      "roomNo": "OT-3",
+      "type": "Cardiac Surgery",
+      "procedureName": "Mitral Valve Replacement",
+      "patientName": "Sarla Devi",
+      "patientAge": 55,
+      "patientGender": "F",
+      "doctor": "Dr. Priya Sharma",
+      "assistants": [
+        "Dr. Rajiv Menon",
+        "Dr. Sunita Bose"
+      ],
+      "anaesthetist": "Dr. Kavitha Pillai",
+      "scheduledTime": "15:00",
+      "estimatedDuration": 210,
+      "status": "delayed",
+      "notes": "Delayed due to ongoing CABG. Expected start 16:30."
+    },
+    {
+      "id": "ot-010",
+      "roomNo": "OT-4",
+      "type": "Urology",
+      "procedureName": "Percutaneous Nephrolithotomy (PCNL)",
+      "patientName": "Pankaj Kumar Jha",
+      "patientAge": 41,
+      "patientGender": "M",
+      "doctor": "Dr. Manish Joshi",
+      "assistants": [
+        "Dr. Suresh Patel"
+      ],
+      "anaesthetist": "Dr. Priya Nair",
+      "scheduledTime": "14:30",
+      "estimatedDuration": 100,
+      "status": "scheduled",
+      "notes": "8mm renal calculus. Fluoroscopy required."
+    },
+    {
+      "id": "ot-011",
+      "roomNo": "OT-5",
+      "type": "ENT",
+      "procedureName": "Functional Endoscopic Sinus Surgery (FESS)",
+      "patientName": "Kavita Agarwal",
+      "patientAge": 33,
+      "patientGender": "F",
+      "doctor": "Dr. Harish Chandra",
+      "assistants": [],
+      "anaesthetist": "Dr. Arjun Rao",
+      "scheduledTime": "16:00",
+      "estimatedDuration": 60,
+      "status": "scheduled",
+      "notes": "Chronic sinusitis. Day surgery."
+    },
+    {
+      "id": "ot-012",
+      "roomNo": "OT-1",
+      "type": "Ophthalmology",
+      "procedureName": "Phacoemulsification (Cataract Surgery)",
+      "patientName": "Kamla Devi",
+      "patientAge": 69,
+      "patientGender": "F",
+      "doctor": "Dr. Rajan Verma",
+      "assistants": [
+        "Dr. Shalini Gupta"
+      ],
+      "anaesthetist": "Dr. Priya Nair",
+      "scheduledTime": "07:30",
+      "estimatedDuration": 45,
+      "status": "completed",
+      "notes": "IOL implanted. Right eye. Left eye scheduled next week."
+    }
+  ]
+}

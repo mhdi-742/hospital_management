@@ -1,0 +1,227 @@
+/* ── Screen shell ────────────────────────────────────────────────────── */
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+/* ── Header ──────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.75rem;
+  height: 70px;
+  flex-shrink: 0;
+  position: relative;   /* needed for ::after accent stripe */
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  gap: 1rem;
+}
+
+/* Red accent stripe at the bottom of the header (light theme only) */
+.header::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 3px;
+  background: var(--header-accent);
+  pointer-events: none;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.logoMark {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.logoImage {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.hospitalName {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-on-surface);
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.headerSub {
+  font-size: 0.65rem;
+  color: var(--text-on-surface-muted);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.headerCenter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.livePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: var(--status-running);
+  padding: 5px 14px;
+  border-radius: 100px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+}
+
+.liveDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--status-running);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.75); }
+}
+
+.headerRight {
+  text-align: right;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.clock {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-on-surface);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.calDate {
+  font-size: 0.65rem;
+  color: var(--text-on-surface-muted);
+  margin-top: 3px;
+  white-space: nowrap;
+}
+
+/* ── Main layout ─────────────────────────────────────────────────────── */
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── Grid section ────────────────────────────────────────────────────── */
+.gridSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 1.125rem 1.125rem 0.625rem;
+  min-width: 0;
+  gap: 0.625rem;
+}
+
+.gridMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.gridLabel {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.pageChip {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-variant-numeric: tabular-nums;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 0.875rem;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Page dots ───────────────────────────────────────────────────────── */
+.dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.dot {
+  height: 6px;
+  width: 6px;
+  border-radius: 3px;
+  background: var(--border-color);
+  border: none;
+  padding: 0;
+  transition: width 0.35s ease, background 0.35s ease;
+}
+
+.dotActive {
+  width: 22px;
+  background: var(--text-secondary);
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────── */
+.sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Footer ticker ───────────────────────────────────────────────────── */
+.footer {
+  height: 44px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  overflow: hidden;
+}

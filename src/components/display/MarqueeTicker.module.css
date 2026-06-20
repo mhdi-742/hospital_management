@@ -1,0 +1,80 @@
+.ticker {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ── "NOTICE" label badge ────────────────────────────────────────────── */
+.label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 1rem;
+  height: 100%;
+  font-size: 0.575rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--status-upcoming);
+  background: rgba(56, 189, 248, 0.07);
+  border-right: 1px solid var(--border-color);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.labelDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--status-upcoming);
+  animation: blink 2.2s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.25; }
+}
+
+/* ── Scrolling track ─────────────────────────────────────────────────── */
+.track {
+  flex: 1;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+/* The belt is double-width for seamless loop */
+.belt {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  /* 
+    Duration is long so it reads comfortably on a TV;
+    adjust as needed for the number of announcements.
+  */
+  animation: scroll 80s linear infinite;
+  will-change: transform;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.725rem;
+  color: var(--text-on-surface-muted);
+  padding: 0 0.5rem;
+}
+
+.sep {
+  font-size: 0.35rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Slides from right → left; -50% = exactly one copy-length */
+@keyframes scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}

@@ -1,0 +1,492 @@
+/* ═══════════════════════════════════════════════════════════════════
+   OT Screen — Styles
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Screen shell ────────────────────────────────────────────────── */
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+/* ── Header ──────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.75rem;
+  height: 70px;
+  flex-shrink: 0;
+  position: relative;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  gap: 1rem;
+}
+
+.header::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 3px;
+  background: var(--header-accent);
+  pointer-events: none;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.logoMark {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.logoImage {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.headerTitles {
+  display: flex;
+  flex-direction: column;
+}
+
+.hospitalName {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-on-surface);
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.screenTitle {
+  font-size: 0.625rem;
+  color: var(--text-on-surface-muted);
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* Summary pills */
+.headerCenter {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-shrink: 0;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.pillActive    { color: #10b981; background: rgba(16,185,129,.08); border-color: rgba(16,185,129,.3); }
+.pillScheduled { color: #38bdf8; background: rgba(56,189,248,.08); border-color: rgba(56,189,248,.3); }
+.pillDelayed   { color: #f59e0b; background: rgba(245,158,11,.08); border-color: rgba(245,158,11,.3); }
+.pillCompleted { color: #64748b; background: rgba(100,116,139,.08); border-color: rgba(100,116,139,.3); }
+
+.livePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16,185,129,.08);
+  border: 1px solid rgba(16,185,129,.25);
+  color: var(--status-running);
+  padding: 5px 14px;
+  border-radius: 100px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+}
+
+.liveDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--status-running);
+  animation: livePulse 1.6s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.75); }
+}
+
+.headerRight {
+  text-align: right;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.clock {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-on-surface);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.calDate {
+  font-size: 0.65rem;
+  color: var(--text-on-surface-muted);
+  margin-top: 3px;
+  white-space: nowrap;
+}
+
+/* ── Main area ───────────────────────────────────────────────────── */
+.main {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0.875rem 1.25rem 0.5rem;
+}
+
+/* ── Table outer shell (holds fades on top of scroll box) ───────── */
+.tableOuter {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+/* Top fade — rows emerge from mist as they scroll in */
+.tableOuter::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--bg-table), transparent);
+  pointer-events: none;
+  z-index: 5;
+  border-radius: 12px 12px 0 0;
+}
+
+/* Bottom fade — rows fade out as they scroll away */
+.tableOuter::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 40px;
+  background: linear-gradient(to top, var(--bg-table), transparent);
+  pointer-events: none;
+  z-index: 5;
+  border-radius: 0 0 12px 12px;
+}
+
+/* ── Table wrapper (the actual scroll box) ───────────────────────── */
+.tableWrapper {
+  width: 100%;
+  height: 100%;
+  overflow-y: scroll;
+  border-radius: 12px;
+  background: var(--bg-table);
+  /* Hide scrollbar — TV viewers don't scroll manually */
+  scrollbar-width: none;
+  scroll-behavior: auto !important;
+}
+
+.tableWrapper::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Table ───────────────────────────────────────────────────────── */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* Column widths */
+.colRoom     { width: 7%; }
+.colStatus   { width: 10%; }
+.colType     { width: 12%; }
+.colProc     { width: 18%; }
+.colPatient  { width: 14%; }
+.colDoctor   { width: 14%; }
+.colAnaeth   { width: 12%; }
+.colTime     { width: 7%; }
+.colDur      { width: 6%; }
+
+/* ── Sticky header ───────────────────────────────────────────────── */
+.thead {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--bg-table-header);
+}
+
+.th {
+  padding: 0.65rem 0.875rem;
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.th:not(:last-child) {
+  border-right: 1px solid var(--border-color);
+}
+
+/* ── Body rows ───────────────────────────────────────────────────── */
+.tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.2s ease;
+}
+
+.tr:last-child { border-bottom: none; }
+.tr:hover { background: var(--bg-card-hover); }
+
+/* Highlight active rows */
+.trActive {
+  background: rgba(16, 185, 129, 0.03);
+  border-left: 3px solid #10b981;
+}
+
+.trPreparing {
+  background: rgba(56, 189, 248, 0.03);
+  border-left: 3px solid #38bdf8;
+}
+
+.trDelayed {
+  background: rgba(245, 158, 11, 0.04);
+  border-left: 3px solid #f59e0b;
+}
+
+.trCompleted { opacity: 0.6; }
+
+.trCancelled { opacity: 0.4; }
+
+.td {
+  padding: 0.75rem 0.875rem;
+  vertical-align: middle;
+  overflow: hidden;
+}
+
+.td:not(:last-child) {
+  border-right: 1px solid var(--border-color);
+}
+
+/* ── Room No cell ────────────────────────────────────────────────── */
+.roomBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+/* ── Status badge ────────────────────────────────────────────────── */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 100px;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1px solid;
+}
+
+.statusInProgress {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.statusPreparing {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.statusScheduled {
+  color: #94a3b8;
+  background: rgba(148, 163, 184, 0.07);
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+.statusCompleted {
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.07);
+  border-color: rgba(100, 116, 139, 0.2);
+}
+
+.statusDelayed {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.statusCancelled {
+  color: #f43f5e;
+  background: rgba(244, 63, 94, 0.08);
+  border-color: rgba(244, 63, 94, 0.3);
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.statusDotPulse {
+  animation: dotBlink 1.4s ease-in-out infinite;
+}
+
+@keyframes dotBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.25; }
+}
+
+/* ── Type chip ───────────────────────────────────────────────────── */
+.typeChip {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-track);
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ── Procedure name ──────────────────────────────────────────────── */
+.procName {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.35;
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* ── Patient cell ────────────────────────────────────────────────── */
+.patientName {
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.patientMeta {
+  font-size: 0.565rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ── Doctor cell ─────────────────────────────────────────────────── */
+.doctorName {
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.assistantsList {
+  font-size: 0.545rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Anaesthetist ────────────────────────────────────────────────── */
+.anaesthetist {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Time ────────────────────────────────────────────────────────── */
+.timeVal {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ── Duration ────────────────────────────────────────────────────── */
+.durVal {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ── Notes tooltip tag ───────────────────────────────────────────── */
+.notesTag {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.515rem;
+  color: var(--text-muted);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ── Footer ticker ───────────────────────────────────────────────── */
+.footer {
+  height: 44px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  overflow: hidden;
+}
