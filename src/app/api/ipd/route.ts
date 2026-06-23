@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 /** GET /api/ipd — returns the full ward + patient list */
 export async function GET() {
   try {
-    const data = IpdController.getDisplayData();
+    const data = await IpdController.getDisplayData();
     return Response.json(data);
   } catch (error) {
     console.error('[/api/ipd] Failed to load IPD data:', error);

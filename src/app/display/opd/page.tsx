@@ -18,7 +18,7 @@ interface PageProps {
  */
 export default async function OpdDisplayPage({ searchParams }: PageProps) {
   const resolvedParams = await searchParams;
-  const initialData = OpdController.getDisplayData();
+  const initialData = await OpdController.getDisplayData();
   const theme = resolvedParams.theme === 'light' ? 'light' : 'dark';
 
   return <OpdScreen initialData={initialData} theme={theme} />;

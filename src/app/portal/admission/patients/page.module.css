@@ -1,0 +1,185 @@
+.page { max-width: 1100px; margin: 0 auto; }
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.title { font-size: 1.75rem; font-weight: 700; color: #f1f5f9; margin: 0 0 4px; }
+.subtitle { font-size: 0.85rem; color: #64748b; margin: 0; }
+
+.admitBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #3b82f6, #6d56f5);
+  color: white;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(59,130,246,0.3);
+}
+.admitBtn:hover { opacity: 0.9; }
+
+.filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 200px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 10px 16px;
+  color: #f1f5f9;
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.searchInput:focus { border-color: rgba(59,130,246,0.5); }
+.searchInput::placeholder { color: #475569; }
+
+.typeFilters { display: flex; gap: 6px; }
+
+.typeBtn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.typeBtn:hover { color: #cbd5e1; background: rgba(255,255,255,0.08); }
+.typeBtnActive { color: #f1f5f9 !important; }
+
+/* Table */
+.tableWrapper {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.tableHead {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.4fr 1.2fr 100px 70px;
+  padding: 10px 24px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.4fr 1.2fr 100px 70px;
+  padding: 14px 24px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  transition: background 0.15s;
+}
+.tableRow:last-child { border-bottom: none; }
+.tableRow:hover { background: rgba(255,255,255,0.03); }
+
+.patientCell { display: flex; flex-direction: column; gap: 2px; }
+.patientName { font-size: 0.875rem; font-weight: 600; color: #e2e8f0; }
+.patientCell small { font-size: 0.75rem; color: #64748b; }
+
+.contactCell { font-size: 0.82rem; color: #94a3b8; }
+.docCell     { font-size: 0.82rem; color: #94a3b8; }
+.dateCell    { font-size: 0.78rem; color: #64748b; }
+
+.admCell { display: flex; align-items: center; }
+
+.typeBadge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.noneText { font-size: 0.78rem; color: #475569; font-style: italic; }
+
+.viewBtn {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 7px;
+  background: rgba(59,130,246,0.12);
+  color: #60a5fa;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.viewBtn:hover { background: rgba(59,130,246,0.2); }
+
+.loadingRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid rgba(255,255,255,0.1);
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty { padding: 48px; text-align: center; color: #475569; font-size: 0.875rem; }
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.pageBtn {
+  padding: 8px 18px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.04);
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.pageBtn:hover:not(:disabled) { background: rgba(255,255,255,0.08); color: #f1f5f9; }
+.pageBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.pageInfo { font-size: 0.82rem; color: #64748b; }

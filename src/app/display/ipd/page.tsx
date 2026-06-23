@@ -18,7 +18,7 @@ interface PageProps {
  */
 export default async function IpdDisplayPage({ searchParams }: PageProps) {
   const resolvedParams = await searchParams;
-  const initialData = IpdController.getDisplayData();
+  const initialData = await IpdController.getDisplayData();
   const theme = resolvedParams.theme === 'light' ? 'light' : 'dark';
 
   return <IpdScreen initialData={initialData} theme={theme} />;

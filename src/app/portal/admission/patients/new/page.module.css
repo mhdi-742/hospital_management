@@ -1,0 +1,264 @@
+.page { max-width: 800px; margin: 0 auto; }
+
+.header { margin-bottom: 28px; }
+.title { font-size: 1.75rem; font-weight: 700; color: #f1f5f9; margin: 0 0 4px; }
+.subtitle { font-size: 0.875rem; color: #64748b; margin: 0; }
+
+/* Steps */
+.steps {
+  display: flex;
+  gap: 0;
+  margin-bottom: 28px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.step {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all 0.15s;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+.step:last-child { border-right: none; }
+.step:hover { color: #94a3b8; background: rgba(255,255,255,0.03); }
+
+.stepActive { color: #60a5fa !important; background: rgba(59,130,246,0.1) !important; }
+.stepDone   { color: #22c55e !important; }
+
+.stepNum {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.stepActive .stepNum { background: rgba(59,130,246,0.25); color: #60a5fa; }
+.stepDone   .stepNum { background: rgba(34,197,94,0.2);  color: #22c55e; }
+
+.stepLabel { display: none; }
+@media (min-width: 500px) { .stepLabel { display: block; } }
+
+/* Form card */
+.formCard {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px;
+  padding: 28px 32px;
+}
+
+@media (max-width: 600px) {
+  .formCard { padding: 20px 16px; }
+}
+
+.cardTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin: 0 0 24px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+@media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
+
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.field:last-child { margin-bottom: 0; }
+
+.label { font-size: 0.78rem; font-weight: 600; color: #94a3b8; letter-spacing: 0.02em; }
+
+.input {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #f1f5f9;
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.input:focus { border-color: rgba(59,130,246,0.5); }
+.input::placeholder { color: #475569; }
+.input option { background: #1e2436; }
+
+.textarea { resize: vertical; min-height: 80px; }
+
+.sectionDivider {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 20px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Admission type toggle */
+.typeToggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.typeOpt {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.typeOpt:hover { color: #94a3b8; background: rgba(255,255,255,0.07); }
+.typeOptActive {
+  background: rgba(59,130,246,0.15) !important;
+  color: #60a5fa !important;
+  border-color: rgba(59,130,246,0.35) !important;
+}
+
+/* Doctor picker */
+.doctorPicker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+@media (max-width: 560px) { .doctorPicker { grid-template-columns: 1fr; } }
+
+.selectedDoctors {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.doctorChip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.chipRole {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  text-transform: capitalize;
+  background: rgba(59,130,246,0.15);
+  color: #60a5fa;
+}
+.chipRole[data-role="consultant"] {
+  background: rgba(139,92,246,0.15);
+  color: #a78bfa;
+}
+
+.chipName { flex: 1; font-size: 0.875rem; color: #e2e8f0; }
+
+.chipRemove {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+.chipRemove:hover { color: #f87171; }
+
+/* Error */
+.errorBox {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #f87171;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* Nav buttons */
+.navBtns {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 28px;
+  gap: 12px;
+}
+
+.backBtn {
+  padding: 10px 20px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.backBtn:hover { background: rgba(255,255,255,0.08); color: #e2e8f0; }
+
+.nextBtn, .submitBtn {
+  padding: 10px 24px;
+  background: linear-gradient(135deg, #3b82f6, #6d56f5);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(59,130,246,0.3);
+}
+.nextBtn:hover, .submitBtn:hover:not(:disabled) { opacity: 0.9; }
+.submitBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loadingText { color: #475569; font-size: 0.875rem; }

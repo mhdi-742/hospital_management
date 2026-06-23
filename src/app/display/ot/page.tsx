@@ -18,7 +18,7 @@ interface PageProps {
  */
 export default async function OtDisplayPage({ searchParams }: PageProps) {
   const resolvedParams = await searchParams;
-  const initialData = OtController.getDisplayData();
+  const initialData = await OtController.getDisplayData();
   const theme = resolvedParams.theme === 'light' ? 'light' : 'dark';
 
   return <OtScreen initialData={initialData} theme={theme} />;

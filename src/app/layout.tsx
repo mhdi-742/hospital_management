@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import Providers from './Providers';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -10,9 +11,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'OPD Display System — Apex City General Hospital',
-  description:
-    'Real-time OPD queue status, doctor availability, and token information display system',
+  title: 'Mikki Megha Hospital — Staff Portal',
+  description: 'Hospital Management System — Admission, OPD, IPD, and OT portals',
 };
 
 export default function RootLayout({
@@ -22,7 +22,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable}>
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

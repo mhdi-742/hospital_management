@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 /** GET /api/ot — returns the full OT schedule */
 export async function GET() {
   try {
-    const data = OtController.getDisplayData();
+    const data = await OtController.getDisplayData();
     return Response.json(data);
   } catch (error) {
     console.error('[/api/ot] Failed to load OT data:', error);
