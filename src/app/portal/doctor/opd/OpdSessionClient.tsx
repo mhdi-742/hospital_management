@@ -19,6 +19,7 @@ interface Patient {
 interface Admission {
   id: string;
   patientId: string;
+  opdSessionId?: string; // We added this to the API
   admittedAt: string;
   patient: Patient;
 }
@@ -34,20 +35,23 @@ interface OpdSession {
 }
 
 interface Props {
-  initialSession: OpdSession | null;
+  initialSessions: OpdSession[];
   initialQueue: Admission[];
 }
 
-export default function OpdSessionClient({ initialSession, initialQueue }: Props) {
+export default function OpdSessionClient({ initialSessions, initialQueue }: Props) {
   const router = useRouter();
-  const [session, setSession] = useState<OpdSession | null>(initialSession);
+  const [sessions, setSessions] = useState<OpdSession[]>(initialSessions);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(
+    initialSessions.length > 0 ? initialSessions[0].id : null
+  );
   const [queue, setQueue] = useState<Admission[]>(initialQueue);
 
-  // New session form fields
+  // New/Edit session form fields
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [newStartTime, setNewStartTime] = useState('09:00');
   const [newEndTime, setNewEndTime] = useState('13:00');
-  const [newTotalTokens, setNewTotalTokens] = useState('20');
-  const [newAvgWait, setNewAvgWait] = useState('10');
 
   // Examination Modal state
   const [examiningAdmission, setExaminingAdmission] = useState<Admission | null>(null);
@@ -60,9 +64,16 @@ export default function OpdSessionClient({ initialSession, initialQueue }: Props
   const [creatingSession, setCreatingSession] = useState(false);
   const [error, setError] = useState('');
 
+  // ── Derived State ──
+  const activeSession = sessions.find(s => s.id === activeSessionId) || null;
+  const activeQueue = queue.filter(q => q.opdSessionId === activeSessionId);
+  const waitingCount = activeSession
+    ? Math.max(0, activeSession.totalTokens - (activeSession.currentToken ?? 0))
+    : 0;
+
   // ── Handlers ──
 
-  async function handleStartSession(e: React.FormEvent) {
+  async function handleCreateSession(e: React.FormEvent) {
     e.preventDefault();
     setCreatingSession(true);
     setError('');
@@ -74,8 +85,6 @@ export default function OpdSessionClient({ initialSession, initialQueue }: Props
         body: JSON.stringify({
           startTime: newStartTime,
           endTime: newEndTime,
-          totalTokens: newTotalTokens,
-          avgWaitMinutes: newAvgWait,
         }),
       });
 
@@ -85,7 +94,9 @@ export default function OpdSessionClient({ initialSession, initialQueue }: Props
       }
 
       const data = await res.json();
-      setSession(data.session);
+      setSessions([...sessions, data.session]);
+      setActiveSessionId(data.session.id);
+      setShowAddModal(false);
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -95,6 +106,7 @@ export default function OpdSessionClient({ initialSession, initialQueue }: Props
   }
 
   async function updateSessionField(fields: any) {
+    if (!activeSessionId) return;
     setUpdatingSession(true);
     setError('');
 
@@ -102,7 +114,7 @@ export default function OpdSessionClient({ initialSession, initialQueue }: Props
       const res = await fetch('/api/portal/doctor/opd-session', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(fields),
+        body: JSON.stringify({ ...fields, sessionId: activeSessionId }),
       });
 
       if (!res.ok) {
@@ -111,7 +123,8 @@ export default function OpdSessionClient({ initialSession, initialQueue }: Props
       }
 
       const data = await res.json();
-      setSession(data.session);
+      setSessions(prev => prev.map(s => (s.id === data.session.id ? data.session : s)));
+      setShowEditModal(false);
       router.refresh();
     } catch (err: any) {
       setError(err.message);
@@ -120,19 +133,62 @@ export default function OpdSessionClient({ initialSession, initialQueue }: Props
     }
   }
 
+  const handleDeleteSession = async () => {
+    if (!activeSession) return;
+    if (!confirm('Are you sure you want to delete this session? Any waiting patients will be removed from this queue.')) return;
+
+    setUpdatingSession(true);
+    setError('');
+
+    try {
+      const res = await fetch(`/api/portal/doctor/opd-session?sessionId=${activeSession.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to delete session');
+      }
+
+      const updatedSessions = sessions.filter(s => s.id !== activeSession.id);
+      setSessions(updatedSessions);
+      setActiveSessionId(updatedSessions.length > 0 ? updatedSessions[0].id : null);
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setUpdatingSession(false);
+    }
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateSessionField({ startTime: newStartTime, endTime: newEndTime });
+  };
+
+  const openEditModal = () => {
+    if (!activeSession) return;
+    setNewStartTime(activeSession.startTime);
+    setNewEndTime(activeSession.endTime);
+    setShowEditModal(true);
+  };
+
+  const openAddModal = () => {
+    setNewStartTime('09:00');
+    setNewEndTime('13:00');
+    setShowAddModal(true);
+  };
+
   const handleStatusChange = (status: string) => {
     updateSessionField({ status });
   };
 
-  const handleIncrementToken = () => {
+  const handleCallNextPatient = () => {
     updateSessionField({ incrementToken: true });
   };
 
-  const handleSetToken = (val: string) => {
-    const num = val === '' ? null : parseInt(val, 10);
-    if (val === '' || (!isNaN(num!) && num! >= 0)) {
-      updateSessionField({ currentToken: num });
-    }
+  const handleUndoCallPatient = () => {
+    updateSessionField({ decrementToken: true });
   };
 
   const openExamineModal = (adm: Admission) => {
@@ -177,9 +233,9 @@ export default function OpdSessionClient({ initialSession, initialQueue }: Props
           prev.map(a =>
             a.id === examiningAdmission.id
               ? {
-                  ...a,
-                  patient: { ...a.patient, chiefComplaint, diagnosis },
-                }
+                ...a,
+                patient: { ...a.patient, chiefComplaint, diagnosis },
+              }
               : a
           )
         );
@@ -198,66 +254,38 @@ export default function OpdSessionClient({ initialSession, initialQueue }: Props
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <div>
-          <h1 className={styles.title}>OPD Session Control</h1>
-          <p className={styles.subtitle}>Manage today's patient queue and OPD session status</p>
+        <div className={styles.headerActions}>
+          <div>
+            <h1 className={styles.title}>OPD Session Control</h1>
+            <p className={styles.subtitle}>Manage your schedule and examine patients</p>
+          </div>
         </div>
       </header>
 
       {error && <div className={styles.errorBox}>{error}</div>}
 
-      {!session ? (
-        /* ── Start Session Screen ── */
+      {/* Tabs */}
+      <div className={styles.tabs}>
+        {sessions.map(s => (
+          <button
+            key={s.id}
+            className={`${styles.tab} ${activeSessionId === s.id ? styles.tabActive : ''}`}
+            onClick={() => setActiveSessionId(s.id)}
+          >
+            {s.startTime} - {s.endTime}
+          </button>
+        ))}
+        <button className={`${styles.tab} ${styles.addTab}`} onClick={openAddModal}>
+          + Add Session
+        </button>
+      </div>
+
+      {!activeSession ? (
         <div className={styles.startCard}>
-          <h2 className={styles.cardTitle}>No Active Session for Today</h2>
+          <h2 className={styles.cardTitle}>No Session Selected</h2>
           <p className={styles.cardDesc}>
-            Setup your OPD timings and patient limits to initialize today's consultation queue.
+            Click "+ Add Session" above to schedule a new OPD shift for today.
           </p>
-          <form onSubmit={handleStartSession} className={styles.startForm}>
-            <div className={styles.grid2}>
-              <div className={styles.field}>
-                <label className={styles.label}>Start Time</label>
-                <input
-                  type="time"
-                  className={styles.input}
-                  value={newStartTime}
-                  onChange={e => setNewStartTime(e.target.value)}
-                />
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label}>End Time</label>
-                <input
-                  type="time"
-                  className={styles.input}
-                  value={newEndTime}
-                  onChange={e => setNewEndTime(e.target.value)}
-                />
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label}>Total Token Capacity</label>
-                <input
-                  type="number"
-                  className={styles.input}
-                  value={newTotalTokens}
-                  onChange={e => setNewTotalTokens(e.target.value)}
-                  min="1"
-                />
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label}>Avg Wait Time (mins)</label>
-                <input
-                  type="number"
-                  className={styles.input}
-                  value={newAvgWait}
-                  onChange={e => setNewAvgWait(e.target.value)}
-                  min="1"
-                />
-              </div>
-            </div>
-            <button type="submit" className={styles.primaryBtn} disabled={creatingSession}>
-              {creatingSession ? 'Starting Session...' : '🚀 Start OPD Session'}
-            </button>
-          </form>
         </div>
       ) : (
         /* ── Active Session Control ── */
@@ -265,13 +293,23 @@ export default function OpdSessionClient({ initialSession, initialQueue }: Props
           {/* Left panel: Session stats and control */}
           <div className={styles.controlPanel}>
             <div className={styles.sectionCard}>
-              <h2 className={styles.cardTitle}>Session Settings</h2>
+              <div className={styles.panelHeader}>
+                <h2 className={styles.cardTitle}>Session Settings</h2>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button className={styles.secondaryBtn} onClick={openEditModal} disabled={updatingSession}>
+                    ✏️ Edit
+                  </button>
+                  <button className={styles.dangerBtn} onClick={handleDeleteSession} disabled={updatingSession}>
+                    🗑️ Delete
+                  </button>
+                </div>
+              </div>
 
               <div className={styles.controlGroup}>
                 <label className={styles.label}>Session Status</label>
                 <select
                   className={`${styles.input} ${styles.statusSelect}`}
-                  value={session.status}
+                  value={activeSession.status}
                   onChange={e => handleStatusChange(e.target.value)}
                   disabled={updatingSession}
                 >
@@ -283,53 +321,45 @@ export default function OpdSessionClient({ initialSession, initialQueue }: Props
                 </select>
               </div>
 
-              <div className={styles.controlGroup}>
-                <label className={styles.label}>Current Active Token</label>
-                <div className={styles.tokenController}>
-                  <button
-                    className={styles.tokenBtn}
-                    onClick={() => handleSetToken(Math.max(0, (session.currentToken ?? 0) - 1).toString())}
-                    disabled={updatingSession || (session.currentToken ?? 0) <= 0}
-                  >
-                    -
-                  </button>
-                  <input
-                    type="number"
-                    className={`${styles.input} ${styles.tokenInput}`}
-                    value={session.currentToken ?? ''}
-                    onChange={e => handleSetToken(e.target.value)}
-                    placeholder="None"
-                    disabled={updatingSession}
-                  />
-                  <button
-                    className={styles.tokenBtn}
-                    onClick={() => handleSetToken(((session.currentToken ?? 0) + 1).toString())}
-                    disabled={updatingSession}
-                  >
-                    +
-                  </button>
-                </div>
+              <div className={styles.actionRow}>
+                <button
+                  className={styles.nextBtn}
+                  onClick={handleCallNextPatient}
+                  disabled={updatingSession || (activeSession.currentToken ?? 0) >= activeSession.totalTokens}
+                >
+                  🔔 Call Next
+                </button>
+                <button
+                  className={styles.undoBtn}
+                  onClick={handleUndoCallPatient}
+                  disabled={updatingSession || (activeSession.currentToken ?? 0) <= 0}
+                  title="Undo Call (Go back one token)"
+                >
+                  ↩️ Undo
+                </button>
               </div>
-
-              <button
-                className={styles.nextBtn}
-                onClick={handleIncrementToken}
-                disabled={updatingSession}
-              >
-                🔔 Call Next Patient
-              </button>
             </div>
 
             <div className={styles.sectionCard}>
-              <h2 className={styles.cardTitle}>Queue Performance</h2>
+              <h2 className={styles.cardTitle}>Queue Status</h2>
               <div className={styles.grid2}>
                 <div className={styles.statBox}>
-                  <div className={styles.statVal}>{session.totalTokens}</div>
-                  <div className={styles.statLbl}>Total Capacity</div>
+                  <div className={styles.statVal}>{activeSession.currentToken ?? '—'}</div>
+                  <div className={styles.statLbl}>Now Serving</div>
                 </div>
                 <div className={styles.statBox}>
-                  <div className={styles.statVal}>{session.avgWaitMinutes}m</div>
-                  <div className={styles.statLbl}>Avg Wait Time</div>
+                  <div className={styles.statVal}>{activeSession.totalTokens}</div>
+                  <div className={styles.statLbl}>Total Registered</div>
+                </div>
+              </div>
+              <div className={styles.grid2} style={{ marginTop: '0.75rem' }}>
+                <div className={styles.statBox}>
+                  <div className={styles.statVal}>{waitingCount}</div>
+                  <div className={styles.statLbl}>Waiting</div>
+                </div>
+                <div className={styles.statBox}>
+                  <div className={styles.statVal}>{activeSession.startTime}</div>
+                  <div className={styles.statLbl}>Start Time</div>
                 </div>
               </div>
             </div>
@@ -340,12 +370,12 @@ export default function OpdSessionClient({ initialSession, initialQueue }: Props
             <div className={styles.sectionCard}>
               <div className={styles.panelHeader}>
                 <h2 className={styles.cardTitle}>Active Patient Queue</h2>
-                <span className={styles.queueCount}>{queue.length} waiting</span>
+                <span className={styles.queueCount}>{activeQueue.length} waiting</span>
               </div>
 
-              {queue.length === 0 ? (
+              {activeQueue.length === 0 ? (
                 <div className={styles.emptyQueue}>
-                  <p>Queue is empty. No patients currently checked in for OPD.</p>
+                  <p>Queue is empty. Patients will appear here once the receptionist registers them.</p>
                 </div>
               ) : (
                 <div className={styles.tableWrapper}>
@@ -359,7 +389,7 @@ export default function OpdSessionClient({ initialSession, initialQueue }: Props
                       </tr>
                     </thead>
                     <tbody>
-                      {queue.map((item, idx) => (
+                      {activeQueue.map((item, idx) => (
                         <tr key={item.id} className={styles.tableRow}>
                           <td>
                             <div className={styles.patientName}>{item.patient.name}</div>
@@ -391,6 +421,69 @@ export default function OpdSessionClient({ initialSession, initialQueue }: Props
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add/Edit Modal */}
+      {(showAddModal || showEditModal) && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <div>
+                <h3 className={styles.modalTitle}>
+                  {showAddModal ? 'Schedule New Session' : 'Edit Session Times'}
+                </h3>
+              </div>
+              <button
+                className={styles.closeBtn}
+                onClick={() => {
+                  setShowAddModal(false);
+                  setShowEditModal(false);
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={showAddModal ? handleCreateSession : handleEditSubmit}>
+              <div className={styles.modalBody}>
+                <div className={styles.grid2}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Start Time</label>
+                    <input
+                      type="time"
+                      className={styles.input}
+                      value={newStartTime}
+                      onChange={e => setNewStartTime(e.target.value)}
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>End Time</label>
+                    <input
+                      type="time"
+                      className={styles.input}
+                      value={newEndTime}
+                      onChange={e => setNewEndTime(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.secondaryBtn}
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setShowEditModal(false);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className={styles.primaryBtn} disabled={creatingSession || updatingSession}>
+                  {creatingSession || updatingSession ? 'Saving...' : 'Save Session'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

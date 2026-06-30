@@ -3,7 +3,7 @@ import { OpdController } from '../../../controllers/OpdController';
 import OpdScreen from '../../../components/display/OpdScreen';
 
 export const metadata: Metadata = {
-  title: 'OPD Live Display | Apex City General Hospital',
+  title: 'OPD Live Display | Mikki Megha General Hospital',
   description:
     'Live OPD queue status, doctor availability, room numbers, and token information',
 };

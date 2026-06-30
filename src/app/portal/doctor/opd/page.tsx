@@ -23,13 +23,13 @@ export default async function OpdSessionPage() {
     );
   }
 
-  // Fetch today's session
+  // Fetch today's sessions
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const todayEnd = new Date();
   todayEnd.setHours(23, 59, 59, 999);
 
-  const opdSession = await prisma.opdSession.findFirst({
+  const opdSessions = await prisma.opdSession.findMany({
     where: {
       doctorId: doctor.id,
       date: {
@@ -37,24 +37,25 @@ export default async function OpdSessionPage() {
         lte: todayEnd,
       },
     },
+    orderBy: { startTime: 'asc' },
   });
 
-  const serializedSession = opdSession ? {
-    id: opdSession.id,
-    startTime: opdSession.startTime,
-    endTime: opdSession.endTime,
-    status: opdSession.status as any,
-    currentToken: opdSession.currentToken,
-    totalTokens: opdSession.totalTokens,
-    avgWaitMinutes: opdSession.avgWaitMinutes,
-  } : null;
+  const serializedSessions = opdSessions.map(session => ({
+    id: session.id,
+    startTime: session.startTime,
+    endTime: session.endTime,
+    status: session.status as any,
+    currentToken: session.currentToken,
+    totalTokens: session.totalTokens,
+    avgWaitMinutes: session.avgWaitMinutes,
+  }));
 
-  // Fetch active patient queue for today's session
+  // Fetch active patient queue for ALL of today's sessions
   let queue: any[] = [];
-  if (opdSession) {
+  if (opdSessions.length > 0) {
     const rawQueue = await prisma.admission.findMany({
       where: {
-        opdSessionId: opdSession.id,
+        opdSessionId: { in: opdSessions.map(s => s.id) },
         status: 'active',
       },
       include: {
@@ -68,6 +69,7 @@ export default async function OpdSessionPage() {
     queue = rawQueue.map(item => ({
       id: item.id,
       patientId: item.patientId,
+      opdSessionId: item.opdSessionId, // Added so UI can filter by session
       admittedAt: item.admittedAt.toISOString(),
       patient: {
         id: item.patient.id,
@@ -85,7 +87,7 @@ export default async function OpdSessionPage() {
 
   return (
     <OpdSessionClient
-      initialSession={serializedSession}
+      initialSessions={serializedSessions}
       initialQueue={queue}
     />
   );

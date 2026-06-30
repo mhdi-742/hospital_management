@@ -15,7 +15,7 @@ export class OpdController {
     const settings = await prisma.hospitalSettings.findUnique({
       where: { key: 'hospitalName' },
     });
-    const hospitalName = settings?.value ?? 'Apex City General Hospital';
+    const hospitalName = settings?.value ?? 'Mikki Megha General Hospital';
 
     const dbAnnouncements = await prisma.announcement.findMany({
       where: { isActive: true, board: { in: ['ALL', 'OPD'] } },
@@ -28,36 +28,41 @@ export class OpdController {
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999);
 
-    const dbDoctors = await prisma.doctor.findMany({
-      include: {
-        user: { select: { name: true } },
-        department: true,
-        opdSessions: {
-          where: {
-            date: {
-              gte: todayStart,
-              lte: todayEnd,
-            },
-          },
-          take: 1,
+    // Query sessions first, then map doctor info onto each one.
+    // This naturally handles:
+    //   - Multiple sessions per doctor (each becomes a separate entry)
+    //   - Doctors with no session today are automatically excluded
+    const dbSessions = await prisma.opdSession.findMany({
+      where: {
+        date: {
+          gte: todayStart,
+          lte: todayEnd,
         },
       },
-      orderBy: { id: 'asc' },
+      include: {
+        doctor: {
+          include: {
+            user: { select: { name: true } },
+            department: true,
+          },
+        },
+      },
+      orderBy: { startTime: 'asc' },
     });
 
-    const doctors: FlatDoctor[] = dbDoctors.map(doc => {
-      const session = doc.opdSessions[0];
+    const doctors: FlatDoctor[] = dbSessions.map(session => {
+      const doc = session.doctor;
       return {
-        id: doc.id,
+        id: session.id,
         name: doc.user.name,
         designation: doc.designation,
         roomNo: doc.roomNo ?? 'TBD',
-        status: (session?.status as DoctorStatus) ?? 'unavailable',
-        startTime: session?.startTime ?? '09:00',
-        endTime: session?.endTime ?? '17:00',
-        currentToken: session?.currentToken ?? null,
-        totalTokens: session?.totalTokens ?? 0,
-        avgWaitMinutes: session?.avgWaitMinutes ?? 0,
+        status: (session.status as DoctorStatus) ?? 'unavailable',
+        startTime: session.startTime,
+        endTime: session.endTime,
+        currentToken: session.currentToken ?? null,
+        totalTokens: session.totalTokens,
+        avgWaitMinutes: session.avgWaitMinutes,
         departmentId: doc.department?.id ?? 'none',
         departmentName: doc.department?.name ?? 'General Medicine',
         departmentFloor: doc.department?.floor ?? '1st Floor',

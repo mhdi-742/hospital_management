@@ -12,6 +12,18 @@ interface Doctor {
 }
 interface Ward   { id: string; name: string; code: string; accentColor: string; }
 interface OtRoom { id: string; roomNo: string; type: string; }
+interface OpdSession {
+  id: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  totalTokens: number;
+  doctor: {
+    id: string;
+    user: { name: string };
+    department: { name: string } | null;
+  };
+}
 
 const BLOOD_GROUPS = ['A+', 'A−', 'B+', 'B−', 'AB+', 'AB−', 'O+', 'O−'];
 
@@ -31,7 +43,7 @@ export default function NewAdmissionPage() {
   });
 
   const [selectedDoctors, setSelectedDoctors] = useState<{ doctorId: string; role: 'primary' | 'consultant' }[]>([]);
-  const [options, setOptions] = useState<{ doctors: Doctor[]; wards: Ward[]; otRooms: OtRoom[] } | null>(null);
+  const [options, setOptions] = useState<{ doctors: Doctor[]; wards: Ward[]; otRooms: OtRoom[]; opdSessions: OpdSession[] } | null>(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -84,7 +96,28 @@ export default function NewAdmissionPage() {
     }
 
     const data = await res.json();
+
+    // Show assigned OPD token number if available
+    if (data.assignedToken) {
+      alert(`Patient registered successfully!\nAssigned Token: #${data.assignedToken}`);
+    }
+
     router.push(`/portal/admission/patients/${data.patient.id}`);
+  }
+
+  // When an OPD session is selected, auto-assign that doctor as primary
+  function handleOpdSessionSelect(sessionId: string) {
+    set('opdSessionId', sessionId);
+    if (!sessionId || !options) return;
+
+    const selectedSession = options.opdSessions.find(s => s.id === sessionId);
+    if (selectedSession) {
+      // Auto-add the session's doctor as primary
+      setSelectedDoctors(prev => {
+        const withoutOldPrimary = prev.filter(d => d.role !== 'primary');
+        return [{ doctorId: selectedSession.doctor.id, role: 'primary' as const }, ...withoutOldPrimary];
+      });
+    }
   }
 
   const steps = ['Demographics', 'Medical Details', 'Admission & Assignment'];
@@ -235,6 +268,33 @@ export default function NewAdmissionPage() {
                 ))}
               </div>
             </div>
+
+            {/* OPD specific — Session picker */}
+            {form.admissionType === 'OPD' && (
+              <div className={styles.field}>
+                <label className={styles.label}>Doctor&apos;s OPD Session</label>
+                {options?.opdSessions && options.opdSessions.length > 0 ? (
+                  <select
+                    id="opd-session"
+                    className={styles.input}
+                    value={form.opdSessionId}
+                    onChange={e => handleOpdSessionSelect(e.target.value)}
+                  >
+                    <option value="">Select a doctor&apos;s session…</option>
+                    {options.opdSessions.map(s => (
+                      <option key={s.id} value={s.id}>
+                        {s.doctor.user.name}
+                        {s.doctor.department ? ` (${s.doctor.department.name})` : ''}
+                        {' — '}{s.startTime}–{s.endTime}
+                        {' — '}{s.totalTokens} patients registered
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className={styles.loadingText}>No active OPD sessions today. A doctor must start a session first.</p>
+                )}
+              </div>
+            )}
 
             {/* IPD specific */}
             {form.admissionType === 'IPD' && (

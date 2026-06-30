@@ -6,7 +6,12 @@ export async function GET(_: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const [doctors, wards, otRooms] = await Promise.all([
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const [doctors, wards, otRooms, opdSessions] = await Promise.all([
     prisma.doctor.findMany({
       where: { user: { isActive: true } },
       include: {
@@ -17,7 +22,22 @@ export async function GET(_: NextRequest) {
     }),
     prisma.ward.findMany({ orderBy: { name: 'asc' } }),
     prisma.otRoom.findMany({ orderBy: { roomNo: 'asc' } }),
+    prisma.opdSession.findMany({
+      where: {
+        date: { gte: todayStart, lte: todayEnd },
+        status: { in: ['upcoming', 'running', 'break'] },
+      },
+      include: {
+        doctor: {
+          include: {
+            user: { select: { name: true } },
+            department: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: { startTime: 'asc' },
+    }),
   ]);
 
-  return NextResponse.json({ doctors, wards, otRooms });
+  return NextResponse.json({ doctors, wards, otRooms, opdSessions });
 }

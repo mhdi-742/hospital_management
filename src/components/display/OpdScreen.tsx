@@ -9,7 +9,6 @@ import styles from './OpdScreen.module.css';
 
 const CARDS_PER_PAGE = 6;
 const PAGE_INTERVAL_MS = 9000;   // advance page every 9 s
-const REFRESH_INTERVAL_MS = 30000; // re-fetch data every 30 s
 
 interface Props {
   initialData: OpdApiResponse;
@@ -67,7 +66,7 @@ export default function OpdScreen({ initialData, theme = 'dark' }: Props) {
     return () => clearInterval(id);
   }, [totalPages]);
 
-  // ── Data refresh polling ───────────────────────────────────────────────────
+  // ── Data refresh via SSE ───────────────────────────────────────────────────
   const refreshData = useCallback(async () => {
     try {
       const res = await fetch('/api/opd');
@@ -81,8 +80,11 @@ export default function OpdScreen({ initialData, theme = 'dark' }: Props) {
   }, []);
 
   useEffect(() => {
-    const id = setInterval(refreshData, REFRESH_INTERVAL_MS);
-    return () => clearInterval(id);
+    const evtSource = new EventSource('/api/events');
+    evtSource.onmessage = () => {
+      refreshData();
+    };
+    return () => evtSource.close();
   }, [refreshData]);
 
   // ── Manual page jump ───────────────────────────────────────────────────────

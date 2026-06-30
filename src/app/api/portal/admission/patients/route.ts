@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { eventBus } from '@/lib/eventBus';
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -105,6 +106,8 @@ export async function POST(req: NextRequest) {
 
     // Auto-resolve OPD session if type is OPD and primary doctor is specified
     let resolvedOpdSessionId = opdSessionId || undefined;
+    let assignedToken: number | null = null;
+
     if (admissionType === 'OPD' && doctorIds && Array.isArray(doctorIds)) {
       const primaryDoc = doctorIds.find((d: any) => d.role === 'primary');
       if (primaryDoc) {
@@ -113,17 +116,31 @@ export async function POST(req: NextRequest) {
         const todayEnd = new Date();
         todayEnd.setHours(23, 59, 59, 999);
 
-        const activeSession = await tx.opdSession.findFirst({
-          where: {
-            doctorId: primaryDoc.doctorId,
-            date: {
-              gte: todayStart,
-              lte: todayEnd,
+        // If a specific session was selected, use it; otherwise find today's latest
+        let activeSession;
+        if (opdSessionId) {
+          activeSession = await tx.opdSession.findFirst({
+            where: { id: opdSessionId, doctorId: primaryDoc.doctorId },
+          });
+        } else {
+          activeSession = await tx.opdSession.findFirst({
+            where: {
+              doctorId: primaryDoc.doctorId,
+              date: { gte: todayStart, lte: todayEnd },
             },
-          },
-        });
+            orderBy: { startTime: 'asc' },
+          });
+        }
+
         if (activeSession) {
           resolvedOpdSessionId = activeSession.id;
+
+          // Increment totalTokens and assign the new token number to this patient
+          const updatedSession = await tx.opdSession.update({
+            where: { id: activeSession.id },
+            data: { totalTokens: { increment: 1 } },
+          });
+          assignedToken = updatedSession.totalTokens;
         }
       }
     }
@@ -179,8 +196,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return { patient, admission };
+    return { patient, admission, assignedToken };
   });
+
+  // Emit event if this is an OPD admission
+  if (admissionType === 'OPD') {
+    eventBus.emit('REFRESH_OPD');
+  }
 
   return NextResponse.json(result, { status: 201 });
 }
