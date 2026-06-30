@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { OpdApiResponse } from '../../../lib/types';
 import MarqueeTicker from '../../../components/display/MarqueeTicker';
 import styles from './DoctorQueueScreen.module.css';
@@ -8,6 +8,7 @@ import styles from './DoctorQueueScreen.module.css';
 interface QueuePatient {
   tokenNo: number;
   patientName: string;
+  bengaliName?: string;
 }
 
 interface QueueData {
@@ -23,6 +24,72 @@ interface QueueData {
   queue: QueuePatient[];
 }
 
+function AutoScrollText({ text, className }: { text: string; className: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    let scrollInterval: NodeJS.Timeout;
+    let pauseTimeout: NodeJS.Timeout;
+    let isPaused = false;
+    let direction = 1;
+
+    const startScrolling = () => {
+      // Only scroll if content is overflowing
+      if (el.scrollWidth <= el.clientWidth) {
+        el.scrollLeft = 0;
+        return;
+      }
+
+      scrollInterval = setInterval(() => {
+        if (isPaused) return;
+
+        el.scrollLeft += direction;
+
+        // Hit right edge
+        if (direction === 1 && el.scrollLeft + el.clientWidth >= el.scrollWidth - 1) {
+          isPaused = true;
+          clearInterval(scrollInterval);
+          pauseTimeout = setTimeout(() => {
+            direction = -1;
+            isPaused = false;
+            startScrolling();
+          }, 2000);
+        }
+        // Hit left edge
+        else if (direction === -1 && el.scrollLeft <= 0) {
+          isPaused = true;
+          clearInterval(scrollInterval);
+          pauseTimeout = setTimeout(() => {
+            direction = 1;
+            isPaused = false;
+            startScrolling();
+          }, 2000);
+        }
+      }, 30);
+    };
+
+    pauseTimeout = setTimeout(startScrolling, 1000);
+
+    return () => {
+      clearInterval(scrollInterval);
+      clearTimeout(pauseTimeout);
+    };
+  }, [text]);
+
+  return (
+    <div
+      ref={containerRef}
+      className={className}
+      style={{ overflow: 'hidden', whiteSpace: 'nowrap', width: '100%' }}
+    >
+      {text}
+    </div>
+  );
+}
+
 export default function DoctorQueueScreen({ initialData }: { initialData: OpdApiResponse }) {
   // Setup state: list of doctors available
   const [data, setData] = useState<OpdApiResponse>(initialData);
@@ -33,12 +100,62 @@ export default function DoctorQueueScreen({ initialData }: { initialData: OpdApi
   const [loadingQueue, setLoadingQueue] = useState(false);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
+  // Ref for auto-scrolling the waiting list
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   // ── Clock ───────────────────────────────────────────────────────────
   useEffect(() => {
     setCurrentTime(new Date());
     const id = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
+
+  // ── Auto-scroll Waiting List ────────────────────────────────────────
+  useEffect(() => {
+    if (!queueData) return;
+    
+    let scrollInterval: NodeJS.Timeout;
+    let pauseTimeout: NodeJS.Timeout;
+    let isPaused = false;
+
+    const startScrolling = () => {
+      scrollInterval = setInterval(() => {
+        const el = scrollRef.current;
+        if (!el || isPaused) return;
+
+        // If not scrollable, don't do anything
+        if (el.scrollHeight <= el.clientHeight) return;
+
+        // Scroll down by 1px
+        el.scrollTop += 1;
+
+        // Check if we hit the bottom (allow 2px margin of error)
+        if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) {
+          isPaused = true;
+          clearInterval(scrollInterval);
+          
+          // Pause at bottom for 3 seconds, then snap to top and pause for 3 seconds before resuming
+          pauseTimeout = setTimeout(() => {
+            el.scrollTop = 0;
+            setTimeout(() => {
+              isPaused = false;
+              startScrolling();
+            }, 3000);
+          }, 3000);
+        }
+      }, 50); // Speed of scroll (50ms per pixel)
+    };
+
+    // Initial pause before scrolling starts
+    pauseTimeout = setTimeout(() => {
+      startScrolling();
+    }, 3000);
+
+    return () => {
+      clearInterval(scrollInterval);
+      clearTimeout(pauseTimeout);
+    };
+  }, [queueData]);
 
   // ── Refresh doctor list via SSE (for setup mode) ────────────────────
   const refreshData = useCallback(async () => {
@@ -61,7 +178,27 @@ export default function DoctorQueueScreen({ initialData }: { initialData: OpdApi
     try {
       const res = await fetch(`/api/opd/queue?sessionId=${sessionId}`);
       if (res.ok) {
-        setQueueData(await res.json());
+        const rawData: QueueData = await res.json();
+        
+        // Transliterate missing Bengali names
+        const updatedQueue = await Promise.all(rawData.queue.map(async (patient) => {
+          if (patient.bengaliName) return patient;
+          
+          try {
+            const firstWord = patient.patientName.split(' ')[0];
+            const transRes = await fetch(`https://inputtools.google.com/request?text=${encodeURIComponent(firstWord)}&itc=bn-t-i0-und&num=1&cp=0&cs=1&ie=utf-8&oe=utf-8&app=test`);
+            const transData = await transRes.json();
+            
+            if (transData[0] === 'SUCCESS' && transData[1]?.[0]?.[1]?.[0]) {
+              return { ...patient, bengaliName: transData[1][0][1][0] };
+            }
+          } catch {
+             // Silently fail and just use English
+          }
+          return patient;
+        }));
+
+        setQueueData({ ...rawData, queue: updatedQueue });
       }
     } catch { /* skip */ }
     if (isInitial) setLoadingQueue(false);
@@ -211,7 +348,10 @@ export default function DoctorQueueScreen({ initialData }: { initialData: OpdApi
               {nowServing ? (
                 <>
                   <div className={styles.servingToken}>{nowServing.tokenNo}</div>
-                  <div className={styles.servingName}>{nowServing.patientName}</div>
+                  <AutoScrollText 
+                    className={styles.servingName} 
+                    text={`${nowServing.patientName} ${nowServing.bengaliName ? `(${nowServing.bengaliName})` : ''}`}
+                  />
                 </>
               ) : queueData?.currentToken ? (
                 /* Patient is serving but not found in list (e.g. ad-hoc/manual token advance without registration) */
@@ -240,13 +380,16 @@ export default function DoctorQueueScreen({ initialData }: { initialData: OpdApi
                   No one is waiting.
                 </div>
               ) : (
-                <div className={styles.waitingList}>
+                <div className={styles.waitingList} ref={scrollRef}>
                   {waitingList.map((patient, index) => {
                     const isNext = index === 0;
                     return (
                       <div key={patient.tokenNo} className={`${styles.waitingItem} ${isNext ? styles.next : ''}`}>
                         <div className={styles.waitingToken}>{patient.tokenNo}</div>
-                        <div className={styles.waitingName}>{patient.patientName}</div>
+                        <AutoScrollText 
+                          className={styles.waitingName} 
+                          text={`${patient.patientName} ${patient.bengaliName ? `(${patient.bengaliName})` : ''}`}
+                        />
                         <div className={styles.waitingStatus}>
                           {isNext ? 'Next' : 'Waiting'}
                         </div>

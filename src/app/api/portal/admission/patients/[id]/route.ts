@@ -72,6 +72,88 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     return NextResponse.json(admission);
   }
 
+  if (action === 'transfer') {
+    if (role !== 'RECEPTIONIST' && role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Only receptionists can transfer' }, { status: 403 });
+    }
+    const {
+      admissionId, newType, newWardId, newBedNo, newOpdSessionId,
+      newOtRoomId, newProcedureName, newAnaesthetist, newScheduledTime, newEstimatedDuration,
+      transferRequestId
+    } = data;
+
+    const newAdmission = await prisma.$transaction(async (tx) => {
+      // 1. Mark current as transferred
+      const oldAdm = await tx.admission.update({
+        where: { id: admissionId },
+        data: { status: 'transferred', dischargedAt: new Date() },
+        include: { doctors: true }
+      });
+
+      // 2. Create new admission
+      const created = await tx.admission.create({
+        data: {
+          patientId: oldAdm.patientId,
+          type: newType,
+          status: 'active',
+          wardId: newType === 'IPD' ? newWardId || null : null,
+          bedNo: newType === 'IPD' ? newBedNo || null : null,
+          patientCondition: newType === 'IPD' ? 'stable' : null,
+          opdSessionId: newType === 'OPD' ? newOpdSessionId || null : null,
+          doctors: {
+            create: oldAdm.doctors.map(d => ({
+              doctorId: d.doctorId,
+              role: d.role
+            }))
+          }
+        }
+      });
+
+      // 3. Handle OT case
+      if (newType === 'OT') {
+        const leadDoctorId = oldAdm.doctors.find(d => d.role === 'primary')?.doctorId || oldAdm.doctors[0]?.doctorId;
+        if (leadDoctorId) {
+          await tx.otCase.create({
+            data: {
+              admissionId: created.id,
+              procedureName: newProcedureName || 'TBD',
+              leadDoctorId,
+              anaesthetist: newAnaesthetist || null,
+              status: 'scheduled',
+              otRoomId: newOtRoomId || null,
+              scheduledTime: newScheduledTime || null,
+              estimatedDuration: newEstimatedDuration ? parseInt(newEstimatedDuration) : null,
+            }
+          });
+        }
+      }
+
+      // 4. Mark TransferRequest as approved
+      if (transferRequestId) {
+        await tx.transferRequest.update({
+          where: { id: transferRequestId },
+          data: { status: 'approved' },
+        });
+      }
+
+      return created;
+    });
+
+    const { eventBus } = await import('@/lib/eventBus');
+    eventBus.emit('REFRESH_OPD', {});
+    eventBus.emit('REFRESH_OT', {});
+
+    await prisma.auditLog.create({
+      data: {
+        userId: (session!.user as any).id,
+        action: 'PATIENT_TRANSFERRED',
+        target: newAdmission.id,
+      },
+    });
+
+    return NextResponse.json(newAdmission);
+  }
+
   // Update patient demographics
   const patient = await prisma.patient.update({
     where: { id },

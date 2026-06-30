@@ -63,6 +63,7 @@ model Doctor {
   primaryPatients PatientDoctor[] @relation("DoctorPatients")
   otCasesLead    OtCase[]         @relation("OtLead")
   otAssistances  OtAssistant[]
+  transferRequests TransferRequest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -199,6 +200,22 @@ model Admission {
 
   // OT case (if type = OT)
   otCase        OtCase?
+
+  transferRequests TransferRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TransferRequest {
+  id              String   @id @default(cuid())
+  admissionId     String
+  admission       Admission @relation(fields: [admissionId], references: [id])
+  requestingDocId String
+  doctor          Doctor    @relation(fields: [requestingDocId], references: [id])
+  targetType      AdmissionType
+  notes           String?   @db.Text
+  status          String    @default("pending") // pending, approved, rejected
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

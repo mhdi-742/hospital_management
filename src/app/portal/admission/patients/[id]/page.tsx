@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
 
-interface Doctor { user: { name: string }; department: { name: string } | null; }
+interface Doctor { id?: string; user: { name: string }; department: { name: string } | null; }
 interface Admission {
   id: string; type: string; status: string; admittedAt: string; dischargedAt: string | null;
   bedNo: string | null; patientCondition: string | null;
@@ -21,21 +21,54 @@ interface Patient {
   insuranceProvider: string | null; policyNumber: string | null;
   admissions: Admission[];
 }
+interface WardOption { id: string; name: string; code: string; accentColor: string; }
+interface OtRoomOption { id: string; roomNo: string; type: string; }
+interface OpdSessionOption {
+  id: string; startTime: string; endTime: string; status: string;
+  doctor: { id: string; user: { name: string }; department: { name: string } | null; };
+}
+interface DoctorOption { id: string; user: { name: string }; department: { name: string } | null; }
 
 const TYPE_COLOR: Record<string, string> = { OPD: '#3b82f6', IPD: '#8b5cf6', OT: '#f59e0b' };
 const COND_COLOR: Record<string, string> = { stable: '#22c55e', monitoring: '#f59e0b', critical: '#ef4444' };
 
 export default function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const transferRequestId = searchParams?.get('transferRequest');
+  const targetType = searchParams?.get('target');
+
   const [patient, setPatient]   = useState<Patient | null>(null);
   const [loading, setLoading]   = useState(true);
   const [role,    setRole]      = useState('');
+
+  const [options, setOptions] = useState<{ wards: WardOption[]; otRooms: OtRoomOption[]; opdSessions: OpdSessionOption[]; doctors: DoctorOption[] } | null>(null);
+  const [showTransfer, setShowTransfer] = useState(false);
+  const [transferForm, setTransferForm] = useState({
+    newType: 'IPD', newWardId: '', newBedNo: '', newOpdSessionId: '',
+    newOtRoomId: '', newProcedureName: '', newAnaesthetist: '', newScheduledTime: '', newEstimatedDuration: '',
+    transferRequestId: ''
+  });
+  const [transferring, setTransferring] = useState(false);
+
+  useEffect(() => {
+    if (transferRequestId && targetType) {
+      setShowTransfer(true);
+      setTransferForm(prev => ({
+        ...prev,
+        newType: targetType,
+        transferRequestId: transferRequestId
+      }));
+    }
+  }, [transferRequestId, targetType]);
 
   useEffect(() => {
     fetch(`/api/portal/admission/patients/${id}`)
       .then(r => r.json()).then(d => { setPatient(d); setLoading(false); });
     fetch('/api/auth/session')
       .then(r => r.json()).then(s => setRole(s?.user?.role ?? ''));
+    fetch('/api/portal/admission/options')
+      .then(r => r.json()).then(d => setOptions(d));
   }, [id]);
 
   const discharge = async (admissionId: string) => {
@@ -53,6 +86,17 @@ export default function PatientDetailPage() {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'update_condition', admissionId, patientCondition: cond }),
+    });
+    window.location.reload();
+  };
+
+  const handleTransfer = async (admissionId: string) => {
+    if (!transferForm.newType) return;
+    setTransferring(true);
+    await fetch(`/api/portal/admission/patients/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'transfer', admissionId, ...transferForm }),
     });
     window.location.reload();
   };
@@ -187,9 +231,14 @@ export default function PatientDetailPage() {
                   Admitted {new Date(activeAdmission.admittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </span>
                 {role === 'RECEPTIONIST' && (
-                  <button className={styles.dischargeBtn} onClick={() => discharge(activeAdmission.id)}>
-                    Discharge
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className={styles.transferBtn} onClick={() => setShowTransfer(true)}>
+                      Transfer
+                    </button>
+                    <button className={styles.dischargeBtn} onClick={() => discharge(activeAdmission.id)}>
+                      Discharge
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -281,6 +330,91 @@ export default function PatientDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Transfer Modal */}
+      {showTransfer && activeAdmission && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h2>Transfer Patient</h2>
+            <p>Move patient from <strong>{activeAdmission.type}</strong> to a new department.</p>
+
+            <div className={styles.formGroup}>
+              <label>New Department Type</label>
+              <select 
+                value={transferForm.newType} 
+                onChange={e => setTransferForm({ ...transferForm, newType: e.target.value })}
+              >
+                <option value="OPD">OPD</option>
+                <option value="IPD">IPD</option>
+                <option value="OT">Operation Theatre (OT)</option>
+              </select>
+            </div>
+
+            {transferForm.newType === 'IPD' && (
+              <div className={styles.typeFields}>
+                <div className={styles.formGroup}>
+                  <label>Ward</label>
+                  <select value={transferForm.newWardId} onChange={e => setTransferForm({ ...transferForm, newWardId: e.target.value })}>
+                    <option value="">Select Ward...</option>
+                    {options?.wards.map(w => <option key={w.id} value={w.id}>{w.name} ({w.code})</option>)}
+                  </select>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Bed No (Optional)</label>
+                  <input type="text" value={transferForm.newBedNo} onChange={e => setTransferForm({ ...transferForm, newBedNo: e.target.value })} />
+                </div>
+              </div>
+            )}
+
+            {transferForm.newType === 'OPD' && (
+              <div className={styles.typeFields}>
+                <div className={styles.formGroup}>
+                  <label>Assign to Doctor (OPD Session)</label>
+                  <select value={transferForm.newOpdSessionId} onChange={e => setTransferForm({ ...transferForm, newOpdSessionId: e.target.value })}>
+                    <option value="">Select Session...</option>
+                    {options?.opdSessions.map(s => (
+                      <option key={s.id} value={s.id}>
+                        {s.doctor.user.name} ({s.doctor.department?.name}) - {s.startTime}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {transferForm.newType === 'OT' && (
+              <div className={styles.typeFields}>
+                <div className={styles.formGroup}>
+                  <label>Procedure Name</label>
+                  <input type="text" value={transferForm.newProcedureName} onChange={e => setTransferForm({ ...transferForm, newProcedureName: e.target.value })} />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>OT Room</label>
+                  <select value={transferForm.newOtRoomId} onChange={e => setTransferForm({ ...transferForm, newOtRoomId: e.target.value })}>
+                    <option value="">Select OT Room...</option>
+                    {options?.otRooms.map(r => <option key={r.id} value={r.id}>{r.roomNo}</option>)}
+                  </select>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Anaesthetist (Optional)</label>
+                  <input type="text" value={transferForm.newAnaesthetist} onChange={e => setTransferForm({ ...transferForm, newAnaesthetist: e.target.value })} />
+                </div>
+              </div>
+            )}
+
+            <div className={styles.modalActions}>
+              <button className={styles.cancelBtn} onClick={() => setShowTransfer(false)} disabled={transferring}>Cancel</button>
+              <button 
+                className={styles.submitBtn} 
+                onClick={() => handleTransfer(activeAdmission.id)} 
+                disabled={transferring || !transferForm.newType}
+              >
+                {transferring ? 'Transferring...' : 'Confirm Transfer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

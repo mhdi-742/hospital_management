@@ -295,7 +295,6 @@
   max-width: 90%;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* Right: Waiting List */
@@ -363,7 +362,6 @@
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .waitingStatus {

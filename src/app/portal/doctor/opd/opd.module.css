@@ -433,9 +433,17 @@
 }
 
 .modalSubtitle {
-  font-size: 0.8rem;
-  color: #64748b;
+  font-size: 0.85rem;
+  color: #94a3b8;
   margin: 0;
+}
+
+.transferForm {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
 }
 
 .closeBtn {

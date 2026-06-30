@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './opd.module.css';
 
@@ -63,6 +63,35 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
   const [updatingSession, setUpdatingSession] = useState(false);
   const [creatingSession, setCreatingSession] = useState(false);
   const [error, setError] = useState('');
+
+  // ── Real-time Updates ──
+  // Listen for REFRESH_OPD events (triggered by admissions) and silently refresh the server components
+  // to fetch the latest queue without losing local state.
+  useEffect(() => {
+    const evtSource = new EventSource('/api/events');
+    
+    evtSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.event === 'REFRESH_OPD') {
+          router.refresh();
+        }
+      } catch (e) {
+        // Not JSON or plain ping
+      }
+    };
+
+    // Note: router.refresh() automatically updates initialSessions and initialQueue from the server
+    // but React's useState only initializes ONCE. We need to update our local state with the new props!
+    
+    return () => evtSource.close();
+  }, [router]);
+
+  // Update local state when server props change due to router.refresh()
+  useEffect(() => {
+    setSessions(initialSessions);
+    setQueue(initialQueue);
+  }, [initialSessions, initialQueue]);
 
   // ── Derived State ──
   const activeSession = sessions.find(s => s.id === activeSessionId) || null;
@@ -248,6 +277,42 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
       setError(err.message);
     } finally {
       setSaving(false);
+    }
+  }
+
+  const [requestingTransfer, setRequestingTransfer] = useState(false);
+  const [transferTarget, setTransferTarget] = useState('IPD');
+  const [transferNotes, setTransferNotes] = useState('');
+  const [showTransferForm, setShowTransferForm] = useState(false);
+
+  async function handleRequestTransfer() {
+    if (!examiningAdmission) return;
+    setRequestingTransfer(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/portal/doctor/transfer-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          admissionId: examiningAdmission.id,
+          targetType: transferTarget,
+          notes: transferNotes,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to request transfer');
+      }
+
+      alert('Transfer requested successfully. The receptionist will be notified.');
+      setShowTransferForm(false);
+      setTransferNotes('');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setRequestingTransfer(false);
     }
   }
 
@@ -524,6 +589,64 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
                   placeholder="Enter medical assessment, prescription details, or clinical findings..."
                 />
               </div>
+
+              {!showTransferForm ? (
+                <div style={{ marginTop: '16px' }}>
+                  <button 
+                    type="button" 
+                    className={styles.secondaryBtn} 
+                    onClick={() => setShowTransferForm(true)}
+                  >
+                    Request Patient Transfer...
+                  </button>
+                </div>
+              ) : (
+                <div className={styles.transferForm}>
+                  <h4 style={{ color: '#e2e8f0', margin: '0 0 10px 0', fontSize: '0.9rem' }}>Request Transfer</h4>
+                  <div className={styles.grid2}>
+                    <div className={styles.field}>
+                      <label className={styles.label}>Target Department</label>
+                      <select 
+                        className={styles.input}
+                        value={transferTarget}
+                        onChange={e => setTransferTarget(e.target.value)}
+                      >
+                        <option value="IPD">IPD (Admit to Ward)</option>
+                        <option value="OT">OT (Operation Theatre)</option>
+                        <option value="OPD">OPD (Other Doctor)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Notes / Reason for Transfer</label>
+                    <textarea 
+                      className={`${styles.input} ${styles.textarea}`} 
+                      rows={2} 
+                      value={transferNotes}
+                      onChange={e => setTransferNotes(e.target.value)}
+                      placeholder="e.g. Needs immediate surgery for appendicitis..."
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                    <button 
+                      type="button" 
+                      className={styles.primaryBtn} 
+                      onClick={handleRequestTransfer}
+                      disabled={requestingTransfer}
+                    >
+                      {requestingTransfer ? 'Sending...' : 'Send Request'}
+                    </button>
+                    <button 
+                      type="button" 
+                      className={styles.secondaryBtn} 
+                      onClick={() => setShowTransferForm(false)}
+                      disabled={requestingTransfer}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className={styles.modalFooter}>

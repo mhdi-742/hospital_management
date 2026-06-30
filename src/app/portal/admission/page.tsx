@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import styles from './page.module.css';
+import TransferRequestsTable from './TransferRequestsTable';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +13,7 @@ async function getStats(role: string) {
     totalIPD,
     totalOT,
     recentAdmissions,
+    pendingTransferRequests
   ] = await Promise.all([
     prisma.admission.count({ where: { status: 'active' } }),
     prisma.admission.count({ where: { status: 'active', type: 'OPD' } }),
@@ -26,9 +28,17 @@ async function getStats(role: string) {
         ward: { select: { name: true, code: true, accentColor: true } },
       },
     }),
+    prisma.transferRequest.findMany({
+      where: { status: 'pending' },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        admission: { include: { patient: { select: { name: true } } } },
+        doctor: { include: { user: { select: { name: true } } } }
+      }
+    })
   ]);
 
-  return { totalActive, totalOPD, totalIPD, totalOT, recentAdmissions };
+  return { totalActive, totalOPD, totalIPD, totalOT, recentAdmissions, pendingTransferRequests };
 }
 
 export default async function AdmissionDashboard() {
@@ -65,6 +75,13 @@ export default async function AdmissionDashboard() {
           </Link>
         )}
       </div>
+
+      <TransferRequestsTable 
+        requests={stats.pendingTransferRequests} 
+        styles={styles} 
+        typeColors={typeColors} 
+        typeBg={typeBg} 
+      />
 
       {/* Stats row */}
       <div className={styles.statsGrid}>
