@@ -170,14 +170,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Create OT case
-    if (admissionType === 'OT' && procedureName) {
+    if (admissionType === 'OT') {
       const leadDoctor = doctorIds?.find((d: any) => d.role === 'primary');
       await tx.otCase.create({
         data: {
           admissionId:      admission.id,
           otRoomId:         otRoomId || undefined,
           leadDoctorId:     leadDoctor?.doctorId || undefined,
-          procedureName,
+          procedureName:    procedureName || 'TBD',
           anaesthetist:     anaesthetist || undefined,
           scheduledTime:    scheduledTime || undefined,
           estimatedDuration: estimatedDuration ? parseInt(estimatedDuration) : undefined,
@@ -199,9 +199,11 @@ export async function POST(req: NextRequest) {
     return { patient, admission, assignedToken };
   });
 
-  // Emit event if this is an OPD admission
+  // Emit events for live displays
   if (admissionType === 'OPD') {
     eventBus.emit('REFRESH_OPD');
+  } else if (admissionType === 'OT') {
+    eventBus.emit('REFRESH_OT');
   }
 
   return NextResponse.json(result, { status: 201 });

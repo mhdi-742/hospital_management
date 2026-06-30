@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { eventBus } from '@/lib/eventBus';
 
 interface Ctx { params: Promise<{ id: string }> }
 
@@ -81,14 +82,14 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     }
 
     // Create OT case if needed
-    if (admissionType === 'OT' && procedureName) {
+    if (admissionType === 'OT') {
       const lead = doctorIds?.find((d: any) => d.role === 'primary');
       await tx.otCase.create({
         data: {
           admissionId:       admission.id,
           otRoomId:          otRoomId || undefined,
           leadDoctorId:      lead?.doctorId || undefined,
-          procedureName,
+          procedureName:     procedureName || 'TBD',
           anaesthetist:      anaesthetist || undefined,
           scheduledTime:     scheduledTime || undefined,
           estimatedDuration: estimatedDuration ? parseInt(estimatedDuration) : undefined,
@@ -108,6 +109,13 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
     return admission;
   });
+
+  // Emit event for live displays
+  if (admissionType === 'OT') {
+    eventBus.emit('REFRESH_OT');
+  } else if (admissionType === 'OPD') {
+    eventBus.emit('REFRESH_OPD');
+  }
 
   return NextResponse.json(result, { status: 201 });
 }

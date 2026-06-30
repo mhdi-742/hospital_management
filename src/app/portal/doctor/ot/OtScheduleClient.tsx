@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './ot.module.css';
 
@@ -69,6 +69,22 @@ export default function OtScheduleClient({ initialOtCases, doctorId }: Props) {
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  // ── Auto-refresh polling ──
+  const refreshOtCases = useCallback(async () => {
+    try {
+      const res = await fetch('/api/portal/doctor/ot');
+      if (res.ok) {
+        const data = await res.json();
+        setOtCases(data.otCases);
+      }
+    } catch { /* silently skip */ }
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(refreshOtCases, 15_000);
+    return () => clearInterval(id);
+  }, [refreshOtCases]);
 
   // ── Filters ──
   const filteredCases = otCases.filter(ot => {

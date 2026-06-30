@@ -11,10 +11,9 @@ export async function GET(req: NextRequest) {
       // Send initial headers/ping to keep connection alive
       controller.enqueue(encoder.encode(': connected\n\n'));
 
-      // The listener function
-      const onRefresh = () => {
+      // The listener functions
+      const onRefreshOpd = () => {
         try {
-          // SSE format requires "data: {payload}\n\n"
           const message = `data: {"event": "REFRESH_OPD", "time": "${new Date().toISOString()}"}\n\n`;
           controller.enqueue(encoder.encode(message));
         } catch (err) {
@@ -22,8 +21,18 @@ export async function GET(req: NextRequest) {
         }
       };
 
-      // Add listener to global event bus
-      eventBus.on('REFRESH_OPD', onRefresh);
+      const onRefreshOt = () => {
+        try {
+          const message = `data: {"event": "REFRESH_OT", "time": "${new Date().toISOString()}"}\n\n`;
+          controller.enqueue(encoder.encode(message));
+        } catch (err) {
+          console.error('[SSE_ERROR]', err);
+        }
+      };
+
+      // Add listeners to global event bus
+      eventBus.on('REFRESH_OPD', onRefreshOpd);
+      eventBus.on('REFRESH_OT', onRefreshOt);
 
       // Ping every 30 seconds to keep connection alive
       const pingInterval = setInterval(() => {
@@ -36,7 +45,8 @@ export async function GET(req: NextRequest) {
 
       // Clean up when client disconnects
       req.signal.addEventListener('abort', () => {
-        eventBus.off('REFRESH_OPD', onRefresh);
+        eventBus.off('REFRESH_OPD', onRefreshOpd);
+        eventBus.off('REFRESH_OT', onRefreshOt);
         clearInterval(pingInterval);
       });
     },
