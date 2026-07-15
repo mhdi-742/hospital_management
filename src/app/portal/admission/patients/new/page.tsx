@@ -75,9 +75,38 @@ export default function NewAdmissionPage() {
   const getDoctorName = (id: string) =>
     options?.doctors.find(d => d.id === id)?.user.name ?? id;
 
+  const validateDemographics = () => {
+    if (!form.name.trim()) {
+      setError('Patient name is required');
+      return false;
+    }
+    if (!form.age.trim()) {
+      setError('Age is required');
+      return false;
+    }
+    const parsedAge = parseInt(form.age, 10);
+    if (isNaN(parsedAge) || parsedAge < 0 || parsedAge > 150) {
+      setError('Please enter a valid age between 0 and 150');
+      return false;
+    }
+    if (!form.gender) {
+      setError('Gender is required');
+      return false;
+    }
+    if (!form.contact.trim()) {
+      setError('Contact number is required');
+      return false;
+    }
+    setError('');
+    return true;
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.name.trim()) { setError('Patient name is required'); return; }
+    if (!validateDemographics()) {
+      setSection(0);
+      return;
+    }
     setError('');
     setSubmitting(true);
 
@@ -137,7 +166,12 @@ export default function NewAdmissionPage() {
           <button
             key={i}
             className={`${styles.step} ${section === i ? styles.stepActive : ''} ${section > i ? styles.stepDone : ''}`}
-            onClick={() => setSection(i)}
+            onClick={() => {
+              if (i > 0 && !validateDemographics()) {
+                return;
+              }
+              setSection(i);
+            }}
             type="button"
           >
             <span className={styles.stepNum}>{section > i ? '✓' : i + 1}</span>
@@ -147,23 +181,29 @@ export default function NewAdmissionPage() {
       </div>
 
       <form onSubmit={handleSubmit} className={styles.form}>
+        {error && (
+          <div className={styles.errorBox} style={{ marginBottom: '1.5rem' }}>
+            <span>⚠</span> {error}
+          </div>
+        )}
+
         {/* ── Step 0: Demographics ── */}
         {section === 0 && (
           <div className={styles.formCard}>
             <h2 className={styles.cardTitle}>Patient Demographics</h2>
             <div className={styles.grid2}>
               <div className={styles.field}>
-                <label className={styles.label}>Full Name</label>
+                <label className={styles.label}>Full Name <span style={{ color: '#ef4444' }}>*</span></label>
                 <input id="patient-name" className={styles.input} value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. Ravi Kumar" />
               </div>
               <div className={styles.field}>
-                <label className={styles.label}>Age</label>
+                <label className={styles.label}>Age <span style={{ color: '#ef4444' }}>*</span></label>
                 <input id="patient-age" type="number" className={styles.input} value={form.age} onChange={e => set('age', e.target.value)} placeholder="e.g. 45" min="0" max="150" />
               </div>
               <div className={styles.field}>
-                <label className={styles.label}>Gender</label>
+                <label className={styles.label}>Gender <span style={{ color: '#ef4444' }}>*</span></label>
                 <select id="patient-gender" className={styles.input} value={form.gender} onChange={e => set('gender', e.target.value)}>
-                  <option value="">Not specified</option>
+                  <option value="">Select gender…</option>
                   <option value="M">Male</option>
                   <option value="F">Female</option>
                   <option value="Other">Other</option>
@@ -177,7 +217,7 @@ export default function NewAdmissionPage() {
                 </select>
               </div>
               <div className={styles.field}>
-                <label className={styles.label}>Contact Number</label>
+                <label className={styles.label}>Contact Number <span style={{ color: '#ef4444' }}>*</span></label>
                 <input id="patient-contact" className={styles.input} value={form.contact} onChange={e => set('contact', e.target.value)} placeholder="+91 9876543210" />
               </div>
               <div className={styles.field}>
@@ -209,7 +249,17 @@ export default function NewAdmissionPage() {
             </div>
             <div className={styles.navBtns}>
               <div />
-              <button type="button" className={styles.nextBtn} onClick={() => setSection(1)}>Next: Medical Details →</button>
+              <button
+                type="button"
+                className={styles.nextBtn}
+                onClick={() => {
+                  if (validateDemographics()) {
+                    setSection(1);
+                  }
+                }}
+              >
+                Next: Medical Details →
+              </button>
             </div>
           </div>
         )}
@@ -410,11 +460,7 @@ export default function NewAdmissionPage() {
               </>
             )}
 
-            {error && (
-              <div className={styles.errorBox}>
-                <span>⚠</span> {error}
-              </div>
-            )}
+
 
             <div className={styles.navBtns}>
               <button type="button" className={styles.backBtn} onClick={() => setSection(1)}>← Back</button>

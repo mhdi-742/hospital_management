@@ -87,8 +87,27 @@ export async function POST(req: NextRequest) {
     procedureName, anaesthetist, scheduledTime, estimatedDuration,
   } = body;
 
-  if (!name) {
+  if (!name || !name.trim()) {
     return NextResponse.json({ error: 'Patient name is required' }, { status: 400 });
+  }
+
+  if (age === undefined || age === null || String(age).trim() === '') {
+    return NextResponse.json({ error: 'Age is required' }, { status: 400 });
+  }
+  const parsedAge = parseInt(String(age), 10);
+  if (isNaN(parsedAge) || parsedAge < 0 || parsedAge > 150) {
+    return NextResponse.json({ error: 'Age must be a valid number between 0 and 150' }, { status: 400 });
+  }
+
+  if (!gender) {
+    return NextResponse.json({ error: 'Gender is required' }, { status: 400 });
+  }
+  if (gender !== 'M' && gender !== 'F' && gender !== 'Other') {
+    return NextResponse.json({ error: 'Invalid gender value' }, { status: 400 });
+  }
+
+  if (!contact || !contact.trim()) {
+    return NextResponse.json({ error: 'Contact number is required' }, { status: 400 });
   }
 
   // Create patient + admission in a transaction
