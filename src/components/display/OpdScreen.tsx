@@ -80,7 +80,7 @@ export default function OpdScreen({ initialData, theme = 'dark' }: Props) {
     return () => clearInterval(id);
   }, []);
 
-  // ── Auto-page carousel + language switch on cycle completion ────────────
+  // ── Auto-page carousel ──────────────────────────────────────────────────
   useEffect(() => {
     if (totalPages <= 1) {
       // Single page: switch language on a fixed interval (same as one "cycle")
@@ -97,27 +97,32 @@ export default function OpdScreen({ initialData, theme = 'dark' }: Props) {
     const id = setInterval(() => {
       setIsVisible(false);
       setTimeout(() => {
-        setCurrentPage((p) => {
-          const nextPage = (p + 1) % totalPages;
-
-          // When wrapping back to page 0, a full cycle is complete
-          if (nextPage === 0) {
-            cycleCountRef.current += 1;
-            // Trigger language switch with fade
-            setIsLangTransitioning(true);
-            setTimeout(() => {
-              setLang((prev) => (prev === 'en' ? 'bn' : 'en'));
-              setIsLangTransitioning(false);
-            }, 500);
-          }
-
-          return nextPage;
-        });
+        setCurrentPage((p) => (p + 1) % totalPages);
         setIsVisible(true);
       }, 450);
     }, PAGE_INTERVAL_MS);
     return () => clearInterval(id);
   }, [totalPages]);
+
+  const prevPageRef = useRef(0);
+
+  // ── Detect when carousel wraps back to Page 0 to switch language ───────
+  useEffect(() => {
+    if (totalPages <= 1) return;
+
+    const prevPage = prevPageRef.current;
+    prevPageRef.current = currentPage;
+
+    if (currentPage === 0 && prevPage === totalPages - 1) {
+      setIsLangTransitioning(true);
+      const timer = setTimeout(() => {
+        setLang((prev) => (prev === 'en' ? 'bn' : 'en'));
+        setIsLangTransitioning(false);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [currentPage, totalPages]);
 
   // ── Data refresh via SSE ───────────────────────────────────────────────────
   const refreshData = useCallback(async () => {

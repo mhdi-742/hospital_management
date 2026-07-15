@@ -77,12 +77,12 @@ export default function OtScreen({ initialData, theme = 'dark' }: Props) {
   // ── Language state — toggles when scroll reaches bottom + snaps to top ──
   const [lang, setLang] = useState<Lang>('en');
   const [isLangTransitioning, setIsLangTransitioning] = useState(false);
+  const [isScrollable, setIsScrollable] = useState(false);
 
   // ── Auto-scroll refs ─────────────────────────────────────────────────────
   const wrapperRef   = useRef<HTMLDivElement>(null);
   const rafRef       = useRef<number>(0);
   const pauseRef     = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const fallbackRef  = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ── Theme ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -120,36 +120,42 @@ export default function OtScreen({ initialData, theme = 'dark' }: Props) {
     }, 500);
   }, []);
 
-  // ── Auto-scroll (rAF loop) — triggers language switch at bottom ─────────
+  // ── Check if table is scrollable (overflows client height) ─────────────
   useEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
 
-    // Clean up any previous fallback timer
-    if (fallbackRef.current) {
-      clearInterval(fallbackRef.current);
-      fallbackRef.current = null;
-    }
+    // Small delay ensures DOM and styles are fully loaded and rendered
+    const checkTimer = setTimeout(() => {
+      const scrollable = el.scrollHeight - el.clientHeight > 10;
+      setIsScrollable(scrollable);
+    }, 200);
+
+    return () => clearTimeout(checkTimer);
+  }, [data.entries]);
+
+  // ── Fallback language switch timer when table doesn't scroll ───────────
+  useEffect(() => {
+    if (isScrollable) return;
+
+    const intervalId = setInterval(() => {
+      switchLanguage();
+    }, FALLBACK_SWITCH_MS);
+
+    return () => clearInterval(intervalId);
+  }, [isScrollable, switchLanguage]);
+
+  // ── Auto-scroll (rAF loop) — triggers language switch at bottom ─────────
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el || !isScrollable) return;
 
     let lastTs = 0;
     let paused = false;
     let exactScrollTop = 0;
-    let contentFitsWithoutScrolling = false;
 
     const tick = (ts: number) => {
       if (!paused) {
-        // If content fits without scrolling, use fallback timer instead
-        if (el.scrollHeight <= el.clientHeight) {
-          if (!contentFitsWithoutScrolling) {
-            contentFitsWithoutScrolling = true;
-            // Set up a fallback language switch interval
-            fallbackRef.current = setInterval(switchLanguage, FALLBACK_SWITCH_MS);
-          }
-          lastTs = ts;
-          rafRef.current = requestAnimationFrame(tick);
-          return;
-        }
-
         const delta = lastTs ? (ts - lastTs) / 1000 : 0;
         exactScrollTop += SCROLL_PX_PER_SEC * delta;
         
@@ -195,10 +201,9 @@ export default function OtScreen({ initialData, theme = 'dark' }: Props) {
     return () => {
       clearTimeout(startTimer);
       if (pauseRef.current) clearTimeout(pauseRef.current);
-      if (fallbackRef.current) clearInterval(fallbackRef.current);
       cancelAnimationFrame(rafRef.current);
     };
-  }, [data.entries.length, switchLanguage]); // restart when row count changes
+  }, [isScrollable, switchLanguage]); // restart when row count changes
 
   // ── Clock ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -216,8 +221,17 @@ export default function OtScreen({ initialData, theme = 'dark' }: Props) {
   }, []);
 
   useEffect(() => {
-    const id = setInterval(refreshData, REFRESH_INTERVAL_MS);
-    return () => clearInterval(id);
+    const evtSource = new EventSource('/api/events');
+    evtSource.onmessage = () => {
+      refreshData();
+    };
+
+    const intervalId = setInterval(refreshData, REFRESH_INTERVAL_MS);
+
+    return () => {
+      evtSource.close();
+      clearInterval(intervalId);
+    };
   }, [refreshData]);
 
   // ── Computed stats ───────────────────────────────────────────────────────

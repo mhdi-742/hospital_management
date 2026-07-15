@@ -27,8 +27,65 @@ const opdJson = JSON.parse(fs.readFileSync(path.join(dataDir, 'opd.json'), 'utf-
 const ipdJson = JSON.parse(fs.readFileSync(path.join(dataDir, 'ipd.json'), 'utf-8'));
 const otJson  = JSON.parse(fs.readFileSync(path.join(dataDir, 'ot.json'),  'utf-8'));
 
+/* ── Dynamic Date Helpers ─────────────────────────────────────────────── */
+const baselineDate = new Date('2026-06-20T00:00:00Z');
+const currentDateTime = new Date();
+
+function getRelativeDate(oldDateStr: string): Date {
+  const oldDate = new Date(oldDateStr + 'T00:00:00Z');
+  const diffTime = oldDate.getTime() - baselineDate.getTime();
+  const diffDays = diffTime / (1000 * 60 * 60 * 24);
+  
+  const newDate = new Date(currentDateTime);
+  newDate.setDate(currentDateTime.getDate() + diffDays);
+  newDate.setHours(8, 0, 0, 0); // default to 8:00 AM
+  return newDate;
+}
+
+const MOCK_OPD_PATIENTS = [
+  { name: 'Amit Das', age: 28, gender: 'M', complaint: 'Fever and cold for 3 days' },
+  { name: 'Sita Banerjee', age: 34, gender: 'F', complaint: 'Severe headache and nausea' },
+  { name: 'Rahul Sen', age: 42, gender: 'M', complaint: 'Routine checkup for diabetes' },
+  { name: 'Priya Chakraborty', age: 24, gender: 'F', complaint: 'Sore throat and body aches' },
+  { name: 'Vikram Chatterjee', age: 50, gender: 'M', complaint: 'Chest congestion and cough' },
+  { name: 'Rupa Ganguly', age: 45, gender: 'F', complaint: 'Lower back pain' },
+  { name: 'Joydeb Roy', age: 60, gender: 'M', complaint: 'Hypertension follow-up' },
+  { name: 'Kabita Saha', age: 55, gender: 'F', complaint: 'Joint pain and swelling' },
+  { name: 'Animesh Ghosh', age: 31, gender: 'M', complaint: 'Stomach ache after meals' },
+  { name: 'Mithu Kundu', age: 38, gender: 'F', complaint: 'Skin rash on arm' },
+  { name: 'Sandip Paul', age: 27, gender: 'M', complaint: 'Sprained ankle' },
+  { name: 'Deblina Seal', age: 33, gender: 'F', complaint: 'Mild asthma symptoms' }
+];
+
+/* ── Doctor Helper ────────────────────────────────────────────────────── */
+async function getOrCreateDoctorByName(name: string, tx: typeof prisma) {
+  const existing = await tx.doctor.findFirst({
+    where: { user: { name: name } },
+  });
+  if (existing) return existing;
+
+  const email = `${name.toLowerCase().replace(/[^a-z]/g, '')}@hospital.local`;
+  const hashed = await bcrypt.hash('Doctor@123', 12);
+  const user = await tx.user.create({
+    data: {
+      email,
+      password: hashed,
+      name: name,
+      role: 'DOCTOR',
+    },
+  });
+
+  return await tx.doctor.create({
+    data: {
+      userId: user.id,
+      designation: 'Consultant Specialist',
+      roomNo: 'TBD',
+    },
+  });
+}
+
 async function main() {
-  console.log('🌱  Starting seed...');
+  console.log('🌱  Starting seed with relative dates...');
 
   // ── Hospital settings ─────────────────────────────────────────────
   await prisma.hospitalSettings.upsert({
@@ -96,6 +153,7 @@ async function main() {
       await prisma.opdSession.upsert({
         where: { id: doc.id + '-session' },
         update: {
+          date:          today,
           status:        doc.status,
           currentToken:  doc.currentToken ?? null,
           totalTokens:   doc.totalTokens,
@@ -113,6 +171,84 @@ async function main() {
           avgWaitMinutes: doc.avgWaitMinutes,
         },
       });
+
+      // ── Seed patient queue for this session if it is running, upcoming or break ──
+      const opdSessionId = doc.id + '-session';
+      if (doc.status === 'running' || doc.status === 'upcoming' || doc.status === 'break') {
+        const sessionAdmissions = await prisma.admission.findMany({
+          where: { opdSessionId },
+          select: { id: true },
+        });
+        const sessionAdmissionIds = sessionAdmissions.map((a) => a.id);
+
+        await prisma.patientDoctor.deleteMany({
+          where: { admissionId: { in: sessionAdmissionIds } },
+        });
+        await prisma.admission.deleteMany({
+          where: { id: { in: sessionAdmissionIds } },
+        });
+
+        // Create a dynamic queue of 5-8 patients
+        const numPatients = Math.floor(Math.random() * 4) + 5; // 5 to 8 patients
+        const currentToken = doc.currentToken ?? (doc.status === 'running' ? Math.floor(numPatients / 2) : null);
+
+        // Update the session's token counts
+        await prisma.opdSession.update({
+          where: { id: opdSessionId },
+          data: {
+            date: today,
+            totalTokens: numPatients,
+            currentToken: currentToken,
+          },
+        });
+
+        for (let i = 0; i < numPatients; i++) {
+          const patientTemplate = MOCK_OPD_PATIENTS[(doc.id.charCodeAt(0) + i) % MOCK_OPD_PATIENTS.length];
+          const patientId = `${opdSessionId}-patient-${i}`;
+
+          const dbPatient = await prisma.patient.upsert({
+            where: { id: patientId },
+            update: { name: patientTemplate.name, age: patientTemplate.age, gender: patientTemplate.gender as any },
+            create: {
+              id: patientId,
+              name: patientTemplate.name,
+              age: patientTemplate.age,
+              gender: patientTemplate.gender as any,
+              chiefComplaint: patientTemplate.complaint,
+            },
+          });
+
+          const admittedAt = new Date(today);
+          admittedAt.setHours(8, i * 15, 0, 0); // spaced 15 mins apart starting at 8:00 AM
+
+          const admissionId = `${opdSessionId}-adm-${i}`;
+          await prisma.admission.upsert({
+            where: { id: admissionId },
+            update: {
+              status: 'active',
+              admittedAt,
+            },
+            create: {
+              id: admissionId,
+              patientId: dbPatient.id,
+              type: 'OPD',
+              status: 'active',
+              opdSessionId: opdSessionId,
+              admittedAt,
+            },
+          });
+
+          await prisma.patientDoctor.upsert({
+            where: { admissionId_doctorId: { admissionId, doctorId: doctor.id } },
+            update: {},
+            create: {
+              admissionId,
+              doctorId: doctor.id,
+              role: 'primary',
+            },
+          });
+        }
+      }
 
       console.log(`  👨‍⚕️  Doctor: ${doc.name} → ${doctorEmail} / Doctor@123`);
     }
@@ -150,12 +286,12 @@ async function main() {
           wardId:           dbWard.id,
           bedNo:            patient.bedNo,
           patientCondition: patient.status,
-          admittedAt:       new Date(patient.admissionDate),
+          admittedAt:       getRelativeDate(patient.admissionDate),
         },
       });
     }
   }
-  console.log('✅  Wards & IPD Patients seeded.');
+  console.log('✅  Wards & IPD Patients seeded with relative dates.');
 
   // ── OT Rooms from OT JSON ─────────────────────────────────────────
   const otRoomSet = new Set<string>();
@@ -171,8 +307,100 @@ async function main() {
   }
   console.log('✅  OT Rooms seeded.');
 
+  // ── OT Cases from OT JSON ──────────────────────────────────────────
+  console.log('🌱  Seeding OT Cases & Assistants...');
+  await prisma.otAssistant.deleteMany({});
+  await prisma.otCase.deleteMany({});
+
+  // Find all OT admission IDs to clear referencing records first
+  const otAdmissions = await prisma.admission.findMany({
+    where: { type: 'OT' },
+    select: { id: true },
+  });
+  const otAdmissionIds = otAdmissions.map((a) => a.id);
+
+  await prisma.patientDoctor.deleteMany({
+    where: { admissionId: { in: otAdmissionIds } },
+  });
+  await prisma.transferRequest.deleteMany({
+    where: { admissionId: { in: otAdmissionIds } },
+  });
+  await prisma.admission.deleteMany({
+    where: { id: { in: otAdmissionIds } },
+  });
+
+  for (const entry of otJson.entries) {
+    const dbPatient = await prisma.patient.upsert({
+      where: { id: entry.id + '-patient' },
+      update: { name: entry.patientName, age: entry.patientAge, gender: entry.patientGender },
+      create: {
+        id: entry.id + '-patient',
+        name: entry.patientName,
+        age: entry.patientAge,
+        gender: entry.patientGender,
+      },
+    });
+
+    const dbAdmission = await prisma.admission.upsert({
+      where: { id: entry.id + '-admission' },
+      update: {},
+      create: {
+        id: entry.id + '-admission',
+        patientId: dbPatient.id,
+        type: 'OT',
+        status: 'active',
+        admittedAt: new Date(),
+      },
+    });
+
+    const otRoom = await prisma.otRoom.findUnique({
+      where: { roomNo: entry.roomNo },
+    });
+
+    const leadDoc = await getOrCreateDoctorByName(entry.doctor, prisma);
+    const dbStatus = entry.status === 'in-progress' ? 'in_progress' : entry.status;
+
+    const otCase = await prisma.otCase.upsert({
+      where: { id: entry.id },
+      update: {
+        otRoomId: otRoom?.id ?? null,
+        leadDoctorId: leadDoc.id,
+        procedureName: entry.procedureName,
+        anaesthetist: entry.anaesthetist,
+        scheduledTime: entry.scheduledTime,
+        estimatedDuration: entry.estimatedDuration,
+        status: dbStatus as any,
+        notes: entry.notes,
+      },
+      create: {
+        id: entry.id,
+        admissionId: dbAdmission.id,
+        otRoomId: otRoom?.id ?? null,
+        leadDoctorId: leadDoc.id,
+        procedureName: entry.procedureName,
+        anaesthetist: entry.anaesthetist,
+        scheduledTime: entry.scheduledTime,
+        estimatedDuration: entry.estimatedDuration,
+        status: dbStatus as any,
+        notes: entry.notes,
+      },
+    });
+
+    for (const asstName of entry.assistants) {
+      const asstDoc = await getOrCreateDoctorByName(asstName, prisma);
+      await prisma.otAssistant.upsert({
+        where: { otCaseId_doctorId: { otCaseId: otCase.id, doctorId: asstDoc.id } },
+        update: {},
+        create: {
+          otCaseId: otCase.id,
+          doctorId: asstDoc.id,
+        },
+      });
+    }
+  }
+  console.log('✅  OT Cases & Assistants seeded.');
+
   // ── Announcements ─────────────────────────────────────────────────
-  // Clear existing first to avoid duplicates on re-seed
   await prisma.announcement.deleteMany({});
   for (const text of opdJson.announcements) {
     await prisma.announcement.create({ data: { text, board: 'OPD' } });

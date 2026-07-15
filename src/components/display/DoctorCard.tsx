@@ -109,7 +109,7 @@ export default function DoctorCard({
             <div className={styles.tokenCount}>
               <span className={styles.tokenLabel}>{t.common.token}</span>
               <span className={isActive ? styles.tokenNumActive : styles.tokenNum}>
-                {hasToken ? localizeNumber(doctor.currentToken!, lang) : '—'}
+                {hasToken ? localizeNumber(doctor.currentToken!, lang) : '--'}
               </span>
               <span className={styles.tokenOf}>/ {localizeNumber(doctor.totalTokens, lang)}</span>
             </div>

@@ -142,6 +142,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     const { eventBus } = await import('@/lib/eventBus');
     eventBus.emit('REFRESH_OPD', {});
     eventBus.emit('REFRESH_OT', {});
+    eventBus.emit('REFRESH_IPD', {});
 
     await prisma.auditLog.create({
       data: {

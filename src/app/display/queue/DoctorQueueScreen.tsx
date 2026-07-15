@@ -308,7 +308,10 @@ export default function DoctorQueueScreen({ initialData }: { initialData: OpdApi
                     <p className={styles.setupDept} style={{ color: doc.departmentColor }}>
                       {doc.departmentName}
                     </p>
-                    <p className={styles.setupRoom}>Room {doc.roomNo}</p>
+                    <div className={styles.setupMeta}>
+                      <span className={styles.setupRoom}>Room {doc.roomNo}</span>
+                      <span className={styles.setupTime}>{doc.startTime} – {doc.endTime}</span>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -360,12 +363,18 @@ export default function DoctorQueueScreen({ initialData }: { initialData: OpdApi
                   <div className={styles.servingName} style={{ color: 'var(--text-muted)' }}>—</div>
                 </>
               ) : (
-                <>
-                  <div className={styles.servingToken} style={{ color: 'var(--text-muted)' }}>—</div>
-                  <div className={styles.servingName} style={{ color: 'var(--text-muted)', fontSize: '2rem' }}>
+                <div className={styles.emptyServingState}>
+                  <div className={styles.emptyServingIcon}>
+                    {queueData?.status === 'completed' ? (
+                      <CheckCircleIcon />
+                    ) : (
+                      <ClockIconBig />
+                    )}
+                  </div>
+                  <div className={styles.emptyServingText}>
                     {queueData?.status === 'completed' ? 'Session Completed' : 'Waiting for patients...'}
                   </div>
-                </>
+                </div>
               )}
             </div>
 
@@ -408,5 +417,26 @@ export default function DoctorQueueScreen({ initialData }: { initialData: OpdApi
         <MarqueeTicker announcements={data.announcements} />
       </footer>
     </div>
+  );
+}
+
+/* ── Status SVG Icons ────────────────────────────────────────────────── */
+function ClockIconBig() {
+  return (
+    <svg width="100" height="100" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  );
+}
+
+function CheckCircleIcon() {
+  return (
+    <svg width="100" height="100" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
   );
 }
