@@ -1,13 +1,22 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import type { OtApiResponse, OtEntry, OtStatus } from '../../lib/types';
+import {
+  translations,
+  localizeTime,
+  localizeDate,
+  localizeNumber,
+  type Lang,
+} from '../../lib/displayTranslations';
+import { useTransliterate } from '../../hooks/useTransliterate';
 import MarqueeTicker from './MarqueeTicker';
 import styles from './OtScreen.module.css';
 
 const REFRESH_INTERVAL_MS = 30_000;
 const SCROLL_PX_PER_SEC  = 22;   // comfortable reading speed on a TV
 const PAUSE_AT_BOTTOM_MS = 2500; // pause before snapping back to top
+const FALLBACK_SWITCH_MS = 20_000; // fallback interval when content fits without scrolling
 
 interface Props {
   initialData: OtApiResponse;
@@ -15,42 +24,46 @@ interface Props {
 }
 
 /* ── Status configuration ───────────────────────────────────────── */
-const STATUS_META: Record<
-  OtStatus,
-  { label: string; badgeClass: string; rowClass: string; pulse: boolean }
-> = {
+type StatusMetaEntry = {
+  labelKey: keyof typeof translations.en.ot;
+  badgeClass: string;
+  rowClass: string;
+  pulse: boolean;
+};
+
+const STATUS_META: Record<OtStatus, StatusMetaEntry> = {
   'in-progress': {
-    label: 'In Progress',
+    labelKey: 'inProgress',
     badgeClass: styles.statusInProgress,
     rowClass: styles.trActive,
     pulse: true,
   },
   preparing: {
-    label: 'Preparing',
+    labelKey: 'preparing',
     badgeClass: styles.statusPreparing,
     rowClass: styles.trPreparing,
     pulse: true,
   },
   scheduled: {
-    label: 'Scheduled',
+    labelKey: 'scheduled',
     badgeClass: styles.statusScheduled,
     rowClass: '',
     pulse: false,
   },
   delayed: {
-    label: 'Delayed',
+    labelKey: 'delayed',
     badgeClass: styles.statusDelayed,
     rowClass: styles.trDelayed,
     pulse: true,
   },
   completed: {
-    label: 'Completed',
+    labelKey: 'completed',
     badgeClass: styles.statusCompleted,
     rowClass: styles.trCompleted,
     pulse: false,
   },
   cancelled: {
-    label: 'Cancelled',
+    labelKey: 'cancelled',
     badgeClass: styles.statusCancelled,
     rowClass: styles.trCancelled,
     pulse: false,
@@ -61,10 +74,15 @@ export default function OtScreen({ initialData, theme = 'dark' }: Props) {
   const [data, setData] = useState<OtApiResponse>(initialData);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
+  // ── Language state — toggles when scroll reaches bottom + snaps to top ──
+  const [lang, setLang] = useState<Lang>('en');
+  const [isLangTransitioning, setIsLangTransitioning] = useState(false);
+
   // ── Auto-scroll refs ─────────────────────────────────────────────────────
   const wrapperRef   = useRef<HTMLDivElement>(null);
   const rafRef       = useRef<number>(0);
   const pauseRef     = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fallbackRef  = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ── Theme ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -76,19 +94,57 @@ export default function OtScreen({ initialData, theme = 'dark' }: Props) {
     return () => document.documentElement.removeAttribute('data-theme');
   }, [theme]);
 
-  // ── Auto-scroll (rAF loop) ───────────────────────────────────────────────
+  // ── Collect all names for transliteration ────────────────────────────────
+  const allNames = useMemo(() => {
+    const names: string[] = [];
+    for (const entry of data.entries) {
+      names.push(entry.patientName);
+      names.push(entry.doctor);
+      names.push(entry.anaesthetist);
+      names.push(entry.procedureName);
+      for (const asst of entry.assistants) {
+        names.push(asst);
+      }
+    }
+    return names;
+  }, [data.entries]);
+
+  const { transliterations } = useTransliterate(allNames, true);
+
+  // ── Language switch helper ─────────────────────────────────────────────
+  const switchLanguage = useCallback(() => {
+    setIsLangTransitioning(true);
+    setTimeout(() => {
+      setLang((prev) => (prev === 'en' ? 'bn' : 'en'));
+      setIsLangTransitioning(false);
+    }, 500);
+  }, []);
+
+  // ── Auto-scroll (rAF loop) — triggers language switch at bottom ─────────
   useEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
 
+    // Clean up any previous fallback timer
+    if (fallbackRef.current) {
+      clearInterval(fallbackRef.current);
+      fallbackRef.current = null;
+    }
+
     let lastTs = 0;
     let paused = false;
     let exactScrollTop = 0;
+    let contentFitsWithoutScrolling = false;
 
     const tick = (ts: number) => {
       if (!paused) {
-        // If content fits without scrolling, don't scroll
+        // If content fits without scrolling, use fallback timer instead
         if (el.scrollHeight <= el.clientHeight) {
+          if (!contentFitsWithoutScrolling) {
+            contentFitsWithoutScrolling = true;
+            // Set up a fallback language switch interval
+            fallbackRef.current = setInterval(switchLanguage, FALLBACK_SWITCH_MS);
+          }
           lastTs = ts;
           rafRef.current = requestAnimationFrame(tick);
           return;
@@ -104,10 +160,13 @@ export default function OtScreen({ initialData, theme = 'dark' }: Props) {
           el.scrollTop = exactScrollTop;
         }
 
-        // Reached the bottom — pause then snap to top
+        // Reached the bottom — pause, switch language, then snap to top
         if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) {
           paused = true;
           pauseRef.current = setTimeout(() => {
+            // Switch language when we snap back to top
+            switchLanguage();
+
             // Force instant scroll snap by temporarily disabling overflow
             el.style.overflowY = 'hidden';
             el.scrollTop = 0;
@@ -136,9 +195,10 @@ export default function OtScreen({ initialData, theme = 'dark' }: Props) {
     return () => {
       clearTimeout(startTimer);
       if (pauseRef.current) clearTimeout(pauseRef.current);
+      if (fallbackRef.current) clearInterval(fallbackRef.current);
       cancelAnimationFrame(rafRef.current);
     };
-  }, [data.entries.length]); // restart when row count changes
+  }, [data.entries.length, switchLanguage]); // restart when row count changes
 
   // ── Clock ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -166,20 +226,43 @@ export default function OtScreen({ initialData, theme = 'dark' }: Props) {
   const delayedCount   = data.entries.filter((e) => e.status === 'delayed').length;
   const completedCount = data.entries.filter((e) => e.status === 'completed').length;
 
-  // ── Time formatters ───────────────────────────────────────────────────────
-  const fmtTime = (d: Date) =>
-    d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-  const fmtDate = (d: Date) =>
-    d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  // ── Translation helpers ──────────────────────────────────────────────────
+  const t = translations[lang];
 
-  const fmtDuration = (mins: number) =>
-    mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60 > 0 ? `${mins % 60}m` : ''}`.trim() : `${mins}m`;
+  /** Get transliterated value or fall back to original */
+  const tr = (text: string) => {
+    if (lang === 'bn' && transliterations.has(text)) {
+      return transliterations.get(text)!;
+    }
+    return text;
+  };
+
+  const fmtDuration = (mins: number) => {
+    const localMins = localizeNumber(mins % 60, lang);
+    const localHours = localizeNumber(Math.floor(mins / 60), lang);
+    if (mins >= 60) {
+      return `${localHours}h ${mins % 60 > 0 ? `${localMins}m` : ''}`.trim();
+    }
+    return `${localMins}m`;
+  };
 
   const rowClass = (entry: OtEntry) =>
     [styles.tr, STATUS_META[entry.status].rowClass].filter(Boolean).join(' ');
 
+  const genderLabel = (g: string) => {
+    if (g === 'M') return t.common.male;
+    if (g === 'F') return t.common.female;
+    return t.common.other;
+  };
+
   return (
-    <div className={styles.screen}>
+    <div
+      className={styles.screen}
+      style={{
+        opacity: isLangTransitioning ? 0 : 1,
+        transition: 'opacity 0.5s ease',
+      }}
+    >
 
       {/* ── Header ── */}
       <header className={styles.header}>
@@ -192,39 +275,39 @@ export default function OtScreen({ initialData, theme = 'dark' }: Props) {
             />
           </div>
           <div className={styles.headerTitles}>
-            <p className={styles.hospitalName}>{data.hospitalName}</p>
-            <p className={styles.screenTitle}>Operation Theatre — Live Schedule</p>
+            <p className={styles.hospitalName}>{t.common.hospitalName}</p>
+            <p className={styles.screenTitle}>{t.ot.subtitle}</p>
           </div>
         </div>
 
         <div className={styles.headerCenter}>
           {activeCount > 0 && (
             <span className={`${styles.pill} ${styles.pillActive}`}>
-              🔴 {activeCount} Active
+              🔴 {localizeNumber(activeCount, lang)} {t.ot.active}
             </span>
           )}
           <span className={`${styles.pill} ${styles.pillScheduled}`}>
-            📋 {scheduledCount} Scheduled
+            📋 {localizeNumber(scheduledCount, lang)} {t.ot.scheduled}
           </span>
           {delayedCount > 0 && (
             <span className={`${styles.pill} ${styles.pillDelayed}`}>
-              ⏳ {delayedCount} Delayed
+              ⏳ {localizeNumber(delayedCount, lang)} {t.ot.delayed}
             </span>
           )}
           <span className={`${styles.pill} ${styles.pillCompleted}`}>
-            ✓ {completedCount} Done
+            ✓ {localizeNumber(completedCount, lang)} {t.ot.done}
           </span>
           <span className={styles.livePill} role="status" aria-live="polite">
             <span className={styles.liveDot} aria-hidden="true" />
-            LIVE
+            {t.common.live}
           </span>
         </div>
 
         <div className={styles.headerRight}>
           {currentTime ? (
             <>
-              <p className={styles.clock}>{fmtTime(currentTime)}</p>
-              <p className={styles.calDate}>{fmtDate(currentTime)}</p>
+              <p className={styles.clock}>{localizeTime(currentTime, lang)}</p>
+              <p className={styles.calDate}>{localizeDate(currentTime, lang)}</p>
             </>
           ) : (
             <>
@@ -239,7 +322,7 @@ export default function OtScreen({ initialData, theme = 'dark' }: Props) {
       <main className={styles.main}>
         <div className={styles.tableOuter}>
           <div className={styles.tableWrapper} ref={wrapperRef}>
-            <table className={styles.table} aria-label="OT Schedule">
+            <table className={styles.table} aria-label={t.ot.subtitle}>
             <colgroup>
               <col className={styles.colRoom} />
               <col className={styles.colStatus} />
@@ -254,31 +337,32 @@ export default function OtScreen({ initialData, theme = 'dark' }: Props) {
 
             <thead className={styles.thead}>
               <tr>
-                <th className={styles.th} scope="col">OT Room</th>
-                <th className={styles.th} scope="col">Status</th>
-                <th className={styles.th} scope="col">Type</th>
-                <th className={styles.th} scope="col">Procedure</th>
-                <th className={styles.th} scope="col">Patient</th>
-                <th className={styles.th} scope="col">Surgeon</th>
-                <th className={styles.th} scope="col">Anaesthetist</th>
-                <th className={styles.th} scope="col">Time</th>
-                <th className={styles.th} scope="col">Est. Dur.</th>
+                <th className={styles.th} scope="col">{t.ot.otRoom}</th>
+                <th className={styles.th} scope="col">{t.ot.status}</th>
+                <th className={styles.th} scope="col">{t.ot.type}</th>
+                <th className={styles.th} scope="col">{t.ot.procedure}</th>
+                <th className={styles.th} scope="col">{t.ot.patient}</th>
+                <th className={styles.th} scope="col">{t.ot.surgeon}</th>
+                <th className={styles.th} scope="col">{t.ot.anaesthetist}</th>
+                <th className={styles.th} scope="col">{t.ot.time}</th>
+                <th className={styles.th} scope="col">{t.ot.estDur}</th>
               </tr>
             </thead>
 
             <tbody>
               {data.entries.map((entry: OtEntry) => {
                 const meta = STATUS_META[entry.status];
+                const statusLabel = t.ot[meta.labelKey] as string;
 
                 return (
                   <tr
                     key={entry.id}
                     className={rowClass(entry)}
-                    aria-label={`${entry.roomNo}: ${entry.procedureName} for ${entry.patientName}`}
+                    aria-label={`${entry.roomNo}: ${tr(entry.procedureName)} for ${tr(entry.patientName)}`}
                   >
                     {/* OT Room */}
                     <td className={styles.td}>
-                      <span className={styles.roomBadge}>{entry.roomNo}</span>
+                      <span className={styles.roomBadge}>{localizeNumber(entry.roomNo, lang)}</span>
                     </td>
 
                     {/* Status */}
@@ -288,7 +372,7 @@ export default function OtScreen({ initialData, theme = 'dark' }: Props) {
                           className={`${styles.statusDot} ${meta.pulse ? styles.statusDotPulse : ''}`}
                           aria-hidden="true"
                         />
-                        {meta.label}
+                        {statusLabel}
                       </span>
                     </td>
 
@@ -299,7 +383,7 @@ export default function OtScreen({ initialData, theme = 'dark' }: Props) {
 
                     {/* Procedure */}
                     <td className={styles.td}>
-                      <p className={styles.procName}>{entry.procedureName}</p>
+                      <p className={styles.procName}>{tr(entry.procedureName)}</p>
                       {entry.notes && (
                         <span className={styles.notesTag} title={entry.notes}>
                           📝 {entry.notes}
@@ -309,25 +393,25 @@ export default function OtScreen({ initialData, theme = 'dark' }: Props) {
 
                     {/* Patient */}
                     <td className={styles.td}>
-                      <p className={styles.patientName}>{entry.patientName}</p>
+                      <p className={styles.patientName}>{tr(entry.patientName)}</p>
                       <p className={styles.patientMeta}>
-                        {entry.patientAge} yrs · {entry.patientGender === 'M' ? 'Male' : entry.patientGender === 'F' ? 'Female' : 'Other'}
+                        {localizeNumber(entry.patientAge, lang)} {t.common.yrs} · {genderLabel(entry.patientGender)}
                       </p>
                     </td>
 
                     {/* Surgeon */}
                     <td className={styles.td}>
-                      <p className={styles.doctorName}>{entry.doctor}</p>
+                      <p className={styles.doctorName}>{tr(entry.doctor)}</p>
                       {entry.assistants.length > 0 && (
                         <p className={styles.assistantsList}>
-                          + {entry.assistants.join(', ')}
+                          + {entry.assistants.map(a => tr(a)).join(', ')}
                         </p>
                       )}
                     </td>
 
                     {/* Anaesthetist */}
                     <td className={styles.td}>
-                      <p className={styles.anaesthetist}>{entry.anaesthetist}</p>
+                      <p className={styles.anaesthetist}>{tr(entry.anaesthetist)}</p>
                     </td>
 
                     {/* Scheduled Time */}

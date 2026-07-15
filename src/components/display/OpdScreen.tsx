@@ -1,7 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import type { OpdApiResponse, FlatDoctor } from '../../lib/types';
+import {
+  translations,
+  localizeTime,
+  localizeDate,
+  localizeNumber,
+  type Lang,
+} from '../../lib/displayTranslations';
+import { useTransliterate } from '../../hooks/useTransliterate';
 import DoctorCard from './DoctorCard';
 import TokenCallout from './TokenCallout';
 import MarqueeTicker from './MarqueeTicker';
@@ -22,6 +30,11 @@ export default function OpdScreen({ initialData, theme = 'dark' }: Props) {
   const [isVisible, setIsVisible] = useState(true);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
+  // ── Language state — toggles after each full carousel cycle ──────────────
+  const [lang, setLang] = useState<Lang>('en');
+  const [isLangTransitioning, setIsLangTransitioning] = useState(false);
+  const cycleCountRef = useRef(0);
+
   // ── Apply theme to <html data-theme> so vars cascade to every component ──
   useEffect(() => {
     if (theme === 'light') {
@@ -32,7 +45,7 @@ export default function OpdScreen({ initialData, theme = 'dark' }: Props) {
     return () => document.documentElement.removeAttribute('data-theme');
   }, [theme]);
 
-  const totalPages = Math.ceil(data.doctors.length / CARDS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(data.doctors.length / CARDS_PER_PAGE));
 
   const visibleDoctors: FlatDoctor[] = data.doctors.slice(
     currentPage * CARDS_PER_PAGE,
@@ -46,6 +59,20 @@ export default function OpdScreen({ initialData, theme = 'dark' }: Props) {
     (d) => d.status === 'running' && d.currentToken !== null
   );
 
+  // ── Collect all names for transliteration ────────────────────────────────
+  const allNames = useMemo(() => {
+    const names: string[] = [];
+    for (const doc of data.doctors) {
+      names.push(doc.name);
+      names.push(doc.departmentName);
+      if (doc.designation) names.push(doc.designation);
+      if (doc.departmentFloor) names.push(doc.departmentFloor);
+    }
+    return names;
+  }, [data.doctors]);
+
+  const { transliterations } = useTransliterate(allNames, true);
+
   // ── Clock (hydration-safe — only set after mount) ──────────────────────────
   useEffect(() => {
     setCurrentTime(new Date());
@@ -53,13 +80,39 @@ export default function OpdScreen({ initialData, theme = 'dark' }: Props) {
     return () => clearInterval(id);
   }, []);
 
-  // ── Auto-page carousel ─────────────────────────────────────────────────────
+  // ── Auto-page carousel + language switch on cycle completion ────────────
   useEffect(() => {
-    if (totalPages <= 1) return;
+    if (totalPages <= 1) {
+      // Single page: switch language on a fixed interval (same as one "cycle")
+      const id = setInterval(() => {
+        setIsLangTransitioning(true);
+        setTimeout(() => {
+          setLang((prev) => (prev === 'en' ? 'bn' : 'en'));
+          setIsLangTransitioning(false);
+        }, 500);
+      }, PAGE_INTERVAL_MS);
+      return () => clearInterval(id);
+    }
+
     const id = setInterval(() => {
       setIsVisible(false);
       setTimeout(() => {
-        setCurrentPage((p) => (p + 1) % totalPages);
+        setCurrentPage((p) => {
+          const nextPage = (p + 1) % totalPages;
+
+          // When wrapping back to page 0, a full cycle is complete
+          if (nextPage === 0) {
+            cycleCountRef.current += 1;
+            // Trigger language switch with fade
+            setIsLangTransitioning(true);
+            setTimeout(() => {
+              setLang((prev) => (prev === 'en' ? 'bn' : 'en'));
+              setIsLangTransitioning(false);
+            }, 500);
+          }
+
+          return nextPage;
+        });
         setIsVisible(true);
       }, 450);
     }, PAGE_INTERVAL_MS);
@@ -97,53 +150,53 @@ export default function OpdScreen({ initialData, theme = 'dark' }: Props) {
     }, 450);
   };
 
-  // ── Time formatters ────────────────────────────────────────────────────────
-  const fmtTime = (d: Date) =>
-    d.toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true,
-    });
+  // ── Translation helpers ─────────────────────────────────────────────────────
+  const t = translations[lang];
 
-  const fmtDate = (d: Date) =>
-    d.toLocaleDateString('en-IN', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
+  /** Get transliterated value or fall back to original */
+  const tr = (text: string) => {
+    if (lang === 'bn' && transliterations.has(text)) {
+      return transliterations.get(text)!;
+    }
+    return text;
+  };
 
   return (
-    <div className={styles.screen}>
+    <div
+      className={styles.screen}
+      style={{
+        opacity: isLangTransitioning ? 0 : 1,
+        transition: 'opacity 0.5s ease',
+      }}
+    >
       {/* ── Header ── */}
       <header className={styles.header}>
         <div className={styles.headerLeft}>
           <div className={styles.logoMark}>
             <img
               src="https://mikkymeghahospital.com/wp-content/uploads/2025/09/m.png"
-              alt="Apex City General Hospital Logo"
+              alt="Hospital Logo"
               className={styles.logoImage}
             />
           </div>
           <div>
-            <p className={styles.hospitalName}>{data.hospitalName}</p>
-            <p className={styles.headerSub}>Outpatient Department — Live Display</p>
+            <p className={styles.hospitalName}>{t.common.hospitalName}</p>
+            <p className={styles.headerSub}>{t.opd.subtitle}</p>
           </div>
         </div>
 
         <div className={styles.headerCenter}>
           <span className={styles.livePill} role="status" aria-live="polite">
             <span className={styles.liveDot} aria-hidden="true" />
-            LIVE
+            {t.common.live}
           </span>
         </div>
 
         <div className={styles.headerRight}>
           {currentTime ? (
             <>
-              <p className={styles.clock}>{fmtTime(currentTime)}</p>
-              <p className={styles.calDate}>{fmtDate(currentTime)}</p>
+              <p className={styles.clock}>{localizeTime(currentTime, lang)}</p>
+              <p className={styles.calDate}>{localizeDate(currentTime, lang)}</p>
             </>
           ) : (
             <>
@@ -160,10 +213,10 @@ export default function OpdScreen({ initialData, theme = 'dark' }: Props) {
         {/* Doctor grid */}
         <section className={styles.gridSection}>
           <div className={styles.gridMeta}>
-            <span className={styles.gridLabel}>All Doctors</span>
+            <span className={styles.gridLabel}>{t.opd.allDoctors}</span>
             {totalPages > 1 && (
               <span className={styles.pageChip}>
-                {currentPage + 1} / {totalPages}
+                {localizeNumber(currentPage + 1, lang)} / {localizeNumber(totalPages, lang)}
               </span>
             )}
           </div>
@@ -177,7 +230,15 @@ export default function OpdScreen({ initialData, theme = 'dark' }: Props) {
             }}
           >
             {visibleDoctors.map((doc) => (
-              <DoctorCard key={doc.id} doctor={doc} />
+              <DoctorCard
+                key={doc.id}
+                doctor={doc}
+                lang={lang}
+                transliteratedName={tr(doc.name) !== doc.name ? tr(doc.name) : undefined}
+                transliteratedDept={tr(doc.departmentName) !== doc.departmentName ? tr(doc.departmentName) : undefined}
+                transliteratedDesignation={doc.designation && tr(doc.designation) !== doc.designation ? tr(doc.designation) : undefined}
+                transliteratedFloor={doc.departmentFloor && tr(doc.departmentFloor) !== doc.departmentFloor ? tr(doc.departmentFloor) : undefined}
+              />
             ))}
           </div>
 
@@ -204,6 +265,8 @@ export default function OpdScreen({ initialData, theme = 'dark' }: Props) {
             consultations={runningConsultations}
             allDoctors={data.doctors}
             visibleDoctorIds={visibleDoctorIds}
+            lang={lang}
+            transliterations={transliterations}
           />
         </aside>
       </main>

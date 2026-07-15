@@ -1,27 +1,46 @@
 import type { FlatDoctor, DoctorStatus } from '../../lib/types';
+import { translations, localizeNumber, type Lang } from '../../lib/displayTranslations';
 import styles from './DoctorCard.module.css';
 
 /* ── Status configuration map ──────────────────────────────────────── */
 interface StatusMeta {
-  label: string;
+  labelKey: keyof typeof translations.en.doctorCard;
   dotClass: string;
   cardClass: string;
 }
 
 const STATUS: Record<DoctorStatus, StatusMeta> = {
-  running:     { label: 'Consulting',   dotClass: styles.dotRunning,     cardClass: styles.cardRunning },
-  upcoming:    { label: 'Upcoming',     dotClass: styles.dotUpcoming,    cardClass: styles.cardUpcoming },
-  break:       { label: 'On Break',     dotClass: styles.dotBreak,       cardClass: styles.cardBreak },
-  completed:   { label: 'Completed',    dotClass: styles.dotCompleted,   cardClass: styles.cardCompleted },
-  unavailable: { label: 'Unavailable',  dotClass: styles.dotUnavailable, cardClass: styles.cardUnavailable },
+  running:     { labelKey: 'consulting',   dotClass: styles.dotRunning,     cardClass: styles.cardRunning },
+  upcoming:    { labelKey: 'upcoming',     dotClass: styles.dotUpcoming,    cardClass: styles.cardUpcoming },
+  break:       { labelKey: 'onBreak',      dotClass: styles.dotBreak,       cardClass: styles.cardBreak },
+  completed:   { labelKey: 'completed',    dotClass: styles.dotCompleted,   cardClass: styles.cardCompleted },
+  unavailable: { labelKey: 'unavailable',  dotClass: styles.dotUnavailable, cardClass: styles.cardUnavailable },
 };
 
 interface Props {
   doctor: FlatDoctor;
+  lang?: Lang;
+  /** Pre-transliterated Bengali name (if available) */
+  transliteratedName?: string;
+  /** Pre-transliterated Bengali department name (if available) */
+  transliteratedDept?: string;
+  /** Pre-transliterated Bengali designation (if available) */
+  transliteratedDesignation?: string;
+  /** Pre-transliterated Bengali floor (if available) */
+  transliteratedFloor?: string;
 }
 
-export default function DoctorCard({ doctor }: Props) {
+export default function DoctorCard({
+  doctor,
+  lang = 'en',
+  transliteratedName,
+  transliteratedDept,
+  transliteratedDesignation,
+  transliteratedFloor,
+}: Props) {
+  const t = translations[lang];
   const meta      = STATUS[doctor.status];
+  const statusLabel = t.doctorCard[meta.labelKey];
   const isActive  = doctor.status === 'running';
   const isDimmed  = doctor.status === 'completed' || doctor.status === 'unavailable';
   const hasToken  = doctor.currentToken !== null;
@@ -29,11 +48,17 @@ export default function DoctorCard({ doctor }: Props) {
     ? Math.min((doctor.currentToken! / doctor.totalTokens) * 100, 100)
     : 0;
 
+  // Resolve display values based on language
+  const displayName = lang === 'bn' && transliteratedName ? transliteratedName : doctor.name;
+  const displayDept = lang === 'bn' && transliteratedDept ? transliteratedDept : doctor.departmentName;
+  const displayDesignation = lang === 'bn' && transliteratedDesignation ? transliteratedDesignation : doctor.designation;
+  const displayFloor = lang === 'bn' && transliteratedFloor ? transliteratedFloor : doctor.departmentFloor;
+
   return (
     <article
       className={`${styles.card} ${meta.cardClass}`}
       style={{ '--dept-color': doctor.departmentColor } as React.CSSProperties}
-      aria-label={`${doctor.name}, ${meta.label}`}
+      aria-label={`${displayName}, ${statusLabel}`}
     >
       {/* Left dept accent */}
       <div className={styles.accent} aria-hidden="true" />
@@ -42,37 +67,37 @@ export default function DoctorCard({ doctor }: Props) {
       <div className={styles.topRow}>
         <div className={styles.statusBadge}>
           <span className={`${styles.dot} ${meta.dotClass}`} aria-hidden="true" />
-          <span className={styles.statusText}>{meta.label}</span>
+          <span className={styles.statusText}>{statusLabel}</span>
         </div>
         <span
           className={styles.deptPill}
           style={{ color: doctor.departmentColor }}
-          aria-label={`Department: ${doctor.departmentName}`}
+          aria-label={`${t.doctorCard.department}: ${displayDept}`}
         >
-          {doctor.departmentName}
+          {displayDept}
         </span>
       </div>
 
       {/* ── Doctor info ── */}
       <div className={styles.info}>
         <p className={`${styles.name} ${isDimmed ? styles.nameDimmed : ''}`}>
-          {doctor.name}
+          {displayName}
         </p>
-        <p className={styles.designation}>{doctor.designation}</p>
-        <p className={styles.floor}>{doctor.departmentFloor}</p>
+        <p className={styles.designation}>{displayDesignation}</p>
+        <p className={styles.floor}>{displayFloor}</p>
       </div>
 
       {/* ── Room & hours ── */}
       <div className={styles.metaBar}>
         <div className={styles.metaItem}>
           <RoomIcon />
-          <span className={styles.metaKey}>Room</span>
-          <span className={styles.metaVal}>{doctor.roomNo}</span>
+          <span className={styles.metaKey}>{t.common.room}</span>
+          <span className={styles.metaVal}>{localizeNumber(doctor.roomNo, lang)}</span>
         </div>
         <div className={styles.metaDivider} aria-hidden="true" />
         <div className={styles.metaItem}>
           <ClockIcon />
-          <span className={styles.metaKey}>Hours</span>
+          <span className={styles.metaKey}>{t.common.hours}</span>
           <span className={styles.metaVal}>{doctor.startTime} – {doctor.endTime}</span>
         </div>
       </div>
@@ -82,15 +107,15 @@ export default function DoctorCard({ doctor }: Props) {
         <div className={styles.tokenSection}>
           <div className={styles.tokenTop}>
             <div className={styles.tokenCount}>
-              <span className={styles.tokenLabel}>Token</span>
+              <span className={styles.tokenLabel}>{t.common.token}</span>
               <span className={isActive ? styles.tokenNumActive : styles.tokenNum}>
-                {hasToken ? doctor.currentToken : '—'}
+                {hasToken ? localizeNumber(doctor.currentToken!, lang) : '—'}
               </span>
-              <span className={styles.tokenOf}>/ {doctor.totalTokens}</span>
+              <span className={styles.tokenOf}>/ {localizeNumber(doctor.totalTokens, lang)}</span>
             </div>
             {isActive && doctor.avgWaitMinutes > 0 && (
-              <span className={styles.waitBadge} aria-label={`Approximate wait: ${doctor.avgWaitMinutes} minutes`}>
-                ≈&nbsp;{doctor.avgWaitMinutes} min
+              <span className={styles.waitBadge} aria-label={`${t.tokenCallout.avgWait}: ${doctor.avgWaitMinutes} ${t.common.min}`}>
+                ≈&nbsp;{localizeNumber(doctor.avgWaitMinutes, lang)} {t.common.min}
               </span>
             )}
           </div>
@@ -108,7 +133,7 @@ export default function DoctorCard({ doctor }: Props) {
         </div>
       ) : (
         <p className={styles.unavailNote}>
-          {doctor.status === 'completed' ? 'Session completed for today' : 'Not available today'}
+          {doctor.status === 'completed' ? t.doctorCard.sessionCompleted : t.doctorCard.notAvailable}
         </p>
       )}
     </article>

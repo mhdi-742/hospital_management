@@ -1,7 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { IpdApiResponse, Ward } from '../../lib/types';
+import {
+  translations,
+  localizeTime,
+  localizeDate,
+  localizeNumber,
+  type Lang,
+} from '../../lib/displayTranslations';
+import { useTransliterate } from '../../hooks/useTransliterate';
 import PatientMarquee from './PatientMarquee';
 import MarqueeTicker from './MarqueeTicker';
 import styles from './IpdScreen.module.css';
@@ -18,6 +26,10 @@ export default function IpdScreen({ initialData, theme = 'dark' }: Props) {
   const [data, setData] = useState<IpdApiResponse>(initialData);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
+  // ── Language state — toggles after longest marquee scroll completes ──────
+  const [lang, setLang] = useState<Lang>('en');
+  const [isLangTransitioning, setIsLangTransitioning] = useState(false);
+
   // ── Apply theme to <html data-theme> ───────────────────────────────────
   useEffect(() => {
     if (theme === 'light') {
@@ -27,6 +39,54 @@ export default function IpdScreen({ initialData, theme = 'dark' }: Props) {
     }
     return () => document.documentElement.removeAttribute('data-theme');
   }, [theme]);
+
+  // ── Collect all names for transliteration ────────────────────────────────
+  const allNames = useMemo(() => {
+    const names: string[] = [];
+    for (const ward of data.wards) {
+      names.push(ward.name);
+      for (const patient of ward.patients) {
+        names.push(patient.name);
+      }
+    }
+    return names;
+  }, [data.wards]);
+
+  const { transliterations } = useTransliterate(allNames, true);
+
+  // ── Language switch timer — based on longest marquee duration ─────────────
+  const longestMarquee = useMemo(() => {
+    return data.wards.reduce((max, ward) => {
+      const duration = Math.max(ward.patients.length * 4, 20);
+      return Math.max(max, duration);
+    }, 20);
+  }, [data.wards]);
+
+  const switchInterval = longestMarquee * 1000;
+  const switchIntervalRef = useRef(switchInterval);
+
+  useEffect(() => {
+    switchIntervalRef.current = switchInterval;
+  }, [switchInterval]);
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const tick = () => {
+      timeoutId = setTimeout(() => {
+        setIsLangTransitioning(true);
+        setTimeout(() => {
+          setLang((prev) => (prev === 'en' ? 'bn' : 'en'));
+          setIsLangTransitioning(false);
+          tick(); // Schedule next tick
+        }, 500);
+      }, switchIntervalRef.current);
+    };
+
+    tick();
+
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   // ── Clock (hydration-safe) ──────────────────────────────────────────────
   useEffect(() => {
@@ -64,19 +124,25 @@ export default function IpdScreen({ initialData, theme = 'dark' }: Props) {
     ? Math.round((totalAdmitted / totalCapacity) * 100)
     : 0;
 
-  // ── Time formatters ────────────────────────────────────────────────────
-  const fmtTime = (d: Date) =>
-    d.toLocaleTimeString('en-IN', {
-      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
-    });
+  // ── Translation helpers ──────────────────────────────────────────────────
+  const t = translations[lang];
 
-  const fmtDate = (d: Date) =>
-    d.toLocaleDateString('en-IN', {
-      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-    });
+  /** Get transliterated value or fall back to original */
+  const tr = (text: string) => {
+    if (lang === 'bn' && transliterations.has(text)) {
+      return transliterations.get(text)!;
+    }
+    return text;
+  };
 
   return (
-    <div className={styles.screen}>
+    <div
+      className={styles.screen}
+      style={{
+        opacity: isLangTransitioning ? 0 : 1,
+        transition: 'opacity 0.5s ease',
+      }}
+    >
 
       {/* ── Header ── */}
       <header className={styles.header}>
@@ -89,8 +155,8 @@ export default function IpdScreen({ initialData, theme = 'dark' }: Props) {
             />
           </div>
           <div className={styles.headerTitles}>
-            <p className={styles.hospitalName}>{data.hospitalName}</p>
-            <p className={styles.screenTitle}>IPD Patient Status Dashboard</p>
+            <p className={styles.hospitalName}>{t.common.hospitalName}</p>
+            <p className={styles.screenTitle}>{t.ipd.subtitle}</p>
           </div>
         </div>
 
@@ -98,29 +164,29 @@ export default function IpdScreen({ initialData, theme = 'dark' }: Props) {
           {/* Summary pills */}
           <div className={styles.summaryPills}>
             <span className={`${styles.pill} ${styles.pillAdmitted}`}>
-              🏥 {totalAdmitted} Admitted
+              🏥 {localizeNumber(totalAdmitted, lang)} {t.ipd.admitted}
             </span>
             {criticalCount > 0 && (
               <span className={`${styles.pill} ${styles.pillCritical}`}>
-                ⚠ {criticalCount} Critical
+                ⚠ {localizeNumber(criticalCount, lang)} {t.ipd.critical}
               </span>
             )}
             <span className={`${styles.pill} ${styles.pillOccupancy}`}>
-              {occupancyPct}% Occupancy
+              {localizeNumber(occupancyPct, lang)}% {t.ipd.occupancy}
             </span>
           </div>
 
           <span className={styles.livePill} role="status" aria-live="polite">
             <span className={styles.liveDot} aria-hidden="true" />
-            LIVE
+            {t.common.live}
           </span>
         </div>
 
         <div className={styles.headerRight}>
           {currentTime ? (
             <>
-              <p className={styles.clock}>{fmtTime(currentTime)}</p>
-              <p className={styles.calDate}>{fmtDate(currentTime)}</p>
+              <p className={styles.clock}>{localizeTime(currentTime, lang)}</p>
+              <p className={styles.calDate}>{localizeDate(currentTime, lang)}</p>
             </>
           ) : (
             <>
@@ -134,7 +200,7 @@ export default function IpdScreen({ initialData, theme = 'dark' }: Props) {
       {/* ── Main Table Area ── */}
       <main className={styles.main}>
         <div className={styles.tableWrapper}>
-          <table className={styles.table} aria-label="IPD Patient Status">
+          <table className={styles.table} aria-label={t.ipd.subtitle}>
             <colgroup>
               <col className={styles.colWard} />
               <col className={styles.colCount} />
@@ -142,9 +208,9 @@ export default function IpdScreen({ initialData, theme = 'dark' }: Props) {
             </colgroup>
             <thead className={styles.thead}>
               <tr>
-                <th className={styles.th} scope="col">Ward / Unit</th>
-                <th className={styles.th} scope="col">Occupied / Capacity</th>
-                <th className={styles.th} scope="col">Admitted Patients</th>
+                <th className={styles.th} scope="col">{t.ipd.wardUnit}</th>
+                <th className={styles.th} scope="col">{t.ipd.occupiedCapacity}</th>
+                <th className={styles.th} scope="col">{t.ipd.admittedPatients}</th>
               </tr>
             </thead>
             <tbody className={styles.tbody}>
@@ -176,7 +242,7 @@ export default function IpdScreen({ initialData, theme = 'dark' }: Props) {
                           {ward.code}
                         </span>
                         <div className={styles.wardInfo}>
-                          <p className={styles.wardName}>{ward.name}</p>
+                          <p className={styles.wardName}>{tr(ward.name)}</p>
                         </div>
                       </div>
                     </td>
@@ -189,10 +255,10 @@ export default function IpdScreen({ initialData, theme = 'dark' }: Props) {
                             className={styles.countValue}
                             style={{ color: ward.accentColor }}
                           >
-                            {ward.patients.length}
+                            {localizeNumber(ward.patients.length, lang)}
                           </span>
                           <span className={styles.countSep}>/</span>
-                          <span className={styles.countCapacity}>{ward.capacity}</span>
+                          <span className={styles.countCapacity}>{localizeNumber(ward.capacity, lang)}</span>
                         </div>
                         <div className={styles.progressTrack}>
                           <div
@@ -206,7 +272,7 @@ export default function IpdScreen({ initialData, theme = 'dark' }: Props) {
                         {critCount > 0 && (
                           <span className={styles.critBadge}>
                             <span className={styles.critDotSmall} />
-                            {critCount} Critical
+                            {localizeNumber(critCount, lang)} {t.ipd.critical}
                           </span>
                         )}
                       </div>
@@ -218,6 +284,8 @@ export default function IpdScreen({ initialData, theme = 'dark' }: Props) {
                         <PatientMarquee
                           patients={ward.patients}
                           accentColor={ward.accentColor}
+                          lang={lang}
+                          transliterations={transliterations}
                         />
                       </div>
                     </td>
