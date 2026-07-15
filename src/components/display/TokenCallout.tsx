@@ -2,25 +2,34 @@
 
 import { useRef, useEffect } from 'react';
 import type { FlatDoctor } from '../../lib/types';
+import { translations, localizeNumber, type Lang } from '../../lib/displayTranslations';
 import styles from './TokenCallout.module.css';
 
 interface Props {
   consultations: FlatDoctor[];
   allDoctors: FlatDoctor[];
   visibleDoctorIds: Set<string>;
+  lang?: Lang;
+  /** Map of English name → Bengali transliteration */
+  transliterations?: Map<string, string>;
 }
 
 const SCROLL_SPEED_PX_PER_SEC = 28;
 
-export default function TokenCallout({ consultations, allDoctors, visibleDoctorIds }: Props) {
+export default function TokenCallout({
+  consultations,
+  allDoctors,
+  visibleDoctorIds,
+  lang = 'en',
+  transliterations,
+}: Props) {
+  const t = translations[lang];
 
   // ── Compute dashboard stats ───────────────────────────────────────────────
-  /** Total tokens served across all doctors who have started consulting */
   const patientsTreated = allDoctors
     .filter((d) => d.currentToken !== null)
     .reduce((sum, d) => sum + (d.currentToken ?? 0), 0);
 
-  /** Remaining tokens (total issued minus already served) for active sessions */
   const totalWaiting = allDoctors
     .filter((d) => d.status === 'running' || d.status === 'upcoming')
     .reduce((sum, d) => {
@@ -39,6 +48,7 @@ export default function TokenCallout({ consultations, allDoctors, visibleDoctorI
   ).length;
 
   const activeDepts = new Set(consultations.map((c) => c.departmentId)).size;
+  const totalDepts = new Set(allDoctors.map((d) => d.departmentId)).size;
 
   const totalTokensIssued = allDoctors.reduce((s, d) => s + d.totalTokens, 0);
 
@@ -74,6 +84,22 @@ export default function TokenCallout({ consultations, allDoctors, visibleDoctorI
     };
   }, [alsoRunning.length]);
 
+  /** Resolve name with transliteration fallback */
+  const resolveName = (name: string) => {
+    if (lang === 'bn' && transliterations?.has(name)) {
+      return transliterations.get(name)!;
+    }
+    return name;
+  };
+
+  /** Resolve department with transliteration fallback */
+  const resolveDept = (dept: string) => {
+    if (lang === 'bn' && transliterations?.has(dept)) {
+      return transliterations.get(dept)!;
+    }
+    return dept;
+  };
+
   // ── Stat card definitions ─────────────────────────────────────────────────
   const stats: {
     id: string;
@@ -85,49 +111,49 @@ export default function TokenCallout({ consultations, allDoctors, visibleDoctorI
   }[] = [
     {
       id: 'treated',
-      label: 'Treated Today',
-      value: patientsTreated,
-      sub: `of ${totalTokensIssued} tokens`,
+      label: t.tokenCallout.treatedToday,
+      value: localizeNumber(patientsTreated, lang),
+      sub: t.tokenCallout.ofTokens.replace('{n}', localizeNumber(totalTokensIssued, lang)),
       accent: '#10b981',
       icon: <CheckIcon />,
     },
     {
       id: 'active',
-      label: 'Active Now',
-      value: consultations.length,
-      sub: 'consultations',
+      label: t.tokenCallout.activeNow,
+      value: localizeNumber(consultations.length, lang),
+      sub: t.tokenCallout.consultations,
       accent: '#38bdf8',
       icon: <PulseIcon />,
     },
     {
       id: 'waiting',
-      label: 'In Queue',
-      value: totalWaiting,
-      sub: 'patients waiting',
+      label: t.tokenCallout.inQueue,
+      value: localizeNumber(totalWaiting, lang),
+      sub: t.tokenCallout.patientsWaiting,
       accent: '#f59e0b',
       icon: <WaitIcon />,
     },
     {
       id: 'avgwait',
-      label: 'Avg Wait',
-      value: avgWait > 0 ? `${avgWait}m` : '—',
-      sub: 'per patient',
+      label: t.tokenCallout.avgWait,
+      value: avgWait > 0 ? `${localizeNumber(avgWait, lang)}${lang === 'bn' ? 'মি' : 'm'}` : '—',
+      sub: t.tokenCallout.perPatient,
       accent: '#f97316',
       icon: <ClockIcon />,
     },
     {
       id: 'depts',
-      label: 'Depts Active',
-      value: activeDepts,
-      sub: `of ${new Set(allDoctors.map((d) => d.departmentId)).size} total`,
+      label: t.tokenCallout.deptsActive,
+      value: localizeNumber(activeDepts, lang),
+      sub: t.tokenCallout.ofTotal.replace('{n}', localizeNumber(totalDepts, lang)),
       accent: '#8b5cf6',
       icon: <DeptIcon />,
     },
     {
       id: 'docs',
-      label: 'Doctors Avail.',
-      value: doctorsAvailable,
-      sub: `of ${allDoctors.length} today`,
+      label: t.tokenCallout.doctorsAvail,
+      value: localizeNumber(doctorsAvailable, lang),
+      sub: t.tokenCallout.ofToday.replace('{n}', localizeNumber(allDoctors.length, lang)),
       accent: '#14b8a6',
       icon: <DocIcon />,
     },
@@ -139,7 +165,7 @@ export default function TokenCallout({ consultations, allDoctors, visibleDoctorI
       {/* ── Dashboard heading ── */}
       <div className={styles.dashHeading}>
         <span className={styles.dashDot} aria-hidden="true" />
-        OPD Overview
+        {t.tokenCallout.opdOverview}
       </div>
 
       {/* ── 2 × 3 stat card grid ── */}
@@ -171,19 +197,19 @@ export default function TokenCallout({ consultations, allDoctors, visibleDoctorI
       {alsoRunning.length > 0 ? (
         <div className={styles.othersWrapper}>
           <p className={styles.othersHeading}>
-            Also Running
-            <span className={styles.othersCount}>{alsoRunning.length}</span>
+            {t.tokenCallout.alsoRunning}
+            <span className={styles.othersCount}>{localizeNumber(alsoRunning.length, lang)}</span>
           </p>
           <div
             ref={listRef}
             className={styles.othersList}
-            aria-label="Other active consultations not visible on screen"
+            aria-label={t.tokenCallout.alsoRunning}
           >
             {alsoRunning.map((doc) => (
               <div
                 key={doc.id}
                 className={styles.otherItem}
-                aria-label={`${doc.name}, token ${doc.currentToken}, Room ${doc.roomNo}`}
+                aria-label={`${resolveName(doc.name)}, ${t.common.token} ${localizeNumber(doc.currentToken ?? 0, lang)}, ${t.common.room} ${localizeNumber(doc.roomNo, lang)}`}
               >
                 <span
                   className={styles.otherDot}
@@ -191,16 +217,16 @@ export default function TokenCallout({ consultations, allDoctors, visibleDoctorI
                   aria-hidden="true"
                 />
                 <div className={styles.otherInfo}>
-                  <p className={styles.otherName}>{doc.name}</p>
-                  <p className={styles.otherMeta}>{doc.departmentName} · Rm {doc.roomNo}</p>
+                  <p className={styles.otherName}>{resolveName(doc.name)}</p>
+                  <p className={styles.otherMeta}>{resolveDept(doc.departmentName)} · {t.tokenCallout.rm} {localizeNumber(doc.roomNo, lang)}</p>
                 </div>
-                <span className={styles.otherToken}>#{doc.currentToken}</span>
+                <span className={styles.otherToken}>#{localizeNumber(doc.currentToken ?? 0, lang)}</span>
               </div>
             ))}
           </div>
         </div>
       ) : consultations.length > 0 ? (
-        <p className={styles.allOnScreen}>All active doctors are visible on screen</p>
+        <p className={styles.allOnScreen}>{t.tokenCallout.allOnScreen}</p>
       ) : null}
     </div>
   );
