@@ -221,8 +221,17 @@ export default function OtScreen({ initialData, theme = 'dark' }: Props) {
   }, []);
 
   useEffect(() => {
-    const id = setInterval(refreshData, REFRESH_INTERVAL_MS);
-    return () => clearInterval(id);
+    const evtSource = new EventSource('/api/events');
+    evtSource.onmessage = () => {
+      refreshData();
+    };
+
+    const intervalId = setInterval(refreshData, REFRESH_INTERVAL_MS);
+
+    return () => {
+      evtSource.close();
+      clearInterval(intervalId);
+    };
   }, [refreshData]);
 
   // ── Computed stats ───────────────────────────────────────────────────────

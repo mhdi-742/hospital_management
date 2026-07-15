@@ -223,6 +223,8 @@ export async function POST(req: NextRequest) {
     eventBus.emit('REFRESH_OPD');
   } else if (admissionType === 'OT') {
     eventBus.emit('REFRESH_OT');
+  } else if (admissionType === 'IPD') {
+    eventBus.emit('REFRESH_IPD');
   }
 
   return NextResponse.json(result, { status: 201 });

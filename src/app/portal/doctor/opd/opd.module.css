@@ -595,3 +595,64 @@ button:disabled {
   justify-content: space-between;
   align-items: center;
 }
+
+/* Custom Queue Styles */
+.patientNameContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.servingBadge {
+  font-size: 0.65rem;
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  animation: pulseBadge 2.5s ease-in-out infinite;
+}
+
+@keyframes pulseBadge {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.7; transform: scale(0.96); }
+}
+
+.rowServing {
+  background: rgba(16, 185, 129, 0.03) !important;
+  border-left: 3px solid #10b981;
+}
+
+.rowCompleted {
+  opacity: 0.6;
+}
+
+.waitingCountBadge {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #60a5fa !important;
+}
+
+.completedCountBadge {
+  background: rgba(148, 163, 184, 0.15) !important;
+  color: #94a3b8 !important;
+}
+
+.reexamineBtn {
+  background: rgba(255, 255, 255, 0.04);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.reexamineBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+}

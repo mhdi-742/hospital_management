@@ -316,6 +316,16 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
     }
   }
 
+  // Map token numbers (1-indexed based on database admission order) and segment the queue
+  const queueWithTokens = activeQueue.map((item, idx) => ({
+    ...item,
+    tokenNo: idx + 1,
+  }));
+
+  const currentToken = activeSession?.currentToken ?? 0;
+  const completedQueue = queueWithTokens.filter(item => item.tokenNo < currentToken);
+  const waitingQueue = queueWithTokens.filter(item => item.tokenNo >= currentToken);
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -432,15 +442,16 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
 
           {/* Right panel: Queue list */}
           <div className={styles.queuePanel}>
+            {/* 1. Waiting List Card */}
             <div className={styles.sectionCard}>
               <div className={styles.panelHeader}>
-                <h2 className={styles.cardTitle}>Active Patient Queue</h2>
-                <span className={styles.queueCount}>{activeQueue.length} waiting</span>
+                <h2 className={styles.cardTitle}>Patients Waiting</h2>
+                <span className={`${styles.queueCount} ${styles.waitingCountBadge}`}>{waitingQueue.length} waiting</span>
               </div>
 
-              {activeQueue.length === 0 ? (
+              {waitingQueue.length === 0 ? (
                 <div className={styles.emptyQueue}>
-                  <p>Queue is empty. Patients will appear here once the receptionist registers them.</p>
+                  <p>No patients are currently waiting in the queue.</p>
                 </div>
               ) : (
                 <div className={styles.tableWrapper}>
@@ -454,12 +465,74 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
                       </tr>
                     </thead>
                     <tbody>
-                      {activeQueue.map((item, idx) => (
-                        <tr key={item.id} className={styles.tableRow}>
+                      {waitingQueue.map((item) => {
+                        const isServing = item.tokenNo === currentToken;
+                        return (
+                          <tr key={item.id} className={`${styles.tableRow} ${isServing ? styles.rowServing : ''}`}>
+                            <td>
+                              <div className={styles.patientNameContainer}>
+                                <span className={styles.patientName}>{item.patient.name}</span>
+                                {isServing && <span className={styles.servingBadge}>Now Serving</span>}
+                              </div>
+                              <div className={styles.patientMeta}>
+                                Token #{item.tokenNo} • {item.patient.age || 'N/A'} yrs • {item.patient.gender || 'Unknown'}
+                              </div>
+                            </td>
+                            <td className={styles.timeCol}>
+                              {new Date(item.admittedAt).toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </td>
+                            <td className={styles.complaintCol}>
+                              {item.patient.chiefComplaint || 'No chief complaint recorded.'}
+                            </td>
+                            <td>
+                              <button
+                                className={styles.examineBtn}
+                                onClick={() => openExamineModal(item)}
+                              >
+                                Examine
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* 2. Completed List Card */}
+            <div className={styles.sectionCard} style={{ marginTop: '1.5rem' }}>
+              <div className={styles.panelHeader}>
+                <h2 className={styles.cardTitle}>Completed / Already Examined</h2>
+                <span className={`${styles.queueCount} ${styles.completedCountBadge}`}>{completedQueue.length} completed</span>
+              </div>
+
+              {completedQueue.length === 0 ? (
+                <div className={styles.emptyQueue}>
+                  <p>No patients have been completed yet in this session.</p>
+                </div>
+              ) : (
+                <div className={styles.tableWrapper}>
+                  <table className={styles.table}>
+                    <thead>
+                      <tr>
+                        <th>Patient Details</th>
+                        <th>Registered At</th>
+                        <th>Complaint</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {completedQueue.map((item) => (
+                        <tr key={item.id} className={`${styles.tableRow} ${styles.rowCompleted}`}>
                           <td>
                             <div className={styles.patientName}>{item.patient.name}</div>
                             <div className={styles.patientMeta}>
-                              Token #{idx + 1} • {item.patient.age || 'N/A'} yrs • {item.patient.gender || 'Unknown'}
+                              Token #{item.tokenNo} • {item.patient.age || 'N/A'} yrs • {item.patient.gender || 'Unknown'}
                             </div>
                           </td>
                           <td className={styles.timeCol}>
@@ -473,10 +546,10 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
                           </td>
                           <td>
                             <button
-                              className={styles.examineBtn}
+                              className={styles.reexamineBtn}
                               onClick={() => openExamineModal(item)}
                             >
-                              Examine
+                              Re-examine
                             </button>
                           </td>
                         </tr>
