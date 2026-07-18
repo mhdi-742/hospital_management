@@ -26,10 +26,16 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
   const body = await req.json();
   const {
-    admissionType, wardId, bedNo, otRoomId,
+    admissionType, wardId, bedId, otRoomId,
     procedureName, anaesthetist, scheduledTime, estimatedDuration,
     doctorIds,
   } = body;
+
+  // IPD requires ward and bed
+  if (admissionType === 'IPD') {
+    if (!wardId) return NextResponse.json({ error: 'Ward is required for IPD admission' }, { status: 400 });
+    if (!bedId)  return NextResponse.json({ error: 'Bed selection is required for IPD admission' }, { status: 400 });
+  }
 
   const result = await prisma.$transaction(async tx => {
     // Auto-resolve OPD session if type is OPD and primary doctor is specified
@@ -63,7 +69,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         type:   admissionType ?? 'OPD',
         status: 'active',
         wardId:    wardId    || undefined,
-        bedNo:     bedNo     || undefined,
+        bedId:     bedId     || undefined,
         opdSessionId: resolvedOpdSessionId,
       },
     });
@@ -115,6 +121,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     eventBus.emit('REFRESH_OT');
   } else if (admissionType === 'OPD') {
     eventBus.emit('REFRESH_OPD');
+  } else if (admissionType === 'IPD') {
+    eventBus.emit('REFRESH_IPD');
   }
 
   return NextResponse.json(result, { status: 201 });

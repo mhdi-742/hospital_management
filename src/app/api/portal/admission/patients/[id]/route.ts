@@ -19,6 +19,7 @@ export async function GET(_: NextRequest, { params }: Ctx) {
         orderBy: { admittedAt: 'desc' },
         include: {
           ward: true,
+          bed: true,
           opdSession: { include: { doctor: { include: { user: true } } } },
           otCase: { include: { otRoom: true, leadDoctor: { include: { user: true } } } },
           doctors: {
@@ -77,7 +78,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       return NextResponse.json({ error: 'Only receptionists can transfer' }, { status: 403 });
     }
     const {
-      admissionId, newType, newWardId, newBedNo, newOpdSessionId,
+      admissionId, newType, newWardId, newBedId, newOpdSessionId,
       newOtRoomId, newProcedureName, newAnaesthetist, newScheduledTime, newEstimatedDuration,
       transferRequestId
     } = data;
@@ -97,7 +98,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
           type: newType,
           status: 'active',
           wardId: newType === 'IPD' ? newWardId || null : null,
-          bedNo: newType === 'IPD' ? newBedNo || null : null,
+          bedId: newType === 'IPD' ? newBedId || null : null,
           patientCondition: newType === 'IPD' ? 'stable' : null,
           opdSessionId: newType === 'OPD' ? newOpdSessionId || null : null,
           doctors: {

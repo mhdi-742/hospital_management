@@ -263,6 +263,26 @@ async function main() {
       create: { id: ward.id, name: ward.name, code: ward.code, capacity: ward.capacity, accentColor: ward.accentColor },
     });
 
+    // Pre-create all beds for this ward up to its capacity
+    for (let bedIdx = 1; bedIdx <= dbWard.capacity; bedIdx++) {
+      const padNo = String(bedIdx).padStart(2, '0');
+      const bedNo = `${dbWard.code}-${padNo}`;
+      await prisma.bed.upsert({
+        where: {
+          wardId_bedNo: {
+            wardId: dbWard.id,
+            bedNo: bedNo
+          }
+        },
+        update: {},
+        create: {
+          id: `${dbWard.id}-bed-${padNo}`,
+          wardId: dbWard.id,
+          bedNo: bedNo
+        }
+      });
+    }
+
     for (const patient of ward.patients) {
       const dbPatient = await prisma.patient.upsert({
         where:  { id: patient.id },
@@ -275,16 +295,23 @@ async function main() {
         },
       });
 
+      const padNo = patient.bedNo.slice(-2);
+      const bedId = `${dbWard.id}-bed-${padNo}`;
+
       await prisma.admission.upsert({
         where:  { id: patient.id + '-admission' },
-        update: { patientCondition: patient.status, wardId: dbWard.id, bedNo: patient.bedNo },
+        update: { 
+          patientCondition: patient.status, 
+          wardId: dbWard.id, 
+          bedId: bedId 
+        },
         create: {
           id:               patient.id + '-admission',
           patientId:        dbPatient.id,
           type:             'IPD',
           status:           'active',
           wardId:           dbWard.id,
-          bedNo:            patient.bedNo,
+          bedId:            bedId,
           patientCondition: patient.status,
           admittedAt:       getRelativeDate(patient.admissionDate),
         },

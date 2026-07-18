@@ -34,6 +34,7 @@ export async function GET(req: NextRequest) {
         take: 1,
         include: {
           ward: { select: { name: true, code: true, accentColor: true } },
+          bed: { select: { bedNo: true } },
           doctors: {
             include: { doctor: { include: { user: { select: { name: true } } } } },
             where: { role: 'primary' },
@@ -81,7 +82,7 @@ export async function POST(req: NextRequest) {
     // Insurance
     insuranceProvider, policyNumber,
     // Admission
-    admissionType, wardId, bedNo, opdSessionId, otRoomId,
+    admissionType, wardId, bedId, opdSessionId, otRoomId,
     doctorIds, // [{ doctorId, role }]
     // OT
     procedureName, anaesthetist, scheduledTime, estimatedDuration,
@@ -108,6 +109,16 @@ export async function POST(req: NextRequest) {
 
   if (!contact || !contact.trim()) {
     return NextResponse.json({ error: 'Contact number is required' }, { status: 400 });
+  }
+
+  // IPD requires ward and bed
+  if (admissionType === 'IPD') {
+    if (!wardId) {
+      return NextResponse.json({ error: 'Ward is required for IPD admission' }, { status: 400 });
+    }
+    if (!bedId) {
+      return NextResponse.json({ error: 'Bed selection is required for IPD admission' }, { status: 400 });
+    }
   }
 
   // Create patient + admission in a transaction
@@ -170,7 +181,7 @@ export async function POST(req: NextRequest) {
         type:      admissionType ?? 'OPD',
         status:    'active',
         wardId:    wardId    || undefined,
-        bedNo:     bedNo     || undefined,
+        bedId:     bedId     || undefined,
         opdSessionId: resolvedOpdSessionId,
       },
     });
