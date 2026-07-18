@@ -20,7 +20,20 @@ export async function GET(_: NextRequest) {
       },
       orderBy: { user: { name: 'asc' } },
     }),
-    prisma.ward.findMany({ orderBy: { name: 'asc' } }),
+    prisma.ward.findMany({
+      orderBy: { name: 'asc' },
+      include: {
+        beds: {
+          include: {
+            admissions: {
+              where: { status: 'active' },
+              select: { id: true, patient: { select: { name: true } } }
+            }
+          },
+          orderBy: { bedNo: 'asc' }
+        }
+      }
+    }),
     prisma.otRoom.findMany({ orderBy: { roomNo: 'asc' } }),
     prisma.opdSession.findMany({
       where: {

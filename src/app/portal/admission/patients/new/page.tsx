@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
+import BedSelector from '@/components/admission/BedSelector';
 
 interface Doctor {
   id: string;
@@ -10,7 +11,18 @@ interface Doctor {
   user: { name: string };
   department: { name: string } | null;
 }
-interface Ward   { id: string; name: string; code: string; accentColor: string; }
+interface Bed {
+  id: string;
+  bedNo: string;
+  wardId: string;
+  admissions: {
+    id: string;
+    patient: {
+      name: string;
+    };
+  }[];
+}
+interface Ward   { id: string; name: string; code: string; accentColor: string; beds: Bed[]; }
 interface OtRoom { id: string; roomNo: string; type: string; }
 interface OpdSession {
   id: string;
@@ -37,7 +49,7 @@ export default function NewAdmissionPage() {
     emergencyContactName: '', emergencyContactPhone: '',
     insuranceProvider: '', policyNumber: '',
     admissionType: 'OPD',
-    wardId: '', bedNo: '',
+    wardId: '', bedId: '',
     opdSessionId: '',
     otRoomId: '', procedureName: '', anaesthetist: '', scheduledTime: '', estimatedDuration: '',
   });
@@ -106,6 +118,18 @@ export default function NewAdmissionPage() {
     if (!validateDemographics()) {
       setSection(0);
       return;
+    }
+    if (form.admissionType === 'IPD') {
+      if (!form.wardId) {
+        setError('Please select a ward');
+        setSection(2);
+        return;
+      }
+      if (!form.bedId) {
+        setError('Please select a bed from the booking grid');
+        setSection(2);
+        return;
+      }
     }
     setError('');
     setSubmitting(true);
@@ -348,20 +372,30 @@ export default function NewAdmissionPage() {
 
             {/* IPD specific */}
             {form.admissionType === 'IPD' && (
-              <div className={styles.grid2}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
                 <div className={styles.field}>
                   <label className={styles.label}>Ward</label>
-                  <select id="ipd-ward" className={styles.input} value={form.wardId} onChange={e => set('wardId', e.target.value)}>
+                  <select id="ipd-ward" className={styles.input} value={form.wardId} onChange={e => {
+                    setForm(f => ({ ...f, wardId: e.target.value, bedId: '' }));
+                  }}>
                     <option value="">Select ward…</option>
                     {options?.wards.map(w => (
                       <option key={w.id} value={w.id}>{w.name} ({w.code})</option>
                     ))}
                   </select>
                 </div>
-                <div className={styles.field}>
-                  <label className={styles.label}>Bed Number</label>
-                  <input id="bed-number" className={styles.input} value={form.bedNo} onChange={e => set('bedNo', e.target.value)} placeholder="e.g. B-12" />
-                </div>
+
+                {form.wardId && (() => {
+                  const selectedWard = options?.wards.find(w => w.id === form.wardId);
+                  return (
+                    <BedSelector
+                      wardName={selectedWard?.name || ''}
+                      beds={selectedWard?.beds || []}
+                      selectedBedId={form.bedId}
+                      onSelectBed={(bedId) => set('bedId', bedId)}
+                    />
+                  );
+                })()}
               </div>
             )}
 

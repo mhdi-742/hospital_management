@@ -37,6 +37,7 @@ export default async function DoctorIpdPage() {
     include: {
       patient: true,
       ward: true,
+      bed: true,
       doctors: {
         include: {
           doctor: {
@@ -61,7 +62,7 @@ export default async function DoctorIpdPage() {
       id: adm.id,
       patientId: adm.patientId,
       admittedAt: adm.admittedAt.toISOString(),
-      bedNo: adm.bedNo,
+      bedNo: adm.bed?.bedNo ?? null,
       patientCondition: adm.patientCondition as any,
       assignedRole: (ourAssignment?.role ?? 'consultant') as any,
       ward: adm.ward ? {

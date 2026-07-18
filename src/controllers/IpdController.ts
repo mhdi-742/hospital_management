@@ -27,7 +27,7 @@ export class IpdController {
       include: {
         admissions: {
           where: { status: 'active', type: 'IPD' },
-          include: { patient: true },
+          include: { patient: true, bed: true },
         },
       },
       orderBy: { name: 'asc' },
@@ -41,7 +41,7 @@ export class IpdController {
           age: adm.patient.age ?? 0,
           gender: (adm.patient.gender as any) ?? 'M',
           admissionDate: adm.admittedAt.toISOString().split('T')[0],
-          bedNo: adm.bedNo ?? 'N/A',
+          bedNo: adm.bed?.bedNo ?? 'N/A',
           status: (adm.patientCondition as any) ?? 'stable',
         };
       });

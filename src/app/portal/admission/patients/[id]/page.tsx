@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import styles from './page.module.css';
+import BedSelector from '@/components/admission/BedSelector';
 
 interface Doctor { id?: string; user: { name: string }; department: { name: string } | null; }
 interface Admission {
   id: string; type: string; status: string; admittedAt: string; dischargedAt: string | null;
   bedNo: string | null; patientCondition: string | null;
+  bed: { id: string; bedNo: string } | null;
   ward: { name: string; code: string; accentColor: string } | null;
   opdSession: { doctor: { user: { name: string } }; startTime: string; endTime: string } | null;
   otCase: { procedureName: string; status: string; otRoom: { roomNo: string } | null } | null;
@@ -21,7 +23,13 @@ interface Patient {
   insuranceProvider: string | null; policyNumber: string | null;
   admissions: Admission[];
 }
-interface WardOption { id: string; name: string; code: string; accentColor: string; }
+interface Bed {
+  id: string;
+  bedNo: string;
+  wardId: string;
+  admissions: { id: string; patient: { name: string } }[];
+}
+interface WardOption { id: string; name: string; code: string; accentColor: string; beds: Bed[]; }
 interface OtRoomOption { id: string; roomNo: string; type: string; }
 interface OpdSessionOption {
   id: string; startTime: string; endTime: string; status: string;
@@ -45,7 +53,7 @@ export default function PatientDetailPage() {
   const [options, setOptions] = useState<{ wards: WardOption[]; otRooms: OtRoomOption[]; opdSessions: OpdSessionOption[]; doctors: DoctorOption[] } | null>(null);
   const [showTransfer, setShowTransfer] = useState(false);
   const [transferForm, setTransferForm] = useState({
-    newType: 'IPD', newWardId: '', newBedNo: '', newOpdSessionId: '',
+    newType: 'IPD', newWardId: '', newBedId: '', newOpdSessionId: '',
     newOtRoomId: '', newProcedureName: '', newAnaesthetist: '', newScheduledTime: '', newEstimatedDuration: '',
     transferRequestId: ''
   });
@@ -92,6 +100,10 @@ export default function PatientDetailPage() {
 
   const handleTransfer = async (admissionId: string) => {
     if (!transferForm.newType) return;
+    if (transferForm.newType === 'IPD') {
+      if (!transferForm.newWardId) { alert('Please select a ward'); return; }
+      if (!transferForm.newBedId) { alert('Please select a bed from the booking grid'); return; }
+    }
     setTransferring(true);
     await fetch(`/api/portal/admission/patients/${id}`, {
       method: 'PATCH',
@@ -138,7 +150,7 @@ export default function PatientDetailPage() {
             >
               Active · {activeAdmission.type}
               {activeAdmission.ward && ` · ${activeAdmission.ward.name}`}
-              {activeAdmission.bedNo && ` · Bed ${activeAdmission.bedNo}`}
+              {(activeAdmission.bed?.bedNo || activeAdmission.bedNo) && ` · Bed ${activeAdmission.bed?.bedNo || activeAdmission.bedNo}`}
             </span>
           )}
         </div>
@@ -170,10 +182,10 @@ export default function PatientDetailPage() {
                       {activeAdmission.ward.name}
                     </span>
                   </div>
-                  {activeAdmission.bedNo && (
+                  {(activeAdmission.bed?.bedNo || activeAdmission.bedNo) && (
                     <div className={styles.infoItem}>
                       <span className={styles.infoLabel}>Bed</span>
-                      <span className={styles.infoVal}>{activeAdmission.bedNo}</span>
+                      <span className={styles.infoVal}>{activeAdmission.bed?.bedNo || activeAdmission.bedNo}</span>
                     </div>
                   )}
                   <div className={styles.infoItem}>
@@ -354,15 +366,23 @@ export default function PatientDetailPage() {
               <div className={styles.typeFields}>
                 <div className={styles.formGroup}>
                   <label>Ward</label>
-                  <select value={transferForm.newWardId} onChange={e => setTransferForm({ ...transferForm, newWardId: e.target.value })}>
+                  <select value={transferForm.newWardId} onChange={e => setTransferForm({ ...transferForm, newWardId: e.target.value, newBedId: '' })}>
                     <option value="">Select Ward...</option>
                     {options?.wards.map(w => <option key={w.id} value={w.id}>{w.name} ({w.code})</option>)}
                   </select>
                 </div>
-                <div className={styles.formGroup}>
-                  <label>Bed No (Optional)</label>
-                  <input type="text" value={transferForm.newBedNo} onChange={e => setTransferForm({ ...transferForm, newBedNo: e.target.value })} />
-                </div>
+
+                {transferForm.newWardId && (() => {
+                  const selectedWard = options?.wards.find(w => w.id === transferForm.newWardId);
+                  return (
+                    <BedSelector
+                      wardName={selectedWard?.name || ''}
+                      beds={selectedWard?.beds || []}
+                      selectedBedId={transferForm.newBedId}
+                      onSelectBed={(bedId) => setTransferForm({ ...transferForm, newBedId: bedId })}
+                    />
+                  );
+                })()}
               </div>
             )}
 

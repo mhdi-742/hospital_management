@@ -12,6 +12,7 @@ interface Admission {
   status: string;
   admittedAt: string;
   bedNo: string | null;
+  bed: { bedNo: string } | null;
   ward: Ward | null;
   doctors: { role: string; doctor: Doctor }[];
 }
@@ -129,7 +130,7 @@ export default function PatientsPage() {
                   <span className={styles.typeBadge} style={{ color: TYPE_COLOR[adm.type], background: TYPE_BG[adm.type] }}>
                     {adm.type}
                     {adm.ward && ` · ${adm.ward.code}`}
-                    {adm.bedNo && ` B-${adm.bedNo}`}
+                    {(adm.bed?.bedNo || adm.bedNo) && ` B-${adm.bed?.bedNo || adm.bedNo}`}
                   </span>
                 ) : <span className={styles.noneText}>No active admission</span>}
               </span>

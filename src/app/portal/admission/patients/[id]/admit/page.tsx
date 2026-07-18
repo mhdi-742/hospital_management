@@ -4,9 +4,16 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './admit.module.css';
+import BedSelector from '@/components/admission/BedSelector';
 
 interface Doctor { id: string; designation: string; user: { name: string }; department: { name: string } | null; }
-interface Ward   { id: string; name: string; code: string; accentColor: string; }
+interface Bed {
+  id: string;
+  bedNo: string;
+  wardId: string;
+  admissions: { id: string; patient: { name: string } }[];
+}
+interface Ward   { id: string; name: string; code: string; accentColor: string; beds: Bed[]; }
 interface OtRoom { id: string; roomNo: string; type: string; }
 
 export default function NewAdmissionForPatientPage() {
@@ -21,7 +28,7 @@ export default function NewAdmissionForPatientPage() {
 
   const [admissionType, setAdmissionType] = useState<'OPD' | 'IPD' | 'OT'>('OPD');
   const [wardId,    setWardId]    = useState('');
-  const [bedNo,     setBedNo]     = useState('');
+  const [bedId,     setBedId]     = useState('');
   const [otRoomId,  setOtRoomId]  = useState('');
   const [procedureName, setProcedureName] = useState('');
   const [anaesthetist,  setAnaesthetist]  = useState('');
@@ -53,15 +60,21 @@ export default function NewAdmissionForPatientPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitting(true); setError('');
+    setError('');
+
+    if (admissionType === 'IPD') {
+      if (!wardId) { setError('Please select a ward'); return; }
+      if (!bedId)  { setError('Please select a bed from the booking grid'); return; }
+    }
+    setSubmitting(true);
 
     const body: Record<string, unknown> = {
       admissionType,
       doctorIds: selectedDoctors,
-      patientId: id, // existing patient
+      patientId: id,
     };
 
-    if (admissionType === 'IPD') { body.wardId = wardId || undefined; body.bedNo = bedNo || undefined; }
+    if (admissionType === 'IPD') { body.wardId = wardId || undefined; body.bedId = bedId || undefined; }
     if (admissionType === 'OT')  {
       body.otRoomId = otRoomId || undefined;
       body.procedureName = procedureName;
@@ -107,18 +120,26 @@ export default function NewAdmissionForPatientPage() {
         </div>
 
         {admissionType === 'IPD' && (
-          <div className={styles.grid2}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' }}>
             <div className={styles.field}>
               <label className={styles.label}>Ward</label>
-              <select id="new-adm-ward" className={styles.input} value={wardId} onChange={e => setWardId(e.target.value)}>
+              <select id="new-adm-ward" className={styles.input} value={wardId} onChange={e => { setWardId(e.target.value); setBedId(''); }}>
                 <option value="">Select ward…</option>
                 {options?.wards.map(w => <option key={w.id} value={w.id}>{w.name} ({w.code})</option>)}
               </select>
             </div>
-            <div className={styles.field}>
-              <label className={styles.label}>Bed Number</label>
-              <input id="new-adm-bed" className={styles.input} value={bedNo} onChange={e => setBedNo(e.target.value)} placeholder="e.g. B-14" />
-            </div>
+
+            {wardId && (() => {
+              const selectedWard = options?.wards.find(w => w.id === wardId);
+              return (
+                <BedSelector
+                  wardName={selectedWard?.name || ''}
+                  beds={selectedWard?.beds || []}
+                  selectedBedId={bedId}
+                  onSelectBed={(id) => setBedId(id)}
+                />
+              );
+            })()}
           </div>
         )}
 

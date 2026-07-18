@@ -26,6 +26,7 @@ async function getStats(role: string) {
       include: {
         patient: { select: { name: true, age: true, gender: true } },
         ward: { select: { name: true, code: true, accentColor: true } },
+        bed: { select: { bedNo: true } },
       },
     }),
     prisma.transferRequest.findMany({
@@ -139,7 +140,7 @@ export default async function AdmissionDashboard() {
                     >
                       {adm.ward.code}
                     </span>
-                    {adm.bedNo && <span className={styles.bedNo}>Bed {adm.bedNo}</span>}
+                    {(adm as any).bed?.bedNo && <span className={styles.bedNo}>Bed {(adm as any).bed.bedNo}</span>}
                   </>
                 ) : '—'}
               </span>
