@@ -19,13 +19,15 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   const { id: wardId } = await params;
 
   try {
-    const { name, code, capacity, accentColor } = await req.json();
+    const { name, code, roomNo, floorNo, capacity, accentColor } = await req.json();
 
     const updated = await prisma.ward.update({
       where: { id: wardId },
       data: {
         name: name !== undefined ? name : undefined,
         code: code !== undefined ? code : undefined,
+        roomNo: roomNo !== undefined ? (roomNo || null) : undefined,
+        floorNo: floorNo !== undefined ? (floorNo || null) : undefined,
         capacity: capacity !== undefined ? parseInt(capacity, 10) : undefined,
         accentColor: accentColor !== undefined ? accentColor : undefined,
       },

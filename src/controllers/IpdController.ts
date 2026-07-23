@@ -50,6 +50,8 @@ export class IpdController {
         id: w.id,
         name: w.name,
         code: w.code,
+        roomNo: w.roomNo ?? undefined,
+        floorNo: w.floorNo ?? undefined,
         capacity: w.capacity,
         accentColor: w.accentColor,
         patients,

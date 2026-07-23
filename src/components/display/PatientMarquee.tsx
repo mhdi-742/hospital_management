@@ -49,16 +49,20 @@ export default function PatientMarquee({
     return name;
   };
 
-  // Double the list for seamless looping
-  const doubled = [...patients, ...patients];
+  // Only double and animate marquee when there are enough patients (> 2) to prevent duplicate chips on screen for single/few patients
+  const shouldAnimate = patients.length > 2;
+  const listToRender = shouldAnimate ? [...patients, ...patients] : patients;
 
   return (
     <div className={styles.marqueeTrack} aria-label="Patient list">
       <div
         className={styles.marqueeBelt}
-        style={{ animationDuration: `${Math.max(patients.length * 4, 20)}s` }}
+        style={{
+          animation: shouldAnimate ? undefined : 'none',
+          animationDuration: `${Math.max(patients.length * 4, 20)}s`,
+        }}
       >
-        {doubled.map((p, idx) => (
+        {listToRender.map((p, idx) => (
           <span
             key={`${p.id}-${idx}`}
             className={`${styles.patientChip} ${STATUS_CLASS[p.status]}`}

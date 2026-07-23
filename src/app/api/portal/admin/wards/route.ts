@@ -33,18 +33,33 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { name, code, capacity, accentColor } = await req.json();
+    const { name, code, roomNo, floorNo, capacity, accentColor } = await req.json();
 
     if (!name || !code) {
       return NextResponse.json({ error: 'Name and short code are required' }, { status: 400 });
     }
 
+    const parsedCapacity = capacity ? parseInt(capacity, 10) : 20;
+
+    // Generate default bed records: CODE-01, CODE-02, ...
+    const defaultBeds = Array.from({ length: parsedCapacity }, (_, i) => ({
+      bedNo: `${code}-${String(i + 1).padStart(2, '0')}`,
+    }));
+
     const ward = await prisma.ward.create({
       data: {
         name,
         code,
-        capacity: capacity ? parseInt(capacity, 10) : 20,
+        roomNo: roomNo || null,
+        floorNo: floorNo || null,
+        capacity: parsedCapacity,
         accentColor: accentColor || '#3b82f6',
+        beds: {
+          create: defaultBeds,
+        },
+      },
+      include: {
+        beds: true,
       },
     });
 

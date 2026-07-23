@@ -20,6 +20,8 @@ interface Ward {
   id: string;
   name: string;
   code: string;
+  roomNo: string | null;
+  floorNo: string | null;
   accentColor: string;
 }
 
@@ -211,7 +213,7 @@ export default function IpdPatientsClient({ initialAdmissions, doctorId }: Props
                         >
                           {adm.ward?.name} ({adm.ward?.code})
                         </span>
-                        <span className={styles.bedNo}>Bed {adm.bedNo || 'N/A'}</span>
+                        <span className={styles.bedNo}>Bed {adm.bedNo || 'N/A'}{adm.ward?.roomNo ? ` • Room ${adm.ward.roomNo}` : ''}{adm.ward?.floorNo ? ` • Floor ${adm.ward.floorNo}` : ''}</span>
                       </div>
                     </td>
                     <td>

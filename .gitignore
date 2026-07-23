@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# backup system
+backup/service-account.json
+backup/oauth-credentials.json
+backup/tokens.json
+backup/logs/
+backup/dumps/
+backup/*.sql.gz
+backup/*.sql

@@ -69,6 +69,8 @@ export default async function DoctorIpdPage() {
         id: adm.ward.id,
         name: adm.ward.name,
         code: adm.ward.code,
+        roomNo: adm.ward.roomNo ?? null,
+        floorNo: adm.ward.floorNo ?? null,
         accentColor: adm.ward.accentColor,
       } : null,
       patient: {

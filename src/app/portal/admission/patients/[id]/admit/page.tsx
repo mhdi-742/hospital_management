@@ -13,7 +13,7 @@ interface Bed {
   wardId: string;
   admissions: { id: string; patient: { name: string } }[];
 }
-interface Ward   { id: string; name: string; code: string; accentColor: string; beds: Bed[]; }
+interface Ward   { id: string; name: string; code: string; roomNo: string | null; floorNo: string | null; accentColor: string; beds: Bed[]; }
 interface OtRoom { id: string; roomNo: string; type: string; }
 
 export default function NewAdmissionForPatientPage() {
@@ -125,7 +125,7 @@ export default function NewAdmissionForPatientPage() {
               <label className={styles.label}>Ward</label>
               <select id="new-adm-ward" className={styles.input} value={wardId} onChange={e => { setWardId(e.target.value); setBedId(''); }}>
                 <option value="">Select ward…</option>
-                {options?.wards.map(w => <option key={w.id} value={w.id}>{w.name} ({w.code})</option>)}
+                {options?.wards.map(w => <option key={w.id} value={w.id}>{w.name} ({w.code}){w.roomNo ? ` • Room ${w.roomNo}` : ''}{w.floorNo ? ` • Floor ${w.floorNo}` : ''}</option>)}
               </select>
             </div>
 

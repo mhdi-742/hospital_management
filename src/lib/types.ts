@@ -62,6 +62,8 @@ export interface Ward {
   id: string;
   name: string;          // "Male Ward", "Female Ward", etc.
   code: string;          // Short badge code e.g. "MW", "ICU"
+  roomNo?: string;       // Room number e.g. "101"
+  floorNo?: string;      // Floor number e.g. "2"
   capacity: number;
   accentColor: string;   // Hex accent for badges / borders
   patients: Patient[];

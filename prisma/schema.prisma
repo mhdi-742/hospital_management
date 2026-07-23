@@ -107,6 +107,8 @@ model Ward {
   id          String  @id @default(cuid())
   name        String
   code        String
+  roomNo      String?
+  floorNo     String?
   capacity    Int     @default(20)
   accentColor String  @default("#3b82f6")
 
