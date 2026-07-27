@@ -21,70 +21,59 @@ const adapter = new PrismaMariaDb({ ...parseDbUrl(dbUrl), connectionLimit: 3 });
 const prisma  = new PrismaClient({ adapter });
 
 async function main() {
-  console.log('🌱  Starting blank seed (clearing database & creating Admin user)...');
+  console.log('🌱  Ensuring Admin user & Departments exist (SAFE: No table truncation)...');
 
   try {
-    await prisma.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 0;');
-
-    const tableNames = [
-      'OtAssistant',
-      'OtCase',
-      'TransferRequest',
-      'PatientDoctor',
-      'Admission',
-      'Patient',
-      'OpdSession',
-      'Bed',
-      'Ward',
-      'OtRoom',
-      'Doctor',
-      'Department',
-      'AuditLog',
-      'User',
-      'Announcement',
-      'HospitalSettings',
-    ];
-
-    for (const tableName of tableNames) {
-      try {
-        await prisma.$executeRawUnsafe(`TRUNCATE TABLE \`${tableName}\`;`);
-        console.log(`  ✓ Cleared table: ${tableName}`);
-      } catch (err) {
-        await prisma.$executeRawUnsafe(`DELETE FROM \`${tableName}\`;`);
-        console.log(`  ✓ Deleted rows from table: ${tableName}`);
-      }
-    }
-
-    await prisma.$executeRawUnsafe('SET FOREIGN_KEY_CHECKS = 1;');
-    console.log('✨  Database successfully cleared.');
-
-    // ── Create Admin User ─────────────────────────────────────────────
+    // ── Upsert Admin User (Safe - does not touch existing data) ──────
     const adminEmail    = process.env.SEED_ADMIN_EMAIL    ?? 'admin@hospital.local';
     const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? 'Admin@123';
     const hashedAdmin   = await bcrypt.hash(adminPassword, 12);
 
-    await prisma.user.create({
-      data: {
+    await prisma.user.upsert({
+      where: { email: adminEmail },
+      update: {},
+      create: {
         email:    adminEmail,
         password: hashedAdmin,
         name:     'Hospital Admin',
         role:     'ADMIN',
       },
     });
-    console.log(`👤  Created Admin User: ${adminEmail} (Password: ${adminPassword})`);
 
-    // ── Create Default Hospital Settings ──────────────────────────────
-    await prisma.hospitalSettings.create({
-      data: {
+    // ── Upsert Hospital Settings (Safe) ──────────────────────────────
+    await prisma.hospitalSettings.upsert({
+      where: { key: 'hospitalName' },
+      update: {},
+      create: {
         key: 'hospitalName',
         value: 'Hospital Management System',
       },
     });
-    console.log('⚙️   Created default Hospital Settings.');
 
-    console.log('\n🎉  Blank seed complete! Admin user is ready for login.');
+    // ── Upsert Departments (Safe) ────────────────────────────────────
+    const departments = [
+      { name: 'Derma', floor: 'Floor 1', color: '#ec4899' },
+      { name: 'Surgeon', floor: 'Floor 2', color: '#ef4444' },
+      { name: 'Child Specialist', floor: 'Floor 1', color: '#3b82f6' },
+      { name: 'Gynocologist', floor: 'Floor 2', color: '#8b5cf6' },
+      { name: 'Orthopedic', floor: 'Floor 3', color: '#f59e0b' },
+      { name: 'ENT', floor: 'Floor 1', color: '#10b981' },
+      { name: 'Physician', floor: 'Ground Floor', color: '#06b6d4' },
+      { name: 'Cardiologist', floor: 'Floor 2', color: '#6366f1' },
+      { name: 'Neurologist', floor: 'Floor 3', color: '#14b8a6' },
+      { name: 'Neurosurgeon', floor: 'Floor 3', color: '#f97316' },
+    ];
+
+    for (const dept of departments) {
+      const existing = await prisma.department.findFirst({ where: { name: dept.name } });
+      if (!existing) {
+        await prisma.department.create({ data: dept });
+      }
+    }
+
+    console.log('✅  Departments and Admin user updated safely without wiping data.');
   } catch (error) {
-    console.error('❌ Error in blank seeder:', error);
+    console.error('❌ Error updating database:', error);
     process.exit(1);
   } finally {
     await prisma.$disconnect();

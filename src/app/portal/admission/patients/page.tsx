@@ -11,6 +11,7 @@ interface Admission {
   type: string;
   status: string;
   admittedAt: string;
+  dischargedAt: string | null;
   bedNo: string | null;
   bed: { bedNo: string } | null;
   ward: Ward | null;
@@ -25,48 +26,78 @@ interface Patient {
   admissions: Admission[];
 }
 
-const TYPE_COLOR: Record<string, string>   = { OPD: '#3b82f6', IPD: '#8b5cf6', OT: '#f59e0b' };
-const TYPE_BG:    Record<string, string>   = { OPD: 'rgba(59,130,246,0.12)', IPD: 'rgba(139,92,246,0.12)', OT: 'rgba(245,158,11,0.12)' };
+const TYPE_COLOR: Record<string, string> = { OPD: '#3b82f6', IPD: '#8b5cf6', OT: '#f59e0b' };
+const TYPE_BG:    Record<string, string> = { OPD: 'rgba(59,130,246,0.12)', IPD: 'rgba(139,92,246,0.12)', OT: 'rgba(245,158,11,0.12)' };
+
+function fmtDateTime(iso: string) {
+  return new Date(iso).toLocaleString('en-IN', {
+    day: 'numeric', month: 'short', year: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: true,
+  });
+}
 
 export default function PatientsPage() {
-  const [patients,  setPatients]  = useState<Patient[]>([]);
-  const [total,     setTotal]     = useState(0);
-  const [page,      setPage]      = useState(1);
-  const [search,    setSearch]    = useState('');
-  const [typeFilter,setTypeFilter]= useState('');
-  const [loading,   setLoading]   = useState(true);
+  const [patients,      setPatients]      = useState<Patient[]>([]);
+  const [total,         setTotal]         = useState(0);
+  const [page,          setPage]          = useState(1);
+  const [search,        setSearch]        = useState('');
+  const [typeFilter,    setTypeFilter]    = useState('');
+  const [statusFilter,  setStatusFilter]  = useState<'active' | 'discharged'>('active');
+  const [loading,       setLoading]       = useState(true);
 
   const fetchPatients = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({
-      page: String(page),
-      ...(search     ? { search }            : {}),
-      ...(typeFilter ? { type: typeFilter }   : {}),
+      page:   String(page),
+      status: statusFilter,
+      ...(search     ? { search }          : {}),
+      ...(typeFilter ? { type: typeFilter } : {}),
     });
     const res  = await fetch(`/api/portal/admission/patients?${params}`);
     const data = await res.json();
     setPatients(data.patients ?? []);
     setTotal(data.total ?? 0);
     setLoading(false);
-  }, [page, search, typeFilter]);
+  }, [page, search, typeFilter, statusFilter]);
 
   useEffect(() => { fetchPatients(); }, [fetchPatients]);
 
   // reset page on filter change
-  useEffect(() => { setPage(1); }, [search, typeFilter]);
+  useEffect(() => { setPage(1); }, [search, typeFilter, statusFilter]);
 
   const totalPages = Math.ceil(total / 20);
+  const isActive = statusFilter === 'active';
 
   return (
     <div className={styles.page}>
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Patients</h1>
-          <p className={styles.subtitle}>{total} total records</p>
+          <p className={styles.subtitle}>{total} {isActive ? 'active' : 'discharged'} records</p>
         </div>
         <Link href="/portal/admission/patients/new" className={styles.admitBtn}>
           + Admit New Patient
         </Link>
+      </div>
+
+      {/* Status tabs */}
+      <div className={styles.statusTabs}>
+        <button
+          id="tab-active"
+          className={`${styles.statusTab} ${isActive ? styles.statusTabActive : ''}`}
+          onClick={() => setStatusFilter('active')}
+        >
+          <span className={styles.statusDot} style={{ background: '#22c55e' }} />
+          Active
+        </button>
+        <button
+          id="tab-discharged"
+          className={`${styles.statusTab} ${!isActive ? styles.statusTabActiveGray : ''}`}
+          onClick={() => setStatusFilter('discharged')}
+        >
+          <span className={styles.statusDot} style={{ background: '#64748b' }} />
+          Discharged
+        </button>
       </div>
 
       {/* Filters */}
@@ -98,9 +129,9 @@ export default function PatientsPage() {
         <div className={styles.tableHead}>
           <span>Patient</span>
           <span>Contact</span>
-          <span>Current Admission</span>
+          <span>{isActive ? 'Current Admission' : 'Last Admission'}</span>
           <span>Doctor</span>
-          <span>Since</span>
+          <span>{isActive ? 'Admitted' : 'Discharged'}</span>
           <span></span>
         </div>
 
@@ -112,12 +143,20 @@ export default function PatientsPage() {
         )}
 
         {!loading && patients.length === 0 && (
-          <div className={styles.empty}>No patients found.</div>
+          <div className={styles.empty}>No {statusFilter} patients found.</div>
         )}
 
         {!loading && patients.map(p => {
           const adm = p.admissions[0];
           const primaryDoc = adm?.doctors.find(d => d.role === 'primary');
+          const dateDisplay = adm
+            ? isActive
+              ? fmtDateTime(adm.admittedAt)
+              : adm.dischargedAt
+                ? fmtDateTime(adm.dischargedAt)
+                : fmtDateTime(adm.admittedAt)
+            : '—';
+
           return (
             <div key={p.id} className={styles.tableRow}>
               <span className={styles.patientCell}>
@@ -132,14 +171,12 @@ export default function PatientsPage() {
                     {adm.ward && ` · ${adm.ward.code}`}
                     {(adm.bed?.bedNo || adm.bedNo) && ` B-${adm.bed?.bedNo || adm.bedNo}`}
                   </span>
-                ) : <span className={styles.noneText}>No active admission</span>}
+                ) : <span className={styles.noneText}>No admission</span>}
               </span>
               <span className={styles.docCell}>
                 {primaryDoc?.doctor.user.name ?? '—'}
               </span>
-              <span className={styles.dateCell}>
-                {adm ? new Date(adm.admittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' }) : '—'}
-              </span>
+              <span className={styles.dateCell}>{dateDisplay}</span>
               <span>
                 <Link href={`/portal/admission/patients/${p.id}`} className={styles.viewBtn}>View</Link>
               </span>

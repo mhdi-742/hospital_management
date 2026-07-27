@@ -26,12 +26,14 @@ interface Ward   { id: string; name: string; code: string; accentColor: string; 
 interface OtRoom { id: string; roomNo: string; type: string; }
 interface OpdSession {
   id: string;
+  opdNo?: string | null;
   startTime: string;
   endTime: string;
   status: string;
   totalTokens: number;
   doctor: {
     id: string;
+    roomNo?: string | null;
     user: { name: string };
     department: { name: string } | null;
   };
@@ -359,6 +361,7 @@ export default function NewAdmissionPage() {
                       <option key={s.id} value={s.id}>
                         {s.doctor.user.name}
                         {s.doctor.department ? ` (${s.doctor.department.name})` : ''}
+                        {s.opdNo ? ` • ${s.opdNo}` : (s.doctor.roomNo ? ` • ${s.doctor.roomNo}` : '')}
                         {' — '}{s.startTime}–{s.endTime}
                         {' — '}{s.totalTokens} patients registered
                       </option>

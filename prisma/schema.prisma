@@ -88,6 +88,8 @@ model OpdSession {
   date           DateTime  @db.Date
   startTime      String
   endTime        String
+  opdNo          String?   // OPD No / Room No for this session e.g. "OPD-01", "Room 102"
+  floor          String?   // Floor for this session e.g. "Floor 1", "1st Floor"
   status         OpdStatus @default(upcoming)
   currentToken   Int?
   totalTokens    Int       @default(0)

@@ -6,6 +6,19 @@ import Link from 'next/link';
 import styles from './page.module.css';
 import BedSelector from '@/components/admission/BedSelector';
 
+function fmtDateTime(iso: string) {
+  return new Date(iso).toLocaleString('en-IN', {
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: true,
+  });
+}
+
+function toLocalDatetimeValue(date: Date) {
+  // Returns YYYY-MM-DDTHH:MM for datetime-local input
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 interface Doctor { id?: string; user: { name: string }; department: { name: string } | null; }
 interface Admission {
   id: string; type: string; status: string; admittedAt: string; dischargedAt: string | null;
@@ -50,6 +63,11 @@ export default function PatientDetailPage() {
   const [loading, setLoading]   = useState(true);
   const [role,    setRole]      = useState('');
 
+  const [showDischargeModal, setShowDischargeModal] = useState(false);
+  const [dischargeAdmId,     setDischargeAdmId]     = useState('');
+  const [dischargeTime,      setDischargeTime]      = useState('');
+  const [discharging,        setDischarging]        = useState(false);
+
   const [options, setOptions] = useState<{ wards: WardOption[]; otRooms: OtRoomOption[]; opdSessions: OpdSessionOption[]; doctors: DoctorOption[] } | null>(null);
   const [showTransfer, setShowTransfer] = useState(false);
   const [transferForm, setTransferForm] = useState({
@@ -79,13 +97,25 @@ export default function PatientDetailPage() {
       .then(r => r.json()).then(d => setOptions(d));
   }, [id]);
 
-  const discharge = async (admissionId: string) => {
-    if (!confirm('Mark this admission as discharged?')) return;
+  const openDischargeModal = (admissionId: string) => {
+    setDischargeAdmId(admissionId);
+    setDischargeTime(toLocalDatetimeValue(new Date()));
+    setShowDischargeModal(true);
+  };
+
+  const dischargeConfirm = async () => {
+    setDischarging(true);
     await fetch(`/api/portal/admission/patients/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'discharge', admissionId }),
+      body: JSON.stringify({
+        action: 'discharge',
+        admissionId: dischargeAdmId,
+        dischargedAt: new Date(dischargeTime).toISOString(),
+      }),
     });
+    setDischarging(false);
+    setShowDischargeModal(false);
     window.location.reload();
   };
 
@@ -239,15 +269,18 @@ export default function PatientDetailPage() {
 
               {/* Admitted date + discharge */}
               <div className={styles.admFooter}>
-                <span className={styles.admDate}>
-                  Admitted {new Date(activeAdmission.admittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </span>
+                <div className={styles.admDates}>
+                  <span className={styles.admDate}>
+                    <span className={styles.admDateLabel}>Admitted</span>
+                    {fmtDateTime(activeAdmission.admittedAt)}
+                  </span>
+                </div>
                 {role === 'RECEPTIONIST' && (
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button className={styles.transferBtn} onClick={() => setShowTransfer(true)}>
                       Transfer
                     </button>
-                    <button className={styles.dischargeBtn} onClick={() => discharge(activeAdmission.id)}>
+                    <button className={styles.dischargeBtn} onClick={() => openDischargeModal(activeAdmission.id)}>
                       Discharge
                     </button>
                   </div>
@@ -331,17 +364,63 @@ export default function PatientDetailPage() {
                       {adm.type}
                     </span>
                     <div className={styles.histMeta}>
-                      <span>{new Date(adm.admittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                      {adm.dischargedAt && <span>→ {new Date(adm.dischargedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>}
+                      <span>
+                        <span className={styles.histLabel}>In: </span>
+                        {fmtDateTime(adm.admittedAt)}
+                      </span>
+                      {adm.dischargedAt && (
+                        <span>
+                          <span className={styles.histLabel}>Out: </span>
+                          {fmtDateTime(adm.dischargedAt)}
+                        </span>
+                      )}
                     </div>
                     <span className={`${styles.histStatus} ${adm.status === 'active' ? styles.histActive : ''}`}>{adm.status}</span>
                   </div>
                 ))}
+
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Discharge Modal */}
+      {showDischargeModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h2>Discharge Patient</h2>
+            <p>Set the exact discharge date and time for <strong>{patient?.name}</strong>.</p>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="discharge-datetime">Discharge Date &amp; Time</label>
+              <input
+                id="discharge-datetime"
+                type="datetime-local"
+                value={dischargeTime}
+                onChange={e => setDischargeTime(e.target.value)}
+              />
+            </div>
+
+            <div className={styles.modalActions}>
+              <button
+                className={styles.cancelBtn}
+                onClick={() => setShowDischargeModal(false)}
+                disabled={discharging}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.dischargeBtn}
+                onClick={dischargeConfirm}
+                disabled={discharging || !dischargeTime}
+              >
+                {discharging ? 'Discharging…' : 'Confirm Discharge'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Transfer Modal */}
       {showTransfer && activeAdmission && (

@@ -56,7 +56,7 @@ export class OpdController {
         id: session.id,
         name: doc.user.name,
         designation: doc.designation,
-        roomNo: doc.roomNo ?? 'TBD',
+        roomNo: session.opdNo || doc.roomNo || 'TBD',
         status: (session.status as DoctorStatus) ?? 'unavailable',
         startTime: session.startTime,
         endTime: session.endTime,
@@ -65,7 +65,7 @@ export class OpdController {
         avgWaitMinutes: session.avgWaitMinutes,
         departmentId: doc.department?.id ?? 'none',
         departmentName: doc.department?.name ?? 'General Medicine',
-        departmentFloor: doc.department?.floor ?? '1st Floor',
+        departmentFloor: session.floor || doc.department?.floor || '1st Floor',
         departmentColor: doc.department?.color ?? '#3b82f6',
       };
     });

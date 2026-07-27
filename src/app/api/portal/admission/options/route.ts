@@ -37,7 +37,7 @@ export async function GET(_: NextRequest) {
     prisma.otRoom.findMany({ orderBy: { roomNo: 'asc' } }),
     prisma.opdSession.findMany({
       where: {
-        date: { gte: todayStart, lte: todayEnd },
+        date: { gte: todayStart },
         status: { in: ['upcoming', 'running', 'break'] },
       },
       include: {
@@ -48,7 +48,10 @@ export async function GET(_: NextRequest) {
           },
         },
       },
-      orderBy: { startTime: 'asc' },
+      orderBy: [
+        { date: 'asc' },
+        { startTime: 'asc' },
+      ],
     }),
   ]);
 

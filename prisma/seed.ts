@@ -154,6 +154,7 @@ async function main() {
         where: { id: doc.id + '-session' },
         update: {
           date:          today,
+          floor:         dept.floor,
           status:        doc.status,
           currentToken:  doc.currentToken ?? null,
           totalTokens:   doc.totalTokens,
@@ -165,6 +166,7 @@ async function main() {
           date:          today,
           startTime:     doc.startTime,
           endTime:       doc.endTime,
+          floor:         dept.floor,
           status:        doc.status,
           currentToken:  doc.currentToken ?? null,
           totalTokens:   doc.totalTokens,

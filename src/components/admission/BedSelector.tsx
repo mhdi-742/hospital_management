@@ -18,9 +18,10 @@ interface BedSelectorProps {
   beds: Bed[];
   selectedBedId: string;
   onSelectBed: (bedId: string) => void;
+  currentAdmissionId?: string;
 }
 
-export default function BedSelector({ wardName, beds, selectedBedId, onSelectBed }: BedSelectorProps) {
+export default function BedSelector({ wardName, beds, selectedBedId, onSelectBed, currentAdmissionId }: BedSelectorProps) {
   return (
     <div className={styles.container}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -49,8 +50,9 @@ export default function BedSelector({ wardName, beds, selectedBedId, onSelectBed
       ) : (
         <div className={styles.grid}>
           {beds.map((bed) => {
-            const isOccupied = bed.admissions && bed.admissions.length > 0;
-            const patientName = isOccupied ? bed.admissions[0].patient.name : null;
+            const otherAdmission = bed.admissions?.find(a => a.id !== currentAdmissionId);
+            const isOccupiedByOther = Boolean(otherAdmission);
+            const patientName = otherAdmission ? otherAdmission.patient.name : (bed.admissions?.[0]?.patient?.name ?? null);
             const isSelected = bed.id === selectedBedId;
 
             return (
@@ -58,15 +60,15 @@ export default function BedSelector({ wardName, beds, selectedBedId, onSelectBed
                 key={bed.id}
                 type="button"
                 className={`${styles.bed} ${
-                  isOccupied ? styles.bedOccupied : styles.bedAvailable
+                  isOccupiedByOther ? styles.bedOccupied : styles.bedAvailable
                 } ${isSelected ? styles.bedSelected : ''}`}
-                onClick={() => !isOccupied && onSelectBed(bed.id)}
-                disabled={isOccupied}
-                title={isOccupied ? `Occupied by: ${patientName}` : `Select bed ${bed.bedNo}`}
+                onClick={() => !isOccupiedByOther && onSelectBed(bed.id)}
+                disabled={isOccupiedByOther}
+                title={isOccupiedByOther ? `Occupied by: ${patientName}` : `Select bed ${bed.bedNo}`}
               >
                 <span className={styles.bedIcon}>🛏️</span>
                 <span className={styles.bedLabel}>{bed.bedNo}</span>
-                {isOccupied && (
+                {isOccupiedByOther && (
                   <div className={styles.tooltip}>
                     <div className={styles.tooltipTitle}>Occupied</div>
                     <div>{patientName}</div>

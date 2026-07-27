@@ -50,9 +50,10 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       return NextResponse.json({ error: 'Only receptionists can discharge' }, { status: 403 });
     }
     const admissionId = data.admissionId;
+    const dischargedAt = data.dischargedAt ? new Date(data.dischargedAt) : new Date();
     const admission = await prisma.admission.update({
       where: { id: admissionId },
-      data: { status: 'discharged', dischargedAt: new Date() },
+      data: { status: 'discharged', dischargedAt },
     });
     await prisma.auditLog.create({
       data: {
@@ -174,6 +175,21 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       policyNumber:         data.policyNumber,
     },
   });
+
+  if (data.activeAdmissionId && (data.wardId !== undefined || data.bedId !== undefined)) {
+    await prisma.admission.update({
+      where: { id: data.activeAdmissionId },
+      data: {
+        wardId: data.wardId || null,
+        bedId: data.bedId || null,
+      },
+    });
+
+    try {
+      const { eventBus } = await import('@/lib/eventBus');
+      eventBus.emit('REFRESH_IPD', {});
+    } catch (e) {}
+  }
 
   return NextResponse.json(patient);
 }

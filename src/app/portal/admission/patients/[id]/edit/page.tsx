@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './edit.module.css';
+import BedSelector from '@/components/admission/BedSelector';
 
 const BLOOD_GROUPS = ['A+', 'A−', 'B+', 'B−', 'AB+', 'AB−', 'O+', 'O−'];
 
@@ -13,32 +14,56 @@ interface Patient {
   chiefComplaint: string | null; diagnosis: string | null;
   emergencyContactName: string | null; emergencyContactPhone: string | null;
   insuranceProvider: string | null; policyNumber: string | null;
+  admissions?: any[];
 }
+
+interface Bed {
+  id: string;
+  bedNo: string;
+  wardId: string;
+  admissions: { id: string; patient: { name: string } }[];
+}
+interface Ward { id: string; name: string; code: string; roomNo: string | null; floorNo: string | null; accentColor: string; beds: Bed[]; }
 
 export default function EditPatientPage() {
   const { id } = useParams<{ id: string }>();
   const router  = useRouter();
 
   const [form, setForm] = useState<Partial<Patient>>({});
-  const [loading, setLoading]   = useState(true);
-  const [saving,  setSaving]    = useState(false);
-  const [error,   setError]     = useState('');
-  const [success, setSuccess]   = useState(false);
+  const [options, setOptions] = useState<{ wards: Ward[] } | null>(null);
+  const [activeIpdAdmission, setActiveIpdAdmission] = useState<any | null>(null);
+  const [wardId, setWardId] = useState('');
+  const [bedId, setBedId] = useState('');
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/portal/admission/patients/${id}`)
-      .then(r => r.json())
-      .then((p: Patient) => {
-        setForm({
-          name: p.name, age: p.age, gender: p.gender ?? '',
-          contact: p.contact ?? '', address: p.address ?? '',
-          bloodGroup: p.bloodGroup ?? '', chiefComplaint: p.chiefComplaint ?? '',
-          diagnosis: p.diagnosis ?? '', emergencyContactName: p.emergencyContactName ?? '',
-          emergencyContactPhone: p.emergencyContactPhone ?? '',
-          insuranceProvider: p.insuranceProvider ?? '', policyNumber: p.policyNumber ?? '',
-        });
-        setLoading(false);
+    Promise.all([
+      fetch(`/api/portal/admission/patients/${id}`).then(r => r.json()),
+      fetch('/api/portal/admission/options').then(r => r.json()),
+    ]).then(([p, opts]) => {
+      setForm({
+        name: p.name, age: p.age, gender: p.gender ?? '',
+        contact: p.contact ?? '', address: p.address ?? '',
+        bloodGroup: p.bloodGroup ?? '', chiefComplaint: p.chiefComplaint ?? '',
+        diagnosis: p.diagnosis ?? '', emergencyContactName: p.emergencyContactName ?? '',
+        emergencyContactPhone: p.emergencyContactPhone ?? '',
+        insuranceProvider: p.insuranceProvider ?? '', policyNumber: p.policyNumber ?? '',
       });
+      setOptions(opts);
+
+      const activeIpd = p.admissions?.find((a: any) => a.type === 'IPD' && a.status === 'active');
+      if (activeIpd) {
+        setActiveIpdAdmission(activeIpd);
+        setWardId(activeIpd.wardId ?? '');
+        setBedId(activeIpd.bedId ?? '');
+      }
+
+      setLoading(false);
+    });
   }, [id]);
 
   const set = (key: keyof Patient, val: string | number) =>
@@ -47,10 +72,20 @@ export default function EditPatientPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true); setError('');
+
+    const payload = {
+      ...form,
+      ...(activeIpdAdmission ? {
+        activeAdmissionId: activeIpdAdmission.id,
+        wardId: wardId || null,
+        bedId: bedId || null,
+      } : {}),
+    };
+
     const res = await fetch(`/api/portal/admission/patients/${id}`, {
       method:  'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(form),
+      body:    JSON.stringify(payload),
     });
     setSaving(false);
     if (!res.ok) { setError('Failed to save changes.'); return; }
@@ -119,6 +154,47 @@ export default function EditPatientPage() {
             <textarea id="edit-diagnosis" className={`${styles.input} ${styles.textarea}`} value={form.diagnosis ?? ''} onChange={e => set('diagnosis', e.target.value)} rows={3} />
           </div>
         </div>
+
+        {/* IPD Ward & Bed Selection */}
+        {activeIpdAdmission && (
+          <div className={styles.section}>
+            <h2 className={styles.sectionTitle}>Inpatient (IPD) Location & Bed Assignment</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className={styles.field}>
+                <label className={styles.label}>Inpatient Ward</label>
+                <select
+                  id="edit-ward"
+                  className={styles.input}
+                  value={wardId}
+                  onChange={e => {
+                    setWardId(e.target.value);
+                    setBedId('');
+                  }}
+                >
+                  <option value="">Select Ward...</option>
+                  {options?.wards.map(w => (
+                    <option key={w.id} value={w.id}>
+                      {w.name} ({w.code}){w.roomNo ? ` • Room ${w.roomNo}` : ''}{w.floorNo ? ` • Floor ${w.floorNo}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {wardId && (() => {
+                const selectedWard = options?.wards.find(w => w.id === wardId);
+                return (
+                  <BedSelector
+                    wardName={selectedWard?.name || ''}
+                    beds={selectedWard?.beds || []}
+                    selectedBedId={bedId}
+                    onSelectBed={(id) => setBedId(id)}
+                    currentAdmissionId={activeIpdAdmission.id}
+                  />
+                );
+              })()}
+            </div>
+          </div>
+        )}
 
         {/* Emergency & Insurance */}
         <div className={styles.section}>

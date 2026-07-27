@@ -24,7 +24,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Doctor profile not found' }, { status: 404 });
     }
 
-    const { status, incrementToken, decrementToken, startTime, endTime, sessionId } = await req.json();
+    const { status, incrementToken, decrementToken, startTime, endTime, opdNo, floor, date, sessionId } = await req.json();
 
     // Find the specific session or fall back to today's latest session
     let opdSession;
@@ -55,6 +55,9 @@ export async function PATCH(req: NextRequest) {
     if (status !== undefined) updateData.status = status as OpdStatus;
     if (startTime !== undefined) updateData.startTime = startTime;
     if (endTime !== undefined) updateData.endTime = endTime;
+    if (opdNo !== undefined) updateData.opdNo = opdNo || null;
+    if (floor !== undefined) updateData.floor = floor || null;
+    if (date !== undefined && date) updateData.date = new Date(date);
 
     if (incrementToken) {
       const nextToken = (opdSession.currentToken ?? 0) + 1;
@@ -102,23 +105,26 @@ export async function POST(req: NextRequest) {
   try {
     const doctor = await prisma.doctor.findUnique({
       where: { userId: session.user.id },
+      include: { department: true },
     });
 
     if (!doctor) {
       return NextResponse.json({ error: 'Doctor profile not found' }, { status: 404 });
     }
 
-    const { startTime, endTime } = await req.json();
+    const { startTime, endTime, opdNo, floor, date } = await req.json();
 
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
+    const sessionDate = date ? new Date(date) : new Date();
+    sessionDate.setHours(0, 0, 0, 0);
 
     const newSession = await prisma.opdSession.create({
       data: {
         doctorId: doctor.id,
-        date: todayStart,
+        date: sessionDate,
         startTime: startTime || '09:00',
         endTime: endTime || '13:00',
+        opdNo: opdNo || doctor.roomNo || null,
+        floor: floor || doctor.department?.floor || null,
         status: 'upcoming',
         totalTokens: 0,
         avgWaitMinutes: 0,

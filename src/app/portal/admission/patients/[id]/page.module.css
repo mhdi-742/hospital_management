@@ -174,7 +174,18 @@
   border-top: 1px solid rgba(255,255,255,0.05);
 }
 
-.admDate { font-size: 0.8rem; color: #64748b; }
+.admDates { display: flex; flex-direction: column; gap: 4px; }
+
+.admDate { font-size: 0.8rem; color: #94a3b8; }
+
+.admDateLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: 5px;
+}
 
 .dischargeBtn {
   padding: 7px 16px;
@@ -235,7 +246,16 @@
   font-weight: 700;
 }
 
-.histMeta { flex: 1; font-size: 0.78rem; color: #64748b; display: flex; gap: 8px; }
+.histMeta { flex: 1; font-size: 0.78rem; color: #94a3b8; display: flex; flex-direction: column; gap: 3px; }
+
+.histLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: 4px;
+}
 
 .histStatus {
   font-size: 0.7rem;

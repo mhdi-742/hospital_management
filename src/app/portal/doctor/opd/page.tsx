@@ -23,27 +23,29 @@ export default async function OpdSessionPage() {
     );
   }
 
-  // Fetch today's sessions
+  // Fetch today's and upcoming sessions from today onwards
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
-  const todayEnd = new Date();
-  todayEnd.setHours(23, 59, 59, 999);
 
   const opdSessions = await prisma.opdSession.findMany({
     where: {
       doctorId: doctor.id,
       date: {
         gte: todayStart,
-        lte: todayEnd,
       },
     },
-    orderBy: { startTime: 'asc' },
+    orderBy: [
+      { date: 'asc' },
+      { startTime: 'asc' },
+    ],
   });
 
   const serializedSessions = opdSessions.map(session => ({
     id: session.id,
+    date: session.date.toISOString().split('T')[0],
     startTime: session.startTime,
     endTime: session.endTime,
+    opdNo: session.opdNo,
     status: session.status as any,
     currentToken: session.currentToken,
     totalTokens: session.totalTokens,

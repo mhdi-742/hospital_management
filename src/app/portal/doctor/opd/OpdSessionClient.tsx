@@ -26,8 +26,11 @@ interface Admission {
 
 interface OpdSession {
   id: string;
+  date?: string;
   startTime: string;
   endTime: string;
+  opdNo?: string | null;
+  floor?: string | null;
   status: 'upcoming' | 'running' | 'break' | 'completed' | 'unavailable';
   currentToken: number | null;
   totalTokens: number;
@@ -50,8 +53,11 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
   // New/Edit session form fields
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [newDate, setNewDate] = useState(new Date().toISOString().split('T')[0]);
   const [newStartTime, setNewStartTime] = useState('09:00');
   const [newEndTime, setNewEndTime] = useState('13:00');
+  const [newOpdNo, setNewOpdNo] = useState('');
+  const [newFloor, setNewFloor] = useState('');
 
   // Examination Modal state
   const [examiningAdmission, setExaminingAdmission] = useState<Admission | null>(null);
@@ -112,8 +118,11 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          date: newDate,
           startTime: newStartTime,
           endTime: newEndTime,
+          opdNo: newOpdNo,
+          floor: newFloor,
         }),
       });
 
@@ -192,19 +201,25 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
 
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateSessionField({ startTime: newStartTime, endTime: newEndTime });
+    updateSessionField({ date: newDate, startTime: newStartTime, endTime: newEndTime, opdNo: newOpdNo, floor: newFloor });
   };
 
   const openEditModal = () => {
     if (!activeSession) return;
+    setNewDate(activeSession.date ? activeSession.date.split('T')[0] : new Date().toISOString().split('T')[0]);
     setNewStartTime(activeSession.startTime);
     setNewEndTime(activeSession.endTime);
+    setNewOpdNo(activeSession.opdNo || '');
+    setNewFloor(activeSession.floor || '');
     setShowEditModal(true);
   };
 
   const openAddModal = () => {
+    setNewDate(new Date().toISOString().split('T')[0]);
     setNewStartTime('09:00');
     setNewEndTime('13:00');
+    setNewOpdNo('');
+    setNewFloor('');
     setShowAddModal(true);
   };
 
@@ -347,7 +362,7 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
             className={`${styles.tab} ${activeSessionId === s.id ? styles.tabActive : ''}`}
             onClick={() => setActiveSessionId(s.id)}
           >
-            {s.startTime} - {s.endTime}
+            {s.date ? `${s.date} • ` : ''}{s.opdNo ? `${s.opdNo} • ` : ''}{s.startTime} - {s.endTime}
           </button>
         ))}
         <button className={`${styles.tab} ${styles.addTab}`} onClick={openAddModal}>
@@ -433,8 +448,16 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
                   <div className={styles.statLbl}>Waiting</div>
                 </div>
                 <div className={styles.statBox}>
-                  <div className={styles.statVal}>{activeSession.startTime}</div>
-                  <div className={styles.statLbl}>Start Time</div>
+                  <div className={styles.statVal}>{activeSession.opdNo || 'TBD'}</div>
+                  <div className={styles.statLbl}>OPD / Room No</div>
+                </div>
+                <div className={styles.statBox}>
+                  <div className={styles.statVal}>{activeSession.floor || 'N/A'}</div>
+                  <div className={styles.statLbl}>Floor</div>
+                </div>
+                <div className={styles.statBox}>
+                  <div className={styles.statVal}>{activeSession.startTime} - {activeSession.endTime}</div>
+                  <div className={styles.statLbl}>Session Timing</div>
                 </div>
               </div>
             </div>
@@ -585,6 +608,16 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
             </div>
             <form onSubmit={showAddModal ? handleCreateSession : handleEditSubmit}>
               <div className={styles.modalBody}>
+                <div className={styles.field}>
+                  <label className={styles.label}>Session Date</label>
+                  <input
+                    type="date"
+                    className={styles.input}
+                    value={newDate}
+                    onChange={e => setNewDate(e.target.value)}
+                    required
+                  />
+                </div>
                 <div className={styles.grid2}>
                   <div className={styles.field}>
                     <label className={styles.label}>Start Time</label>
@@ -593,6 +626,7 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
                       className={styles.input}
                       value={newStartTime}
                       onChange={e => setNewStartTime(e.target.value)}
+                      required
                     />
                   </div>
                   <div className={styles.field}>
@@ -602,6 +636,29 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
                       className={styles.input}
                       value={newEndTime}
                       onChange={e => setNewEndTime(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className={styles.grid2}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>OPD Number / Room Number</label>
+                    <input
+                      type="text"
+                      className={styles.input}
+                      value={newOpdNo}
+                      onChange={e => setNewOpdNo(e.target.value)}
+                      placeholder="e.g. OPD-01, Room 102, Chamber A"
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Floor Location</label>
+                    <input
+                      type="text"
+                      className={styles.input}
+                      value={newFloor}
+                      onChange={e => setNewFloor(e.target.value)}
+                      placeholder="e.g. Floor 1, 1st Floor"
                     />
                   </div>
                 </div>
