@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,71 +6,282 @@ datasource db {
   provider = "mysql"
 }
 
-// ─────────────────────────────────────────────
-// Users & Auth
-// ─────────────────────────────────────────────
+model admission {
+  id               String                      @id
+  patientId        String
+  type             admission_type
+  status           admission_status            @default(active)
+  admittedAt       DateTime                    @default(now())
+  dischargedAt     DateTime?
+  wardId           String?
+  patientCondition admission_patientCondition?
+  opdSessionId     String?
+  createdAt        DateTime                    @default(now())
+  updatedAt        DateTime
+  bedId            String?
+  bed              bed?                        @relation(fields: [bedId], references: [id], map: "Admission_bedId_fkey")
+  opdsession       opdsession?                 @relation(fields: [opdSessionId], references: [id], map: "Admission_opdSessionId_fkey")
+  patient          patient                     @relation(fields: [patientId], references: [id], map: "Admission_patientId_fkey")
+  ward             ward?                       @relation(fields: [wardId], references: [id], map: "Admission_wardId_fkey")
+  otcase           otcase?
+  patientdoctor    patientdoctor[]
+  transferrequest  transferrequest[]
 
-enum Role {
+  @@index([bedId], map: "Admission_bedId_fkey")
+  @@index([opdSessionId], map: "Admission_opdSessionId_fkey")
+  @@index([patientId], map: "Admission_patientId_fkey")
+  @@index([wardId], map: "Admission_wardId_fkey")
+}
+
+model announcement {
+  id        String             @id
+  text      String             @db.Text
+  board     announcement_board @default(ALL)
+  isActive  Boolean            @default(true)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime
+}
+
+model auditlog {
+  id        String   @id
+  userId    String
+  action    String
+  target    String?
+  metadata  String?  @db.Text
+  createdAt DateTime @default(now())
+  user      user     @relation(fields: [userId], references: [id], map: "AuditLog_userId_fkey")
+
+  @@index([userId], map: "AuditLog_userId_fkey")
+}
+
+model bed {
+  id        String      @id
+  bedNo     String
+  wardId    String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime
+  admission admission[]
+  ward      ward        @relation(fields: [wardId], references: [id], onDelete: Cascade, map: "Bed_wardId_fkey")
+
+  @@unique([wardId, bedNo], map: "Bed_wardId_bedNo_key")
+}
+
+model department {
+  id        String   @id
+  name      String
+  floor     String
+  color     String   @default("#3b82f6")
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  doctor    doctor[]
+}
+
+model doctor {
+  id              String            @id
+  userId          String            @unique(map: "Doctor_userId_key")
+  designation     String
+  roomNo          String?
+  speciality      String?
+  departmentId    String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime
+  department      department?       @relation(fields: [departmentId], references: [id], map: "Doctor_departmentId_fkey")
+  user            user              @relation(fields: [userId], references: [id], map: "Doctor_userId_fkey")
+  opdsession      opdsession[]
+  otassistant     otassistant[]
+  otcase          otcase[]
+  patientdoctor   patientdoctor[]
+  transferrequest transferrequest[]
+
+  @@index([departmentId], map: "Doctor_departmentId_fkey")
+}
+
+model hospitalsettings {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime
+}
+
+model opdsession {
+  id             String            @id
+  doctorId       String
+  date           DateTime          @db.Date
+  startTime      String
+  endTime        String
+  status         opdsession_status @default(upcoming)
+  currentToken   Int?
+  totalTokens    Int               @default(0)
+  avgWaitMinutes Int               @default(0)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime
+  opdNo          String?
+  floor          String?
+  admission      admission[]
+  doctor         doctor            @relation(fields: [doctorId], references: [id], map: "OpdSession_doctorId_fkey")
+
+  @@index([doctorId], map: "OpdSession_doctorId_fkey")
+}
+
+model otassistant {
+  id       String @id
+  otCaseId String
+  doctorId String
+  doctor   doctor @relation(fields: [doctorId], references: [id], map: "OtAssistant_doctorId_fkey")
+  otcase   otcase @relation(fields: [otCaseId], references: [id], map: "OtAssistant_otCaseId_fkey")
+
+  @@unique([otCaseId, doctorId], map: "OtAssistant_otCaseId_doctorId_key")
+  @@index([doctorId], map: "OtAssistant_doctorId_fkey")
+}
+
+model otcase {
+  id                String        @id
+  admissionId       String        @unique(map: "OtCase_admissionId_key")
+  otRoomId          String?
+  leadDoctorId      String?
+  procedureName     String
+  anaesthetist      String?
+  scheduledTime     String?
+  estimatedDuration Int?
+  status            otcase_status @default(scheduled)
+  notes             String?       @db.Text
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime
+  otassistant       otassistant[]
+  admission         admission     @relation(fields: [admissionId], references: [id], map: "OtCase_admissionId_fkey")
+  doctor            doctor?       @relation(fields: [leadDoctorId], references: [id], map: "OtCase_leadDoctorId_fkey")
+  otroom            otroom?       @relation(fields: [otRoomId], references: [id], map: "OtCase_otRoomId_fkey")
+
+  @@index([leadDoctorId], map: "OtCase_leadDoctorId_fkey")
+  @@index([otRoomId], map: "OtCase_otRoomId_fkey")
+}
+
+model otroom {
+  id        String   @id
+  roomNo    String   @unique(map: "OtRoom_roomNo_key")
+  type      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  otcase    otcase[]
+}
+
+model patient {
+  id                    String          @id
+  name                  String
+  age                   Int?
+  gender                patient_gender?
+  contact               String?
+  address               String?
+  bloodGroup            String?
+  chiefComplaint        String?         @db.Text
+  diagnosis             String?         @db.Text
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  insuranceProvider     String?
+  policyNumber          String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime
+  admission             admission[]
+}
+
+model patientdoctor {
+  id          String             @id
+  admissionId String
+  doctorId    String
+  role        patientdoctor_role @default(primary)
+  admission   admission          @relation(fields: [admissionId], references: [id], map: "PatientDoctor_admissionId_fkey")
+  doctor      doctor             @relation(fields: [doctorId], references: [id], map: "PatientDoctor_doctorId_fkey")
+
+  @@unique([admissionId, doctorId], map: "PatientDoctor_admissionId_doctorId_key")
+  @@index([doctorId], map: "PatientDoctor_doctorId_fkey")
+}
+
+model transferrequest {
+  id              String                     @id
+  admissionId     String
+  requestingDocId String
+  targetType      transferrequest_targetType
+  notes           String?                    @db.Text
+  status          String                     @default("pending")
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime
+  admission       admission                  @relation(fields: [admissionId], references: [id], map: "TransferRequest_admissionId_fkey")
+  doctor          doctor                     @relation(fields: [requestingDocId], references: [id], map: "TransferRequest_requestingDocId_fkey")
+
+  @@index([admissionId], map: "TransferRequest_admissionId_fkey")
+  @@index([requestingDocId], map: "TransferRequest_requestingDocId_fkey")
+}
+
+model user {
+  id        String     @id
+  email     String     @unique(map: "User_email_key")
+  password  String
+  name      String
+  role      user_role
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime
+  auditlog  auditlog[]
+  doctor    doctor?
+}
+
+model ward {
+  id          String      @id
+  name        String
+  code        String
+  capacity    Int         @default(20)
+  accentColor String      @default("#3b82f6")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime
+  floorNo     String?
+  roomNo      String?
+  admission   admission[]
+  bed         bed[]
+}
+
+enum admission_type {
+  OPD
+  IPD
+  OT
+}
+
+enum announcement_board {
+  OPD
+  IPD
+  OT
+  ALL
+}
+
+enum admission_status {
+  active
+  discharged
+  transferred
+}
+
+enum patient_gender {
+  M
+  F
+  Other
+}
+
+enum patientdoctor_role {
+  primary
+  consultant
+}
+
+enum transferrequest_targetType {
+  OPD
+  IPD
+  OT
+}
+
+enum user_role {
   ADMIN
   DOCTOR
   RECEPTIONIST
   NURSE
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      Role
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  doctor    Doctor?
-  auditLogs AuditLog[]
-}
-
-// ─────────────────────────────────────────────
-// Doctors & Departments
-// ─────────────────────────────────────────────
-
-model Department {
-  id      String   @id @default(cuid())
-  name    String
-  floor   String
-  color   String   @default("#3b82f6")
-  doctors Doctor[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Doctor {
-  id           String  @id @default(cuid())
-  userId       String  @unique
-  user         User    @relation(fields: [userId], references: [id])
-  designation  String
-  roomNo       String?
-  speciality   String?
-  departmentId String?
-  department   Department? @relation(fields: [departmentId], references: [id])
-
-  opdSessions    OpdSession[]
-  primaryPatients PatientDoctor[] @relation("DoctorPatients")
-  otCasesLead    OtCase[]         @relation("OtLead")
-  otAssistances  OtAssistant[]
-  transferRequests TransferRequest[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// ─────────────────────────────────────────────
-// OPD Sessions
-// ─────────────────────────────────────────────
-
-enum OpdStatus {
+enum opdsession_status {
   upcoming
   running
   break
@@ -81,261 +289,17 @@ enum OpdStatus {
   unavailable
 }
 
-model OpdSession {
-  id             String    @id @default(cuid())
-  doctorId       String
-  doctor         Doctor    @relation(fields: [doctorId], references: [id])
-  date           DateTime  @db.Date
-  startTime      String
-  endTime        String
-  status         OpdStatus @default(upcoming)
-  currentToken   Int?
-  totalTokens    Int       @default(0)
-  avgWaitMinutes Int       @default(0)
-
-  admissions Admission[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// ─────────────────────────────────────────────
-// Wards & OT Rooms
-// ─────────────────────────────────────────────
-
-model Ward {
-  id          String  @id @default(cuid())
-  name        String
-  code        String
-  roomNo      String?
-  floorNo     String?
-  capacity    Int     @default(20)
-  accentColor String  @default("#3b82f6")
-
-  beds        Bed[]
-  admissions  Admission[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Bed {
-  id          String      @id @default(cuid())
-  bedNo       String      // e.g. "MW-01"
-  wardId      String
-  ward        Ward        @relation(fields: [wardId], references: [id], onDelete: Cascade)
-  admissions  Admission[]
-
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  @@unique([wardId, bedNo])
-}
-
-model OtRoom {
-  id      String @id @default(cuid())
-  roomNo  String @unique
-  type    String
-
-  otCases OtCase[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// ─────────────────────────────────────────────
-// Patients & Admissions
-// ─────────────────────────────────────────────
-
-enum Gender {
-  M
-  F
-  Other
-}
-
-model Patient {
-  id                   String   @id @default(cuid())
-  name                 String
-  age                  Int?
-  gender               Gender?
-  contact              String?
-  address              String?
-  bloodGroup           String?
-  chiefComplaint       String?  @db.Text
-  diagnosis            String?  @db.Text
-  emergencyContactName  String?
-  emergencyContactPhone String?
-  insuranceProvider    String?
-  policyNumber         String?
-
-  admissions Admission[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-enum AdmissionType {
-  OPD
-  IPD
-  OT
-}
-
-enum AdmissionStatus {
-  active
-  discharged
-  transferred
-}
-
-enum PatientCondition {
+enum admission_patientCondition {
   stable
   monitoring
   critical
 }
 
-model Admission {
-  id            String          @id @default(cuid())
-  patientId     String
-  patient       Patient         @relation(fields: [patientId], references: [id])
-  type          AdmissionType
-  status        AdmissionStatus @default(active)
-  admittedAt    DateTime        @default(now())
-  dischargedAt  DateTime?
-
-  // IPD specific
-  wardId        String?
-  ward          Ward?           @relation(fields: [wardId], references: [id])
-  bedId         String?
-  bed           Bed?            @relation(fields: [bedId], references: [id])
-  patientCondition PatientCondition?
-
-  // OPD specific
-  opdSessionId  String?
-  opdSession    OpdSession?     @relation(fields: [opdSessionId], references: [id])
-
-  // Doctors assigned
-  doctors       PatientDoctor[]
-
-  // OT case (if type = OT)
-  otCase        OtCase?
-
-  transferRequests TransferRequest[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model TransferRequest {
-  id              String   @id @default(cuid())
-  admissionId     String
-  admission       Admission @relation(fields: [admissionId], references: [id])
-  requestingDocId String
-  doctor          Doctor    @relation(fields: [requestingDocId], references: [id])
-  targetType      AdmissionType
-  notes           String?   @db.Text
-  status          String    @default("pending") // pending, approved, rejected
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-enum DoctorRole {
-  primary
-  consultant
-}
-
-model PatientDoctor {
-  id          String     @id @default(cuid())
-  admissionId String
-  admission   Admission  @relation(fields: [admissionId], references: [id])
-  doctorId    String
-  doctor      Doctor     @relation("DoctorPatients", fields: [doctorId], references: [id])
-  role        DoctorRole @default(primary)
-
-  @@unique([admissionId, doctorId])
-}
-
-// ─────────────────────────────────────────────
-// Operation Theatre
-// ─────────────────────────────────────────────
-
-enum OtStatus {
+enum otcase_status {
   scheduled
   preparing
   in_progress
   completed
   delayed
   cancelled
-}
-
-model OtCase {
-  id                String    @id @default(cuid())
-  admissionId       String    @unique
-  admission         Admission @relation(fields: [admissionId], references: [id])
-  otRoomId          String?
-  otRoom            OtRoom?   @relation(fields: [otRoomId], references: [id])
-  leadDoctorId      String?
-  leadDoctor        Doctor?   @relation("OtLead", fields: [leadDoctorId], references: [id])
-  procedureName     String
-  anaesthetist      String?
-  scheduledTime     String?
-  estimatedDuration Int?
-  status            OtStatus  @default(scheduled)
-  notes             String?   @db.Text
-
-  assistants OtAssistant[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model OtAssistant {
-  id       String @id @default(cuid())
-  otCaseId String
-  otCase   OtCase @relation(fields: [otCaseId], references: [id])
-  doctorId String
-  doctor   Doctor @relation(fields: [doctorId], references: [id])
-
-  @@unique([otCaseId, doctorId])
-}
-
-// ─────────────────────────────────────────────
-// Announcements
-// ─────────────────────────────────────────────
-
-enum AnnouncementBoard {
-  OPD
-  IPD
-  OT
-  ALL
-}
-
-model Announcement {
-  id        String            @id @default(cuid())
-  text      String            @db.Text
-  board     AnnouncementBoard @default(ALL)
-  isActive  Boolean           @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// ─────────────────────────────────────────────
-// Audit Logs & Settings
-// ─────────────────────────────────────────────
-
-model AuditLog {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  action    String
-  target    String?
-  metadata  String?  @db.Text
-  createdAt DateTime @default(now())
-}
-
-model HospitalSettings {
-  key       String @id
-  value     String @db.Text
-
-  updatedAt DateTime @updatedAt
 }
