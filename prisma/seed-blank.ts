@@ -74,10 +74,11 @@ async function main() {
     console.log(`👤  Created Admin User: ${adminEmail} (Password: ${adminPassword})`);
 
     // ── Create Default Hospital Settings ──────────────────────────────
-    await prisma.hospitalSettings.create({
+    await prisma.hospitalsettings.create({
       data: {
         key: 'hospitalName',
         value: 'Hospital Management System',
+        updatedAt: new Date(),
       },
     });
     console.log('⚙️   Created default Hospital Settings.');
