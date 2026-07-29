@@ -251,7 +251,9 @@ export default function IpdScreen({ initialData, theme = 'dark' }: Props) {
                           {ward.code}
                         </span>
                         <div className={styles.wardInfo}>
-                          <p className={styles.wardName}>{tr(ward.name)}</p>
+                          <div className={styles.wardNameWrap}>
+                            <p className={`${styles.wardName} ${tr(ward.name).length > 14 ? styles.wardNameScroll : ''}`}>{tr(ward.name)}</p>
+                          </div>
                           {(ward.roomNo || ward.floorNo) && (
                             <p className={styles.wardMeta} style={{ fontSize: '0.75em', opacity: 0.7, margin: 0 }}>
                               {ward.roomNo ? `Room ${ward.roomNo}` : ''}{ward.roomNo && ward.floorNo ? ' • ' : ''}{ward.floorNo ? `Floor ${ward.floorNo}` : ''}

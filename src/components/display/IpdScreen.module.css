@@ -18,8 +18,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.75rem;
-  height: 70px;
+  padding: 0 1.5rem;
+  height: 80px;
   flex-shrink: 0;
   position: relative;
   background: var(--bg-surface);
@@ -39,9 +39,10 @@
 .headerLeft {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.875rem;
   min-width: 0;
-  flex: 1;
+  flex: 0 1 auto;
+  max-width: 38%;
 }
 
 .logoMark {
@@ -51,7 +52,7 @@
 }
 
 .logoImage {
-  height: 40px;
+  height: 44px;
   width: auto;
   object-fit: contain;
   display: block;
@@ -60,32 +61,40 @@
 .headerTitles {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .hospitalName {
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: 1.35rem;
+  font-weight: 800;
   color: var(--text-on-surface);
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
   line-height: 1.2;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .screenTitle {
-  font-size: 0.625rem;
+  font-size: 0.8rem;
   color: var(--text-on-surface-muted);
-  font-weight: 500;
-  letter-spacing: 0.09em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .headerCenter {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1.25rem;
-  flex-shrink: 0;
+  gap: 0.875rem;
+  flex: 1;
+  min-width: 0;
 }
 
 /* Stats summary pills in the header */
@@ -93,58 +102,60 @@
   display: flex;
   align-items: center;
   gap: 0.625rem;
+  flex-wrap: nowrap;
 }
 
 .pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 12px;
+  gap: 6px;
+  padding: 5px 14px;
   border-radius: 100px;
-  font-size: 0.625rem;
-  font-weight: 700;
+  font-size: 0.9rem;
+  font-weight: 800;
   letter-spacing: 0.06em;
-  border: 1px solid;
+  border: 1.5px solid;
   white-space: nowrap;
 }
 
 .pillAdmitted {
   color: #38bdf8;
-  background: rgba(56, 189, 248, 0.08);
-  border-color: rgba(56, 189, 248, 0.25);
+  background: rgba(56, 189, 248, 0.18);
+  border-color: #38bdf8;
 }
 
 .pillCritical {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.08);
-  border-color: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.18);
+  border-color: #ef4444;
 }
 
 .pillOccupancy {
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.08);
-  border-color: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.18);
+  border-color: #10b981;
 }
 
 .livePill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  color: var(--status-running);
-  padding: 5px 14px;
+  gap: 7px;
+  background: rgba(16, 185, 129, 0.2);
+  border: 1.5px solid #10b981;
+  color: #34d399;
+  padding: 5px 16px;
   border-radius: 100px;
-  font-size: 0.65rem;
+  font-size: 0.9rem;
   font-weight: 800;
   letter-spacing: 0.15em;
+  flex-shrink: 0;
 }
 
 .liveDot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: var(--status-running);
+  background: #34d399;
   animation: livePulse 1.6s ease-in-out infinite;
 }
 
@@ -154,15 +165,17 @@
 }
 
 .headerRight {
-  text-align: right;
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 170px;
+  text-align: right;
 }
 
 .clock {
-  font-size: 1.3rem;
+  font-size: 1.85rem;
   font-weight: 800;
   color: var(--text-on-surface);
   font-variant-numeric: tabular-nums;
@@ -171,10 +184,11 @@
 }
 
 .calDate {
-  font-size: 0.65rem;
+  font-size: 0.85rem;
   color: var(--text-on-surface-muted);
   margin-top: 3px;
   white-space: nowrap;
+  font-weight: 600;
 }
 
 /* ── Main scrollable area ────────────────────────────────────────── */
@@ -184,15 +198,15 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 0.875rem 1.25rem 0.5rem;
-  gap: 0.5rem;
+  padding: 1rem 1.5rem 0.75rem;
+  gap: 0.75rem;
 }
 
 /* ── Table wrapper ───────────────────────────────────────────────── */
 .tableWrapper {
   flex: 1;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid var(--border-color);
   background: var(--bg-table);
 }
@@ -206,9 +220,9 @@
 }
 
 /* Column widths */
-.colWard      { width: 20%; }
-.colCount     { width: 16%; }
-.colPatients  { width: 64%; }
+.colWard      { width: 22%; }
+.colCount     { width: 13%; }
+.colPatients  { width: 65%; }
 
 /* ── Table header row ────────────────────────────────────────────── */
 .thead {
@@ -216,9 +230,9 @@
 }
 
 .th {
-  padding: 0.6rem 1rem;
-  font-size: 0.575rem;
-  font-weight: 700;
+  padding: 0.875rem 1.25rem;
+  font-size: 1.0rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--text-muted);
@@ -261,56 +275,74 @@
 .wardCell {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
   height: 100%;
 }
 
 .wardAccent {
-  width: 4px;
-  border-radius: 2px;
+  width: 6px;
+  border-radius: 3px;
   align-self: stretch;
   flex-shrink: 0;
-  min-height: 36px;
+  min-height: 44px;
 }
 
 .wardBadge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 38px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-size: 0.575rem;
+  min-width: 46px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 1.0rem;
   font-weight: 800;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  border: 1px solid;
+  border: 1.5px solid;
   flex-shrink: 0;
 }
 
 .wardInfo {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   min-width: 0;
+  overflow: hidden;
 }
 
+/* Clip container — hides the overflowing text */
+.wardNameWrap {
+  overflow: hidden;
+  position: relative;
+}
+
+/* The actual text node — scrolls when it overflows */
 .wardName {
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 800;
   color: var(--text-primary);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.3;
+  display: inline-block;
+  line-height: 1.2;
+  /* Default: static, no scroll */
+  animation: none;
+}
+
+/* When the name is long, apply the marquee scroll */
+.wardNameWrap:hover .wardName,
+.wardNameScroll {
+  animation: wardScroll 10s linear infinite;
+  animation-delay: 1.2s;
+  padding-right: 3rem; /* gap before loop repeats */
 }
 
 .wardFloor {
-  font-size: 0.575rem;
+  font-size: 0.9rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  font-weight: 600;
 }
 
 /* ── Count cell ──────────────────────────────────────────────────── */
@@ -319,19 +351,19 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
+  gap: 0.625rem;
+  padding: 1rem 1.25rem;
   height: 100%;
 }
 
 .countNumbers {
   display: flex;
   align-items: baseline;
-  gap: 3px;
+  gap: 4px;
 }
 
 .countValue {
-  font-size: 1.75rem;
+  font-size: 2.6rem;
   font-weight: 900;
   letter-spacing: -0.04em;
   line-height: 1;
@@ -339,39 +371,40 @@
 }
 
 .countSep {
-  font-size: 1rem;
+  font-size: 1.5rem;
   color: var(--text-muted);
-  font-weight: 400;
+  font-weight: 500;
   line-height: 1;
 }
 
 .countCapacity {
-  font-size: 0.875rem;
+  font-size: 1.4rem;
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 
 .countLabel {
-  font-size: 0.5rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  font-weight: 600;
 }
 
 /* Capacity progress bar */
 .progressTrack {
   width: 100%;
-  height: 5px;
+  height: 7px;
   background: var(--bg-track);
-  border-radius: 3px;
+  border-radius: 4px;
   overflow: hidden;
 }
 
 .progressFill {
   height: 100%;
-  border-radius: 3px;
+  border-radius: 4px;
   transition: width 0.8s ease;
 }
 
@@ -379,20 +412,20 @@
 .critBadge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.525rem;
-  font-weight: 700;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 800;
   color: #ef4444;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  padding: 2px 7px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 3px 10px;
   border-radius: 100px;
   letter-spacing: 0.04em;
 }
 
 .critDotSmall {
-  width: 5px;
-  height: 5px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #ef4444;
   animation: blink 1.4s ease-in-out infinite;
@@ -418,7 +451,7 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 40px;
+  width: 50px;
   pointer-events: none;
   z-index: 2;
 }
@@ -441,13 +474,13 @@
   align-items: center;
   height: 100%;
   overflow: hidden;
-  padding: 0 0.75rem;
+  padding: 0 1rem;
 }
 
 .marqueeBelt {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.875rem;
   white-space: nowrap;
   animation: scrollLeft linear infinite;
   will-change: transform;
@@ -462,13 +495,14 @@
 .patientChip {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.3rem 0.75rem 0.3rem 0.5rem;
+  gap: 0.75rem;
+  padding: 0.5rem 1.1rem 0.5rem 0.75rem;
   border-radius: 100px;
-  border: 1px solid;
+  border: 1.5px solid;
   background: var(--bg-card);
   flex-shrink: 0;
   transition: transform 0.2s ease;
+  box-shadow: var(--card-shadow);
 }
 
 .chipStable {
@@ -476,37 +510,37 @@
 }
 
 .chipMonitoring {
-  border-color: rgba(245, 158, 11, 0.35);
-  background: rgba(245, 158, 11, 0.04);
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.08);
 }
 
 .chipCritical {
-  border-color: rgba(239, 68, 68, 0.4);
-  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .chipBed {
-  font-size: 0.5rem;
-  font-weight: 700;
+  font-size: 0.95rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   background: var(--bg-track);
-  padding: 1px 5px;
-  border-radius: 4px;
+  padding: 3px 9px;
+  border-radius: 6px;
   white-space: nowrap;
 }
 
 .chipName {
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 1.35rem;
+  font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
 }
 
 .critDot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #ef4444;
   flex-shrink: 0;
@@ -515,15 +549,15 @@
 
 /* ── Empty ward text ─────────────────────────────────────────────── */
 .emptyWard {
-  font-size: 0.625rem;
+  font-size: 1.0rem;
   color: var(--text-muted);
   font-style: italic;
-  padding: 0 1rem;
+  padding: 0 1.25rem;
 }
 
 /* ── Footer ticker ───────────────────────────────────────────────── */
 .footer {
-  height: 44px;
+  height: 54px;
   flex-shrink: 0;
   border-top: 1px solid var(--border-color);
   background: var(--bg-surface);
@@ -552,4 +586,12 @@
   font-size: 0.5rem;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+}
+
+/* ── Ward name marquee scroll keyframe ───────────────────────────── */
+@keyframes wardScroll {
+  0%        { transform: translateX(0); }
+  10%       { transform: translateX(0); }       /* hold at start */
+  85%       { transform: translateX(-100%); }   /* scroll to end */
+  95%, 100% { transform: translateX(0); }       /* snap back & pause */
 }

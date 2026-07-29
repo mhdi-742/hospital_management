@@ -8,48 +8,48 @@
 
 :root {
   /* ── Backgrounds ──────────────────────────────────────────── */
-  --bg-primary:   #020817;
-  --bg-surface:   #0b1120;
-  --bg-surface-2: #111827;
-  --bg-card:      #0d1526;
-  --bg-card-hover:#111f36;
+  --bg-primary:    #070c18;
+  --bg-surface:    #0e172a;
+  --bg-surface-2:  #152238;
+  --bg-card:       rgba(15, 23, 42, 0.85);
+  --bg-card-hover: rgba(30, 41, 59, 0.9);
 
   /* ── Borders ─────────────────────────────── */
-  --border-color:  rgba(255, 255, 255, 0.07);
-  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-color:  rgba(255, 255, 255, 0.12);
+  --border-subtle: rgba(255, 255, 255, 0.06);
 
   /* ── Text ────────────────────────────────── */
-  --text-primary:   #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted:     #475569;
+  --text-primary:   #ffffff;
+  --text-secondary: #cbd5e1;
+  --text-muted:     #64748b;
 
   /* ── Status ──────────────────────────────── */
   --status-running:           #10b981;
-  --status-running-glow:      rgba(16, 185, 129, 0.25);
-  --status-running-bg:        rgba(16, 185, 129, 0.06);
+  --status-running-glow:      rgba(16, 185, 129, 0.35);
+  --status-running-bg:        rgba(16, 185, 129, 0.12);
   --status-upcoming:          #38bdf8;
-  --status-upcoming-bg:       rgba(56, 189, 248, 0.06);
+  --status-upcoming-bg:       rgba(56, 189, 248, 0.12);
   --status-break:             #f59e0b;
-  --status-break-bg:          rgba(245, 158, 11, 0.06);
-  --status-completed:         #64748b;
-  --status-completed-bg:      rgba(100, 116, 139, 0.06);
+  --status-break-bg:          rgba(245, 158, 11, 0.12);
+  --status-completed:         #94a3b8;
+  --status-completed-bg:      rgba(148, 163, 184, 0.1);
   --status-unavailable:       #f43f5e;
-  --status-unavailable-bg:    rgba(244, 63, 94, 0.06);
+  --status-unavailable-bg:    rgba(244, 63, 94, 0.12);
 
   /* ── Text on dark surfaces (header, footer) ───────────────────── */
-  --text-on-surface:       #f8fafc;
-  --text-on-surface-muted: #94a3b8;
+  --text-on-surface:       #ffffff;
+  --text-on-surface-muted: #cbd5e1;
 
-  /* ── Card shadow (none in dark theme) ────────────────────────────── */
-  --card-shadow: none;
+  /* ── Card shadow ────────────────────────────────────────────────── */
+  --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 
   /* ── Header accent stripe (hidden in dark theme) ────────────────── */
   --header-accent: transparent;
 
   /* ── Additional theme-dependent backgrounds ─────────────────────── */
-  --bg-track: rgba(255, 255, 255, 0.05);
-  --bg-badge: rgba(255, 255, 255, 0.07);
-  --bg-item: rgba(255, 255, 255, 0.02);
+  --bg-track: rgba(255, 255, 255, 0.08);
+  --bg-badge: rgba(255, 255, 255, 0.12);
+  --bg-item: rgba(255, 255, 255, 0.04);
 
   /* ── Table backgrounds (distinct from header/footer surface) ──────── */
   --bg-table:        var(--bg-surface);
@@ -62,46 +62,46 @@
   --font-sans: var(--font-inter), var(--font-bengali), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* ══ Light Hospital Theme — Red / Blue / White ══════════════════════════════ */
+/* ══ Light Hospital Theme — Shades of Royal Blue & Clean White ══════════════ */
 [data-theme="light"] {
   /* Backgrounds */
-  --bg-primary:    #eef2ff;
-  --bg-surface:    #1e3a8a;   /* deep navy blue — header & footer */
-  --bg-surface-2:  #1a3070;
+  --bg-primary:    #f0f4f9;
+  --bg-surface:    #1e3a8a;   /* rich vibrant royal blue — header & footer */
+  --bg-surface-2:  #172554;   /* deep rich navy blue */
   --bg-card:       #ffffff;
-  --bg-card-hover: #f1f5ff;
-  --bg-glass:      rgba(255, 255, 255, 0.85);
+  --bg-card-hover: #f8fafc;
+  --bg-glass:      rgba(255, 255, 255, 0.95);
 
   /* Borders */
-  --border-color:  rgba(30, 58, 138, 0.12);
-  --border-subtle: rgba(30, 58, 138, 0.06);
+  --border-color:  rgba(15, 23, 42, 0.14);
+  --border-subtle: rgba(15, 23, 42, 0.07);
 
   /* Text (main content area — sits on light --bg-primary) */
   --text-primary:   #0f172a;
   --text-secondary: #1e3a8a;
-  --text-muted:     #6b7280;
+  --text-muted:     #334155;
 
   /* Text on dark surfaces (header & footer which use --bg-surface) */
   --text-on-surface:       #ffffff;
-  --text-on-surface-muted: rgba(255, 255, 255, 0.58);
+  --text-on-surface-muted: #e2e8f0;
 
-  /* Subtle blue shadow for white cards on light bg */
-  --card-shadow: 0 1px 3px rgba(30, 58, 138, 0.07),
-                 0 4px 16px rgba(30, 58, 138, 0.06);
+  /* Subtle ambient shadow for white cards on light bg */
+  --card-shadow: 0 6px 24px rgba(15, 23, 42, 0.09),
+                 0 1px 4px rgba(15, 23, 42, 0.05);
 
-  /* Red accent stripe under the header */
-  --header-accent: #dc2626;
+  /* Vivid red accent stripe under the header */
+  --header-accent: #f43f5e;
 
   /* Additional light theme backgrounds */
-  --bg-track: rgba(30, 58, 138, 0.08);
-  --bg-badge: rgba(30, 58, 138, 0.08);
-  --bg-item: rgba(30, 58, 138, 0.03);
+  --bg-track: rgba(15, 23, 42, 0.08);
+  --bg-badge: rgba(30, 58, 138, 0.12);
+  --bg-item: rgba(15, 23, 42, 0.03);
 
-  /* Table uses white in light mode (header/footer remain navy) */
+  /* Table uses clean slate white in light mode */
   --bg-table:        #ffffff;
-  --bg-table-header: #f8fafc;
+  --bg-table-header: #e2e8f0;
 
-  /* Hide edge-fade masks in light mode — no blur on the patients column */
+  /* Hide edge-fade masks in light mode */
   --cell-fade-opacity: 0;
 }
 

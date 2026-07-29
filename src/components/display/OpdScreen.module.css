@@ -13,8 +13,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.75rem;
-  height: 70px;
+  padding: 0 1.5rem;
+  height: 80px;
   flex-shrink: 0;
   position: relative;   /* needed for ::after accent stripe */
   background: var(--bg-surface);
@@ -35,9 +35,10 @@
 .headerLeft {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.875rem;
   min-width: 0;
-  flex: 1;
+  flex: 0 1 auto;
+  max-width: 42%;
 }
 
 .logoMark {
@@ -47,56 +48,63 @@
 }
 
 .logoImage {
-  height: 40px;
+  height: 44px;
   width: auto;
   object-fit: contain;
   display: block;
 }
 
 .hospitalName {
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: 1.35rem;
+  font-weight: 800;
   color: var(--text-on-surface);
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
   line-height: 1.2;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .headerSub {
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   color: var(--text-on-surface-muted);
-  font-weight: 400;
-  letter-spacing: 0.06em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .headerCenter {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 0;
 }
 
 .livePill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  color: var(--status-running);
-  padding: 5px 14px;
+  gap: 7px;
+  background: rgba(16, 185, 129, 0.2);
+  border: 1.5px solid #10b981;
+  color: #34d399;
+  padding: 5px 16px;
   border-radius: 100px;
-  font-size: 0.65rem;
+  font-size: 0.9rem;
   font-weight: 800;
   letter-spacing: 0.15em;
+  flex-shrink: 0;
 }
 
 .liveDot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: var(--status-running);
+  background: #34d399;
   animation: pulse 1.6s ease-in-out infinite;
 }
 
@@ -106,15 +114,17 @@
 }
 
 .headerRight {
-  text-align: right;
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 170px;
+  text-align: right;
 }
 
 .clock {
-  font-size: 1.3rem;
+  font-size: 1.85rem;
   font-weight: 800;
   color: var(--text-on-surface);
   font-variant-numeric: tabular-nums;
@@ -123,10 +133,11 @@
 }
 
 .calDate {
-  font-size: 0.65rem;
+  font-size: 0.85rem;
   color: var(--text-on-surface-muted);
   margin-top: 3px;
   white-space: nowrap;
+  font-weight: 600;
 }
 
 /* ── Main layout ─────────────────────────────────────────────────────── */
@@ -142,9 +153,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 1.125rem 1.125rem 0.625rem;
+  padding: 1.25rem 1.25rem 0.75rem;
   min-width: 0;
-  gap: 0.625rem;
+  gap: 0.75rem;
 }
 
 .gridMeta {
@@ -155,20 +166,20 @@
 }
 
 .gridLabel {
-  font-size: 0.625rem;
-  font-weight: 600;
+  font-size: 1.0rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   color: var(--text-muted);
 }
 
 .pageChip {
-  font-size: 0.625rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle);
-  padding: 2px 8px;
+  font-size: 1.0rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: var(--bg-badge);
+  border: 1px solid var(--border-color);
+  padding: 3px 12px;
   border-radius: 100px;
   font-variant-numeric: tabular-nums;
 }
@@ -177,7 +188,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(2, 1fr);
-  gap: 0.875rem;
+  gap: 1rem;
   flex: 1;
   min-height: 0;
 }
@@ -187,15 +198,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 22px;
+  gap: 8px;
+  height: 28px;
   flex-shrink: 0;
 }
 
 .dot {
-  height: 6px;
-  width: 6px;
-  border-radius: 3px;
+  height: 8px;
+  width: 8px;
+  border-radius: 4px;
   background: var(--border-color);
   border: none;
   padding: 0;
@@ -203,23 +214,24 @@
 }
 
 .dotActive {
-  width: 22px;
-  background: var(--text-secondary);
+  width: 28px;
+  background: var(--status-upcoming);
 }
 
 /* ── Sidebar ─────────────────────────────────────────────────────────── */
 .sidebar {
-  width: 320px;
+  width: 380px;
   flex-shrink: 0;
   border-left: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: var(--bg-surface);
 }
 
 /* ── Footer ticker ───────────────────────────────────────────────────── */
 .footer {
-  height: 44px;
+  height: 54px;
   flex-shrink: 0;
   border-top: 1px solid var(--border-color);
   background: var(--bg-surface);

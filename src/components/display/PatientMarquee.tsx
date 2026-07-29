@@ -58,7 +58,7 @@ export default function PatientMarquee({
       <div
         className={styles.marqueeBelt}
         style={{
-          animation: shouldAnimate ? undefined : 'none',
+          animationPlayState: shouldAnimate ? 'running' : 'paused',
           animationDuration: `${Math.max(patients.length * 4, 20)}s`,
         }}
       >
