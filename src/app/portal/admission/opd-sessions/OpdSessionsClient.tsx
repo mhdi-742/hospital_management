@@ -30,6 +30,7 @@ interface QueueAdmission {
   id: string;
   patientId: string;
   opdSessionId: string | null;
+  tokenNo?: number | null;
   admittedAt: string;
   patient: {
     id: string;
@@ -131,9 +132,61 @@ export default function OpdSessionsClient({ initialDoctors, initialQueue }: Prop
   const waitingQueue = sessionQueue.filter((_, i) => i + 1 >= currentToken);
   const completedQueue = sessionQueue.filter((_, i) => i + 1 < currentToken);
 
+  /* Drag and Drop queue reordering state */
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
   const waitingCount = activeSession
     ? Math.max(0, activeSession.totalTokens - (activeSession.currentToken ?? 0))
     : 0;
+
+  const handleReorderQueue = async (newWaitingList: QueueAdmission[]) => {
+    if (!activeSessionId) return;
+
+    // Optimistically update local state
+    const otherAdmissions = queue.filter(q => q.opdSessionId !== activeSessionId);
+    const updatedSessionQueue = [...completedQueue, ...newWaitingList];
+    setQueue([...otherAdmissions, ...updatedSessionQueue]);
+
+    try {
+      await fetch('/api/portal/admission/rearrange-queue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: activeSessionId,
+          orderedAdmissionIds: newWaitingList.map(item => item.id),
+        }),
+      });
+    } catch (err) {
+      console.error('[OPD_REARRANGE_ERR]', err);
+    }
+  };
+
+  const handleDropRow = (targetIdx: number) => {
+    if (draggedIdx === null || draggedIdx === targetIdx) {
+      setDraggedIdx(null);
+      setDragOverIdx(null);
+      return;
+    }
+    const newWaiting = [...waitingQueue];
+    const [movedItem] = newWaiting.splice(draggedIdx, 1);
+    newWaiting.splice(targetIdx, 0, movedItem);
+
+    setDraggedIdx(null);
+    setDragOverIdx(null);
+    handleReorderQueue(newWaiting);
+  };
+
+  const handleMoveStep = (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= waitingQueue.length) return;
+
+    const newWaiting = [...waitingQueue];
+    const [movedItem] = newWaiting.splice(index, 1);
+    newWaiting.splice(targetIndex, 0, movedItem);
+
+    handleReorderQueue(newWaiting);
+  };
 
   /* ── Select a doctor ─────────────────────────────────────────────────── */
   const selectDoctor = (doctorId: string) => {
@@ -477,6 +530,7 @@ export default function OpdSessionsClient({ initialDoctors, initialQueue }: Prop
                           <table className={styles.table}>
                             <thead>
                               <tr>
+                                <th style={{ width: '70px', textAlign: 'center' }}>Reorder</th>
                                 <th>Token</th>
                                 <th>Patient</th>
                                 <th>Complaint</th>
@@ -485,10 +539,52 @@ export default function OpdSessionsClient({ initialDoctors, initialQueue }: Prop
                             </thead>
                             <tbody>
                               {waitingQueue.map((item, idx) => {
-                                const tokenNo = idx + (completedQueue.length + 1);
+                                const tokenNo = item.tokenNo ?? (idx + (completedQueue.length + 1));
                                 const isServing = tokenNo === currentToken;
                                 return (
-                                  <tr key={item.id} className={isServing ? styles.rowServing : ''}>
+                                  <tr
+                                    key={item.id}
+                                    draggable
+                                    onDragStart={() => setDraggedIdx(idx)}
+                                    onDragOver={(e) => {
+                                      e.preventDefault();
+                                      setDragOverIdx(idx);
+                                    }}
+                                    onDragEnd={() => {
+                                      setDraggedIdx(null);
+                                      setDragOverIdx(null);
+                                    }}
+                                    onDrop={(e) => {
+                                      e.preventDefault();
+                                      handleDropRow(idx);
+                                    }}
+                                    className={`${isServing ? styles.rowServing : ''} ${
+                                      draggedIdx === idx ? styles.draggingRow : ''
+                                    } ${dragOverIdx === idx ? styles.dragOverRow : ''}`}
+                                  >
+                                    <td style={{ textAlign: 'center' }}>
+                                      <div className={styles.rearrangeGroup}>
+                                        <span className={styles.dragHandle} title="Drag row to reorder queue">⋮⋮</span>
+                                        <button
+                                          type="button"
+                                          className={styles.stepBtn}
+                                          onClick={() => handleMoveStep(idx, 'up')}
+                                          disabled={idx === 0}
+                                          title="Move up"
+                                        >
+                                          ▲
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className={styles.stepBtn}
+                                          onClick={() => handleMoveStep(idx, 'down')}
+                                          disabled={idx === waitingQueue.length - 1}
+                                          title="Move down"
+                                        >
+                                          ▼
+                                        </button>
+                                      </div>
+                                    </td>
                                     <td>
                                       <span className={styles.tokenBadge}>#{tokenNo}</span>
                                       {isServing && (

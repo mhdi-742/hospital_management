@@ -70,6 +70,58 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
   const [creatingSession, setCreatingSession] = useState(false);
   const [error, setError] = useState('');
 
+  // Drag and drop queue reordering state
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
+  const handleReorderQueue = async (newWaitingList: Admission[]) => {
+    if (!activeSessionId) return;
+
+    // Optimistically update local state
+    const otherAdmissions = queue.filter(q => q.opdSessionId !== activeSessionId);
+    const updatedSessionQueue = [...completedQueue, ...newWaitingList];
+    setQueue([...otherAdmissions, ...updatedSessionQueue]);
+
+    try {
+      await fetch('/api/portal/admission/rearrange-queue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: activeSessionId,
+          orderedAdmissionIds: newWaitingList.map(item => item.id),
+        }),
+      });
+    } catch (err) {
+      console.error('[DOCTOR_REARRANGE_ERR]', err);
+    }
+  };
+
+  const handleDropRow = (targetIdx: number) => {
+    if (draggedIdx === null || draggedIdx === targetIdx) {
+      setDraggedIdx(null);
+      setDragOverIdx(null);
+      return;
+    }
+    const newWaiting = [...waitingQueue];
+    const [movedItem] = newWaiting.splice(draggedIdx, 1);
+    newWaiting.splice(targetIdx, 0, movedItem);
+
+    setDraggedIdx(null);
+    setDragOverIdx(null);
+    handleReorderQueue(newWaiting);
+  };
+
+  const handleMoveStep = (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= waitingQueue.length) return;
+
+    const newWaiting = [...waitingQueue];
+    const [movedItem] = newWaiting.splice(index, 1);
+    newWaiting.splice(targetIndex, 0, movedItem);
+
+    handleReorderQueue(newWaiting);
+  };
+
   // ── Real-time Updates ──
   // Listen for REFRESH_OPD events (triggered by admissions) and silently refresh the server components
   // to fetch the latest queue without losing local state.
@@ -331,10 +383,10 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
     }
   }
 
-  // Map token numbers (1-indexed based on database admission order) and segment the queue
+  // Map token numbers and segment the queue
   const queueWithTokens = activeQueue.map((item, idx) => ({
     ...item,
-    tokenNo: idx + 1,
+    tokenNo: (item as any).tokenNo ?? (idx + 1),
   }));
 
   const currentToken = activeSession?.currentToken ?? 0;
@@ -481,6 +533,7 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
                   <table className={styles.table}>
                     <thead>
                       <tr>
+                        <th style={{ width: '70px', textAlign: 'center' }}>Reorder</th>
                         <th>Patient Details</th>
                         <th>Registered At</th>
                         <th>Complaint</th>
@@ -488,10 +541,52 @@ export default function OpdSessionClient({ initialSessions, initialQueue }: Prop
                       </tr>
                     </thead>
                     <tbody>
-                      {waitingQueue.map((item) => {
+                      {waitingQueue.map((item, idx) => {
                         const isServing = item.tokenNo === currentToken;
                         return (
-                          <tr key={item.id} className={`${styles.tableRow} ${isServing ? styles.rowServing : ''}`}>
+                          <tr
+                            key={item.id}
+                            draggable
+                            onDragStart={() => setDraggedIdx(idx)}
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              setDragOverIdx(idx);
+                            }}
+                            onDragEnd={() => {
+                              setDraggedIdx(null);
+                              setDragOverIdx(null);
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              handleDropRow(idx);
+                            }}
+                            className={`${styles.tableRow} ${isServing ? styles.rowServing : ''} ${
+                              draggedIdx === idx ? styles.draggingRow : ''
+                            } ${dragOverIdx === idx ? styles.dragOverRow : ''}`}
+                          >
+                            <td style={{ textAlign: 'center' }}>
+                              <div className={styles.rearrangeGroup}>
+                                <span className={styles.dragHandle} title="Drag row to reorder queue">⋮⋮</span>
+                                <button
+                                  type="button"
+                                  className={styles.stepBtn}
+                                  onClick={() => handleMoveStep(idx, 'up')}
+                                  disabled={idx === 0}
+                                  title="Move up"
+                                >
+                                  ▲
+                                </button>
+                                <button
+                                  type="button"
+                                  className={styles.stepBtn}
+                                  onClick={() => handleMoveStep(idx, 'down')}
+                                  disabled={idx === waitingQueue.length - 1}
+                                  title="Move down"
+                                >
+                                  ▼
+                                </button>
+                              </div>
+                            </td>
                             <td>
                               <div className={styles.patientNameContainer}>
                                 <span className={styles.patientName}>{item.patient.name}</span>

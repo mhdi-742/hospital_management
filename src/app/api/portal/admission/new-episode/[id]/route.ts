@@ -40,6 +40,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const result = await prisma.$transaction(async tx => {
     // Auto-resolve OPD session if type is OPD and primary doctor is specified
     let resolvedOpdSessionId: string | undefined = undefined;
+    let assignedToken: number | null = null;
+
     if (admissionType === 'OPD' && doctorIds && Array.isArray(doctorIds)) {
       const primaryDoc = doctorIds.find((d: any) => d.role === 'primary');
       if (primaryDoc) {
@@ -59,6 +61,11 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         });
         if (activeSession) {
           resolvedOpdSessionId = activeSession.id;
+          const updatedSession = await tx.opdSession.update({
+            where: { id: activeSession.id },
+            data: { totalTokens: { increment: 1 } },
+          });
+          assignedToken = updatedSession.totalTokens;
         }
       }
     }
@@ -71,6 +78,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         wardId:    wardId    || undefined,
         bedId:     bedId     || undefined,
         opdSessionId: resolvedOpdSessionId,
+        tokenNo:   assignedToken ?? undefined,
+        queueOrder: assignedToken ?? 0,
       },
     });
 

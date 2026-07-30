@@ -229,6 +229,8 @@ async function main() {
             update: {
               status: 'active',
               admittedAt,
+              tokenNo: i + 1,
+              queueOrder: i + 1,
             },
             create: {
               id: admissionId,
@@ -236,6 +238,8 @@ async function main() {
               type: 'OPD',
               status: 'active',
               opdSessionId: opdSessionId,
+              tokenNo: i + 1,
+              queueOrder: i + 1,
               admittedAt,
             },
           });

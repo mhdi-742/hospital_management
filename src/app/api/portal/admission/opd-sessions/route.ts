@@ -40,7 +40,7 @@ export async function GET(_req: NextRequest) {
       ? await prisma.admission.findMany({
           where: { opdSessionId: { in: todaySessionIds }, status: 'active' },
           include: { patient: true },
-          orderBy: { admittedAt: 'asc' },
+          orderBy: [{ queueOrder: 'asc' }, { admittedAt: 'asc' }],
         })
       : [];
 
@@ -68,6 +68,7 @@ export async function GET(_req: NextRequest) {
         id: a.id,
         patientId: a.patientId,
         opdSessionId: a.opdSessionId,
+        tokenNo: a.tokenNo,
         admittedAt: a.admittedAt.toISOString(),
         patient: {
           id: a.patient.id,

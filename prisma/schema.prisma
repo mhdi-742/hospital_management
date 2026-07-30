@@ -213,6 +213,8 @@ model Admission {
   // OPD specific
   opdSessionId  String?
   opdSession    OpdSession?     @relation(fields: [opdSessionId], references: [id])
+  queueOrder    Int             @default(0)
+  tokenNo       Int?
 
   // Doctors assigned
   doctors       PatientDoctor[]

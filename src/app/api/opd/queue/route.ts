@@ -46,13 +46,14 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      orderBy: {
-        admittedAt: 'asc',
-      },
+      orderBy: [
+        { queueOrder: 'asc' },
+        { admittedAt: 'asc' },
+      ],
     });
 
     const queue = admissions.map((adm, idx) => ({
-      tokenNo: idx + 1,
+      tokenNo: adm.tokenNo ?? (idx + 1),
       patientName: adm.patient.name,
       age: adm.patient.age,
       gender: adm.patient.gender,

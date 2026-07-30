@@ -63,15 +63,17 @@ export default async function OpdSessionPage() {
       include: {
         patient: true,
       },
-      orderBy: {
-        admittedAt: 'asc',
-      },
+      orderBy: [
+        { queueOrder: 'asc' },
+        { admittedAt: 'asc' },
+      ],
     });
 
     queue = rawQueue.map(item => ({
       id: item.id,
       patientId: item.patientId,
       opdSessionId: item.opdSessionId, // Added so UI can filter by session
+      tokenNo: item.tokenNo,
       admittedAt: item.admittedAt.toISOString(),
       patient: {
         id: item.patient.id,

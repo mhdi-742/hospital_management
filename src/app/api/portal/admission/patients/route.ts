@@ -190,6 +190,8 @@ export async function POST(req: NextRequest) {
         wardId:    wardId    || undefined,
         bedId:     bedId     || undefined,
         opdSessionId: resolvedOpdSessionId,
+        tokenNo:   assignedToken ?? undefined,
+        queueOrder: assignedToken ?? 0,
       },
     });
 
