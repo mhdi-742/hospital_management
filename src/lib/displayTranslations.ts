@@ -93,7 +93,7 @@ export const translations = {
     ipd: {
       subtitle: 'IPD Patient Status Dashboard',
       wardUnit: 'Ward / Unit',
-      occupiedCapacity: 'Occupied / Capacity',
+      occupiedCapacity: 'OCC / CAP',
       admittedPatients: 'Admitted Patients',
       admitted: 'Admitted',
       critical: 'Critical',

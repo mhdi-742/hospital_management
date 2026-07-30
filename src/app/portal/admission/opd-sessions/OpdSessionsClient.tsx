@@ -45,6 +45,21 @@ interface Props {
   initialQueue: QueueAdmission[];
 }
 
+/* ── Date formatter ──────────────────────────────────────────────────── */
+function formatSessionDate(dateStr: string): string {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  const d = new Date(dateStr + 'T00:00:00');
+  const todayStr = today.toISOString().split('T')[0];
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+  if (dateStr === todayStr) return 'Today';
+  if (dateStr === tomorrowStr) return 'Tomorrow';
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 /* ── Status dot classes ───────────────────────────────────────────────── */
 const STATUS_DOT: Record<string, string> = {
   running:     styles.dotRunning,
@@ -349,7 +364,10 @@ export default function OpdSessionsClient({ initialDoctors, initialQueue }: Prop
                       onClick={() => { setActiveSessionId(s.id); setError(''); }}
                     >
                       <span className={`${styles.statusDot} ${STATUS_DOT[s.status] ?? ''}`} />
-                      {s.opdNo ? `${s.opdNo} · ` : ''}{s.startTime}–{s.endTime}
+                      <span>
+                        <strong>{formatSessionDate(s.date)}</strong>
+                        {' · '}{s.opdNo ? `${s.opdNo} · ` : ''}{s.startTime}–{s.endTime}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -358,7 +376,7 @@ export default function OpdSessionsClient({ initialDoctors, initialQueue }: Prop
               {/* No session */}
               {selectedDoctor.sessions.length === 0 && (
                 <div className={styles.noSessionCard}>
-                  <p className={styles.noSessionText}>No sessions scheduled for today.</p>
+                  <p className={styles.noSessionText}>No upcoming sessions scheduled.</p>
                   <button className={styles.createSessionBtn} onClick={openCreateModal}>
                     + Create a Session
                   </button>
@@ -371,7 +389,12 @@ export default function OpdSessionsClient({ initialDoctors, initialQueue }: Prop
                   {/* Control panel */}
                   <div className={styles.card}>
                     <div className={styles.cardTitle}>
-                      Session Control
+                      <span>
+                        Session Control
+                        <span style={{ fontWeight: 400, fontSize: '0.82rem', marginLeft: '0.6rem', opacity: 0.7 }}>
+                          {formatSessionDate(activeSession.date)} · {activeSession.startTime}–{activeSession.endTime}
+                        </span>
+                      </span>
                       <div className={styles.cardActions}>
                         <button className={styles.editBtn} onClick={openEditModal} disabled={updating}>✏️ Edit</button>
                         <button className={styles.dangerBtn} onClick={handleDelete} disabled={updating}>🗑️</button>
@@ -483,8 +506,9 @@ export default function OpdSessionsClient({ initialDoctors, initialQueue }: Prop
                                         {item.patient.chiefComplaint || 'N/A'}
                                       </span>
                                     </td>
-                                    <td style={{ fontSize: '0.78rem', color: '#64748b', whiteSpace: 'nowrap' }}>
-                                      {new Date(item.admittedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                   <td style={{ fontSize: '0.78rem', color: '#64748b', whiteSpace: 'nowrap' }}>
+                                      {new Date(item.admittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                      {' '}{new Date(item.admittedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                                     </td>
                                   </tr>
                                 );
@@ -524,7 +548,8 @@ export default function OpdSessionsClient({ initialDoctors, initialQueue }: Prop
                                     </div>
                                   </td>
                                   <td style={{ fontSize: '0.78rem', color: '#64748b', whiteSpace: 'nowrap' }}>
-                                    {new Date(item.admittedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                    {new Date(item.admittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                    {' '}{new Date(item.admittedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                                   </td>
                                 </tr>
                               ))}

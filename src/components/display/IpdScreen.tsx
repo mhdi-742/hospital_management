@@ -218,7 +218,7 @@ export default function IpdScreen({ initialData, theme = 'dark' }: Props) {
             <thead className={styles.thead}>
               <tr>
                 <th className={styles.th} scope="col">{t.ipd.wardUnit}</th>
-                <th className={styles.th} scope="col">{t.ipd.occupiedCapacity}</th>
+                <th className={`${styles.th} ${styles.thCompact}`} scope="col">{t.ipd.occupiedCapacity}</th>
                 <th className={styles.th} scope="col">{t.ipd.admittedPatients}</th>
               </tr>
             </thead>

@@ -18,17 +18,15 @@ export default async function ReceptionOpdSessionsPage() {
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
-  const todayEnd = new Date();
-  todayEnd.setHours(23, 59, 59, 999);
 
-  // All doctors with today's sessions
+  // All doctors with sessions from today onwards (including future sessions)
   const doctors = await prisma.doctor.findMany({
     include: {
       user: { select: { name: true } },
       department: true,
       opdSessions: {
-        where: { date: { gte: todayStart, lte: todayEnd } },
-        orderBy: { startTime: 'asc' },
+        where: { date: { gte: todayStart } },
+        orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
       },
     },
     orderBy: { createdAt: 'asc' },

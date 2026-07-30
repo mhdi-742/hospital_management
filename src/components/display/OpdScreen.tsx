@@ -15,7 +15,7 @@ import TokenCallout from './TokenCallout';
 import MarqueeTicker from './MarqueeTicker';
 import styles from './OpdScreen.module.css';
 
-const CARDS_PER_PAGE = 6;
+const CARDS_PER_PAGE = 4;
 const PAGE_INTERVAL_MS = 9000;   // advance page every 9 s
 
 interface Props {

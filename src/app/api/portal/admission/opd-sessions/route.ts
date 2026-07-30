@@ -18,19 +18,17 @@ export async function GET(_req: NextRequest) {
   try {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999);
 
-    // All doctors with their sessions today
+    // All doctors with their sessions from today onwards (including future sessions)
     const doctors = await prisma.doctor.findMany({
       include: {
         user: { select: { name: true } },
         department: true,
         opdSessions: {
           where: {
-            date: { gte: todayStart, lte: todayEnd },
+            date: { gte: todayStart },
           },
-          orderBy: { startTime: 'asc' },
+          orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
         },
       },
       orderBy: { createdAt: 'asc' },
