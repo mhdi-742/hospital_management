@@ -105,31 +105,21 @@ export default function DoctorCard({
       {/* ── Token section ── */}
       {!isDimmed ? (
         <div className={styles.tokenSection}>
-          <div className={styles.tokenTop}>
-            <div className={styles.tokenCount}>
-              <span className={styles.tokenLabel}>{t.common.token}</span>
-              <span className={isActive ? styles.tokenNumActive : styles.tokenNum}>
-                {hasToken ? localizeNumber(doctor.currentToken!, lang) : '--'}
+          <div className={styles.tokenRowGrid}>
+            <div className={styles.tokenBoxNow}>
+              <span className={styles.tokenBoxLabel}>{t.doctorCard.nowServing}</span>
+              <span className={isActive && hasToken ? styles.tokenNumActive : styles.tokenNum}>
+                {hasToken ? `#${localizeNumber(doctor.currentToken!, lang)}` : '--'}
               </span>
-              <span className={styles.tokenOf}>/ {localizeNumber(doctor.totalTokens, lang)}</span>
             </div>
-            {isActive && doctor.avgWaitMinutes > 0 && (
-              <span className={styles.waitBadge} aria-label={`${t.tokenCallout.avgWait}: ${doctor.avgWaitMinutes} ${t.common.min}`}>
-                ≈&nbsp;{localizeNumber(doctor.avgWaitMinutes, lang)} {t.common.min}
+
+            <div className={styles.tokenBoxNext}>
+              <span className={styles.tokenBoxLabel}>{t.doctorCard.nextToken}</span>
+              <span className={styles.tokenNumNext}>
+                {doctor.nextToken ? `#${localizeNumber(doctor.nextToken, lang)}` : '--'}
               </span>
-            )}
+            </div>
           </div>
-          {hasToken && (
-            <div className={styles.track} role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
-              <div
-                className={styles.fill}
-                style={{
-                  width: `${pct}%`,
-                  background: isActive ? doctor.departmentColor : 'var(--text-muted)',
-                }}
-              />
-            </div>
-          )}
         </div>
       ) : (
         <p className={styles.unavailNote}>

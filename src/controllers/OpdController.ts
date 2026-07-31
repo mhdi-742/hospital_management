@@ -50,8 +50,39 @@ export class OpdController {
       orderBy: { startTime: 'asc' },
     });
 
+    const sessionIds = dbSessions.map(s => s.id);
+    const activeAdmissions = sessionIds.length > 0
+      ? await prisma.admission.findMany({
+          where: {
+            opdSessionId: { in: sessionIds },
+            status: 'active',
+          },
+          select: {
+            opdSessionId: true,
+            tokenNo: true,
+            queueOrder: true,
+            admittedAt: true,
+          },
+          orderBy: [
+            { queueOrder: 'asc' },
+            { admittedAt: 'asc' },
+          ],
+        })
+      : [];
+
     const doctors: FlatDoctor[] = dbSessions.map(session => {
       const doc = session.doctor;
+      const sessionQueue = activeAdmissions.filter(a => a.opdSessionId === session.id);
+      let nextToken: number | null = null;
+
+      if (session.currentToken) {
+        const nextWaiting = sessionQueue.find(a => (a.tokenNo ?? 0) > 0 && a.tokenNo !== session.currentToken);
+        nextToken = nextWaiting?.tokenNo ?? (session.currentToken < session.totalTokens ? session.currentToken + 1 : null);
+      } else {
+        const firstWaiting = sessionQueue[0];
+        nextToken = firstWaiting?.tokenNo ?? (session.totalTokens > 0 ? 1 : null);
+      }
+
       return {
         id: session.id,
         name: doc.user.name,
@@ -61,6 +92,7 @@ export class OpdController {
         startTime: session.startTime,
         endTime: session.endTime,
         currentToken: session.currentToken ?? null,
+        nextToken: nextToken,
         totalTokens: session.totalTokens,
         avgWaitMinutes: session.avgWaitMinutes,
         departmentId: doc.department?.id ?? 'none',

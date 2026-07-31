@@ -9,6 +9,7 @@ export interface Doctor {
   startTime: string;
   endTime: string;
   currentToken: number | null;
+  nextToken?: number | null;
   totalTokens: number;
   avgWaitMinutes: number;
 }

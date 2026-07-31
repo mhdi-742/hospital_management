@@ -71,6 +71,8 @@ export const translations = {
       sessionCompleted: 'Session completed for today',
       notAvailable: 'Not available today',
       department: 'Department',
+      nowServing: 'Now Serving',
+      nextToken: 'Next Token',
     },
     tokenCallout: {
       opdOverview: 'OPD Overview',
@@ -151,6 +153,8 @@ export const translations = {
       sessionCompleted: 'আজকের সেশন সম্পন্ন',
       notAvailable: 'আজ উপলব্ধ নয়',
       department: 'বিভাগ',
+      nowServing: 'চলতি টোকেন',
+      nextToken: 'পরবর্তী টোকেন',
     },
     tokenCallout: {
       opdOverview: 'ওপিডি সারসংক্ষেপ',
