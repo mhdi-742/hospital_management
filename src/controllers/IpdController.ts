@@ -4,7 +4,7 @@ import type { IpdApiResponse, Ward, Patient } from '../lib/types';
 
 /**
  * IpdController — queries Prisma DB instead of JSON flat-files.
- * Falls back to static JSON data when the database is unavailable.
+ * Falls back to static JSO N data when the database is unavailable.
  * Server-side only.
  */
 export class IpdController {
