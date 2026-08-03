@@ -1,8 +1,10 @@
 import { prisma } from '../lib/prisma';
+import { getIpdFallback } from '../lib/jsonFallback';
 import type { IpdApiResponse, Ward, Patient } from '../lib/types';
 
 /**
  * IpdController — queries Prisma DB instead of JSON flat-files.
+ * Falls back to static JSON data when the database is unavailable.
  * Server-side only.
  */
 export class IpdController {
@@ -12,6 +14,15 @@ export class IpdController {
    *   - the GET /api/ipd Route Handler (client polling)
    */
   static async getDisplayData(): Promise<IpdApiResponse> {
+    try {
+      return await this._getFromDb();
+    } catch (error) {
+      console.warn('[IpdController] DB unavailable, falling back to JSON:', (error as Error).message);
+      return getIpdFallback();
+    }
+  }
+
+  private static async _getFromDb(): Promise<IpdApiResponse> {
     const settings = await prisma.hospitalSettings.findUnique({
       where: { key: 'hospitalName' },
     });

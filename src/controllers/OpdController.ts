@@ -1,8 +1,10 @@
 import { prisma } from '../lib/prisma';
+import { getOpdFallback } from '../lib/jsonFallback';
 import type { OpdApiResponse, FlatDoctor, DoctorStatus } from '../lib/types';
 
 /**
  * OpdController — queries Prisma DB instead of JSON flat-files.
+ * Falls back to static JSON data when the database is unavailable.
  * Server-side only.
  */
 export class OpdController {
@@ -12,6 +14,15 @@ export class OpdController {
    *   - the GET /api/opd Route Handler (client polling)
    */
   static async getDisplayData(): Promise<OpdApiResponse> {
+    try {
+      return await this._getFromDb();
+    } catch (error) {
+      console.warn('[OpdController] DB unavailable, falling back to JSON:', (error as Error).message);
+      return getOpdFallback();
+    }
+  }
+
+  private static async _getFromDb(): Promise<OpdApiResponse> {
     const settings = await prisma.hospitalSettings.findUnique({
       where: { key: 'hospitalName' },
     });

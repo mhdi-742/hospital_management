@@ -10,64 +10,72 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { searchParams } = req.nextUrl;
-  const search       = searchParams.get('search') ?? '';
-  const type         = searchParams.get('type')   ?? '';
-  const statusFilter = searchParams.get('status') ?? 'active'; // 'active' | 'discharged' | ''
-  const page         = parseInt(searchParams.get('page') ?? '1', 10);
-  const limit        = 20;
+  try {
+    const { searchParams } = req.nextUrl;
+    const search       = searchParams.get('search') ?? '';
+    const type         = searchParams.get('type')   ?? '';
+    const statusFilter = searchParams.get('status') ?? 'active'; // 'active' | 'discharged' | ''
+    const page         = parseInt(searchParams.get('page') ?? '1', 10);
+    const limit        = 20;
 
-  // Build the where clause for the patient's admissions
-  const admissionWhere: any = {};
-  if (type)   admissionWhere.type   = type;
-  // For the discharged tab we want patients whose MOST RECENT admission is discharged
-  // (i.e. no current active admission). For active, at least one active admission.
-  const patientWhere: any = { name: search ? { contains: search } : undefined };
-  if (statusFilter === 'active') {
-    patientWhere.admissions = { some: { ...admissionWhere, status: 'active' } };
-  } else if (statusFilter === 'discharged') {
-    patientWhere.admissions = {
-      some:  { ...admissionWhere, status: { in: ['discharged', 'transferred'] } },
-      none:  { status: 'active' },
-    };
-  } else if (type) {
-    patientWhere.admissions = { some: admissionWhere };
-  }
+    // Build the where clause for the patient's admissions
+    const admissionWhere: any = {};
+    if (type)   admissionWhere.type   = type;
+    // For the discharged tab we want patients whose MOST RECENT admission is discharged
+    // (i.e. no current active admission). For active, at least one active admission.
+    const patientWhere: any = { name: search ? { contains: search } : undefined };
+    if (statusFilter === 'active') {
+      patientWhere.admissions = { some: { ...admissionWhere, status: 'active' } };
+    } else if (statusFilter === 'discharged') {
+      patientWhere.admissions = {
+        some:  { ...admissionWhere, status: { in: ['discharged', 'transferred'] } },
+        none:  { status: 'active' },
+      };
+    } else if (type) {
+      patientWhere.admissions = { some: admissionWhere };
+    }
 
-  // The admission we want to show in each row depends on the tab
-  const rowAdmissionWhere =
-    statusFilter === 'active'
-      ? { status: 'active' as const }
-      : statusFilter === 'discharged'
-      ? { status: { in: ['discharged', 'transferred'] as any } }
-      : {};
+    // The admission we want to show in each row depends on the tab
+    const rowAdmissionWhere =
+      statusFilter === 'active'
+        ? { status: 'active' as const }
+        : statusFilter === 'discharged'
+        ? { status: { in: ['discharged', 'transferred'] as any } }
+        : {};
 
-  const admissionInclude = {
-    where:    { ...rowAdmissionWhere, ...(type ? { type: type as any } : {}) },
-    orderBy:  { admittedAt: 'desc' as const },
-    take:     1,
-    include: {
-      ward:    { select: { name: true, code: true, accentColor: true } },
-      bed:     { select: { bedNo: true } },
-      doctors: {
-        include: { doctor: { include: { user: { select: { name: true } } } } },
-        where:   { role: 'primary' as const },
-        take:    1,
+    const admissionInclude = {
+      where:    { ...rowAdmissionWhere, ...(type ? { type: type as any } : {}) },
+      orderBy:  { admittedAt: 'desc' as const },
+      take:     1,
+      include: {
+        ward:    { select: { name: true, code: true, accentColor: true } },
+        bed:     { select: { bedNo: true } },
+        doctors: {
+          include: { doctor: { include: { user: { select: { name: true } } } } },
+          where:   { role: 'primary' as const },
+          take:    1,
+        },
       },
-    },
-  };
+    };
 
-  const patients = await prisma.patient.findMany({
-    where:   patientWhere,
-    include: { admissions: admissionInclude },
-    orderBy: { createdAt: 'desc' },
-    skip:    (page - 1) * limit,
-    take:    limit,
-  });
+    const patients = await prisma.patient.findMany({
+      where:   patientWhere,
+      include: { admissions: admissionInclude },
+      orderBy: { createdAt: 'desc' },
+      skip:    (page - 1) * limit,
+      take:    limit,
+    });
 
-  const total = await prisma.patient.count({ where: patientWhere });
+    const total = await prisma.patient.count({ where: patientWhere });
 
-  return NextResponse.json({ patients, total, page, limit });
+    return NextResponse.json({ patients, total, page, limit });
+  } catch (error: any) {
+    console.error('[PATIENTS_GET_ERR]', error);
+    return NextResponse.json(
+      { error: 'Database unavailable — running in demo mode', demoMode: true },
+      { status: 503 }
+    );
+  }
 }
 
 export async function POST(req: NextRequest) {
