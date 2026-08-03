@@ -100,3 +100,42 @@ export function getOtFallback(): OtApiResponse {
     lastUpdated: new Date().toLocaleTimeString('en-US', { hour12: false }),
   };
 }
+
+/* ─── OPD Single Doctor Queue Fallback ────────────────────────────────────── */
+
+export function getOpdQueueFallback(sessionId?: string | null) {
+  const opd = getOpdFallback();
+  const doc = opd.doctors.find(d => d.id === sessionId) || opd.doctors[0];
+
+  const mockPatients = [
+    { patientName: 'Amit Das', age: 28, gender: 'M', chiefComplaint: 'Fever and cold for 3 days' },
+    { patientName: 'Sita Banerjee', age: 34, gender: 'F', chiefComplaint: 'Severe headache and nausea' },
+    { patientName: 'Rahul Sen', age: 42, gender: 'M', chiefComplaint: 'Routine checkup for diabetes' },
+    { patientName: 'Priya Chakraborty', age: 24, gender: 'F', chiefComplaint: 'Sore throat and body aches' },
+    { patientName: 'Vikram Chatterjee', age: 50, gender: 'M', chiefComplaint: 'Chest congestion' },
+  ];
+
+  const total = doc ? doc.totalTokens : 5;
+  const queue = mockPatients.slice(0, total > 0 ? total : 5).map((p, idx) => ({
+    tokenNo: idx + 1,
+    patientName: p.patientName,
+    age: p.age,
+    gender: p.gender as any,
+    chiefComplaint: p.chiefComplaint,
+    admittedAt: new Date().toISOString(),
+  }));
+
+  return {
+    doctorName: doc ? doc.name : 'Dr. Priya Sharma',
+    roomNo: doc ? doc.roomNo : '201',
+    departmentName: doc ? doc.departmentName : 'Cardiology',
+    departmentColor: doc ? doc.departmentColor : '#ef4444',
+    currentToken: doc ? doc.currentToken : 1,
+    totalTokens: doc ? doc.totalTokens : 5,
+    status: doc ? doc.status : 'running',
+    startTime: doc ? doc.startTime : '09:00',
+    endTime: doc ? doc.endTime : '13:00',
+    queue,
+  };
+}
+

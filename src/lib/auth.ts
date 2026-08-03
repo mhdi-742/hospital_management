@@ -46,7 +46,18 @@ export const authConfig: NextAuthConfig = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        // Try database first
+        // Check demo credentials directly for instant login on demo branch
+        const demoUser = DEMO_USERS.find(u => u.email === credentials.email);
+        if (demoUser && demoUser.password === credentials.password) {
+          return {
+            id:    demoUser.id,
+            name:  demoUser.name,
+            email: demoUser.email,
+            role:  demoUser.role,
+          } as any;
+        }
+
+        // DB fallback lookup
         try {
           const user = await prisma.user.findUnique({
             where: { email: credentials.email as string },
@@ -66,21 +77,10 @@ export const authConfig: NextAuthConfig = {
             email: user.email,
             role:  user.role,
           } as any;
-        } catch (dbError) {
-          // DB unavailable — fall back to demo credentials
-          console.warn('[auth] DB unavailable, checking demo credentials:', (dbError as Error).message);
-
-          const demoUser = DEMO_USERS.find(u => u.email === credentials.email);
-          if (!demoUser) return null;
-          if (demoUser.password !== credentials.password) return null;
-
-          return {
-            id:    demoUser.id,
-            name:  demoUser.name,
-            email: demoUser.email,
-            role:  demoUser.role,
-          } as any;
+        } catch {
+          return null;
         }
+
       },
     }),
   ],

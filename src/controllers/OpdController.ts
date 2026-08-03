@@ -14,13 +14,9 @@ export class OpdController {
    *   - the GET /api/opd Route Handler (client polling)
    */
   static async getDisplayData(): Promise<OpdApiResponse> {
-    try {
-      return await this._getFromDb();
-    } catch (error) {
-      console.warn('[OpdController] DB unavailable, falling back to JSON:', (error as Error).message);
-      return getOpdFallback();
-    }
+    return getOpdFallback();
   }
+
 
   private static async _getFromDb(): Promise<OpdApiResponse> {
     const settings = await prisma.hospitalSettings.findUnique({

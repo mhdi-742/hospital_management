@@ -14,13 +14,9 @@ export class IpdController {
    *   - the GET /api/ipd Route Handler (client polling)
    */
   static async getDisplayData(): Promise<IpdApiResponse> {
-    try {
-      return await this._getFromDb();
-    } catch (error) {
-      console.warn('[IpdController] DB unavailable, falling back to JSON:', (error as Error).message);
-      return getIpdFallback();
-    }
+    return getIpdFallback();
   }
+
 
   private static async _getFromDb(): Promise<IpdApiResponse> {
     const settings = await prisma.hospitalSettings.findUnique({

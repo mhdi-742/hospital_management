@@ -14,13 +14,9 @@ export class OtController {
    *   - the GET /api/ot Route Handler (client polling)
    */
   static async getDisplayData(): Promise<OtApiResponse> {
-    try {
-      return await this._getFromDb();
-    } catch (error) {
-      console.warn('[OtController] DB unavailable, falling back to JSON:', (error as Error).message);
-      return getOtFallback();
-    }
+    return getOtFallback();
   }
+
 
   private static async _getFromDb(): Promise<OtApiResponse> {
     const settings = await prisma.hospitalSettings.findUnique({
