@@ -164,10 +164,19 @@ export default function InvestigationRegistrationPage() {
   const dueAmount = Math.max(0, netPayable - (advancePaid || 0));
 
   // Build link to billing app with all pre-filled items
-  const buildBillingLink = () => {
+  const buildBillingLink = (autoPrint = false) => {
     const today = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
     const billDate = `${pad(today.getDate())}/${pad(today.getMonth() + 1)}/${today.getFullYear()}`;
+
+    const validItems = items
+      .filter((i) => i.testName.trim() !== '')
+      .map((i) => ({
+        name: i.testName,
+        qty: i.qty || 1,
+        priceUnit: i.rate || 0,
+        amount: i.amount || (i.qty || 1) * (i.rate || 0),
+      }));
 
     const params = new URLSearchParams();
     params.set('patientName', form.patientName);
@@ -176,9 +185,41 @@ export default function InvestigationRegistrationPage() {
     params.set('caseType', 'Investigation');
     params.set('billDate', billDate);
     if (advancePaid > 0) params.set('advance', String(advancePaid));
+    if (discount > 0) params.set('discount', String(discount));
+    if (validItems.length > 0) params.set('items', JSON.stringify(validItems));
+    if (autoPrint) params.set('autoPrint', '1');
 
     return `/billing/index.html?${params.toString()}`;
   };
+
+  const buildRegistrationBillingLink = (reg: Registration, autoPrint = false) => {
+    const d = new Date(reg.createdAt);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const billDate = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+
+    const formattedItems = (reg.items || []).map((i) => ({
+      name: i.testName,
+      qty: i.qty || 1,
+      priceUnit: i.rate || 0,
+      amount: i.amount || (i.qty || 1) * (i.rate || 0),
+    }));
+
+    const params = new URLSearchParams();
+    params.set('patientName', reg.patientName);
+    params.set('patientAge', reg.patientAge ? `${reg.patientAge} Years` : '');
+    params.set('underDoctor', reg.referredByDoctor || '');
+    params.set('hospitalId', reg.regNo);
+    params.set('caseType', 'Investigation');
+    params.set('billDate', billDate);
+    if (reg.advancePaid > 0) params.set('advance', String(reg.advancePaid));
+    if (reg.discount > 0) params.set('discount', String(reg.discount));
+    if (formattedItems.length > 0) params.set('items', JSON.stringify(formattedItems));
+    if (autoPrint) params.set('autoPrint', '1');
+
+    return `/billing/index.html?${params.toString()}`;
+  };
+
+  const [lastSavedReg, setLastSavedReg] = useState<Registration | null>(null);
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
@@ -218,7 +259,8 @@ export default function InvestigationRegistrationPage() {
       }
 
       const data = await res.json();
-      setSuccess(`✅ Investigation Registered! Order ID: ${data.regNo}`);
+      setLastSavedReg(data);
+      setSuccess(`✅ Investigation Registered Successfully! Order ID: ${data.regNo}`);
 
       // Reset form
       setForm({
@@ -310,7 +352,22 @@ export default function InvestigationRegistrationPage() {
       {tab === 'register' && (
         <form onSubmit={handleRegister}>
           {error && <div className={styles.errorBox}>⚠️ {error}</div>}
-          {success && <div className={styles.successBox}>{success}</div>}
+          {success && (
+            <div className={styles.successBox} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <span>{success}</span>
+              {lastSavedReg && (
+                <a
+                  href={buildRegistrationBillingLink(lastSavedReg, true)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.billingPortalBtn}
+                  style={{ background: 'rgba(34, 197, 94, 0.2)', borderColor: 'rgba(34, 197, 94, 0.5)', color: '#4ade80' }}
+                >
+                  🖨️ Print Investigation Bill
+                </a>
+              )}
+            </div>
+          )}
 
           {/* Patient Details */}
           <div className={styles.card}>
@@ -549,6 +606,7 @@ export default function InvestigationRegistrationPage() {
                   <th>Net Total</th>
                   <th>Status</th>
                   <th>Date</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -588,6 +646,17 @@ export default function InvestigationRegistrationPage() {
                     </td>
                     <td style={{ color: '#94a3b8', fontSize: '0.82rem' }}>
                       {new Date(reg.createdAt).toLocaleDateString('en-IN')}
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <a
+                        href={buildRegistrationBillingLink(reg, false)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.billingPortalBtn}
+                        style={{ padding: '4px 10px', fontSize: '0.78rem' }}
+                      >
+                        🧾 Print Bill
+                      </a>
                     </td>
                   </tr>
                 ))}
