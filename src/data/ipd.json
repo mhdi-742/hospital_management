@@ -26,7 +26,8 @@
           "gender": "M",
           "admissionDate": "2026-06-18",
           "bedNo": "MW-04",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0001"
         },
         {
           "id": "mw-002",
@@ -35,7 +36,8 @@
           "gender": "M",
           "admissionDate": "2026-06-17",
           "bedNo": "MW-07",
-          "status": "monitoring"
+          "status": "monitoring",
+          "mmhplId": "MMHPL-0002"
         },
         {
           "id": "mw-003",
@@ -44,7 +46,8 @@
           "gender": "M",
           "admissionDate": "2026-06-19",
           "bedNo": "MW-11",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0003"
         },
         {
           "id": "mw-004",
@@ -53,7 +56,8 @@
           "gender": "M",
           "admissionDate": "2026-06-20",
           "bedNo": "MW-13",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0004"
         },
         {
           "id": "mw-005",
@@ -62,7 +66,8 @@
           "gender": "M",
           "admissionDate": "2026-06-16",
           "bedNo": "MW-18",
-          "status": "monitoring"
+          "status": "monitoring",
+          "mmhplId": "MMHPL-0005"
         },
         {
           "id": "mw-006",
@@ -71,7 +76,8 @@
           "gender": "M",
           "admissionDate": "2026-06-20",
           "bedNo": "MW-21",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0006"
         },
         {
           "id": "mw-007",
@@ -80,7 +86,8 @@
           "gender": "M",
           "admissionDate": "2026-06-18",
           "bedNo": "MW-25",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0007"
         },
         {
           "id": "mw-008",
@@ -89,7 +96,8 @@
           "gender": "M",
           "admissionDate": "2026-06-17",
           "bedNo": "MW-30",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0008"
         },
         {
           "id": "mw-009",
@@ -98,7 +106,8 @@
           "gender": "M",
           "admissionDate": "2026-06-15",
           "bedNo": "MW-33",
-          "status": "monitoring"
+          "status": "monitoring",
+          "mmhplId": "MMHPL-0009"
         },
         {
           "id": "mw-010",
@@ -107,7 +116,8 @@
           "gender": "M",
           "admissionDate": "2026-06-20",
           "bedNo": "MW-37",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0010"
         },
         {
           "id": "mw-011",
@@ -116,7 +126,8 @@
           "gender": "M",
           "admissionDate": "2026-06-14",
           "bedNo": "MW-39",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0011"
         }
       ]
     },
@@ -134,7 +145,8 @@
           "gender": "F",
           "admissionDate": "2026-06-18",
           "bedNo": "FW-02",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0012"
         },
         {
           "id": "fw-002",
@@ -143,7 +155,8 @@
           "gender": "F",
           "admissionDate": "2026-06-20",
           "bedNo": "FW-05",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0013"
         },
         {
           "id": "fw-003",
@@ -152,7 +165,8 @@
           "gender": "F",
           "admissionDate": "2026-06-17",
           "bedNo": "FW-08",
-          "status": "monitoring"
+          "status": "monitoring",
+          "mmhplId": "MMHPL-0014"
         },
         {
           "id": "fw-004",
@@ -161,7 +175,8 @@
           "gender": "F",
           "admissionDate": "2026-06-19",
           "bedNo": "FW-12",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0015"
         },
         {
           "id": "fw-005",
@@ -170,7 +185,8 @@
           "gender": "F",
           "admissionDate": "2026-06-16",
           "bedNo": "FW-15",
-          "status": "monitoring"
+          "status": "monitoring",
+          "mmhplId": "MMHPL-0016"
         },
         {
           "id": "fw-006",
@@ -179,7 +195,8 @@
           "gender": "F",
           "admissionDate": "2026-06-20",
           "bedNo": "FW-17",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0017"
         },
         {
           "id": "fw-007",
@@ -188,7 +205,8 @@
           "gender": "F",
           "admissionDate": "2026-06-18",
           "bedNo": "FW-20",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0018"
         },
         {
           "id": "fw-008",
@@ -197,7 +215,8 @@
           "gender": "F",
           "admissionDate": "2026-06-19",
           "bedNo": "FW-24",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0019"
         },
         {
           "id": "fw-009",
@@ -206,7 +225,8 @@
           "gender": "F",
           "admissionDate": "2026-06-15",
           "bedNo": "FW-28",
-          "status": "monitoring"
+          "status": "monitoring",
+          "mmhplId": "MMHPL-0020"
         }
       ]
     },
@@ -224,7 +244,8 @@
           "gender": "M",
           "admissionDate": "2026-06-19",
           "bedNo": "ICU-01",
-          "status": "critical"
+          "status": "critical",
+          "mmhplId": "MMHPL-0021"
         },
         {
           "id": "icu-002",
@@ -233,7 +254,8 @@
           "gender": "F",
           "admissionDate": "2026-06-18",
           "bedNo": "ICU-02",
-          "status": "critical"
+          "status": "critical",
+          "mmhplId": "MMHPL-0022"
         },
         {
           "id": "icu-003",
@@ -242,7 +264,8 @@
           "gender": "M",
           "admissionDate": "2026-06-20",
           "bedNo": "ICU-03",
-          "status": "monitoring"
+          "status": "monitoring",
+          "mmhplId": "MMHPL-0023"
         },
         {
           "id": "icu-004",
@@ -251,7 +274,8 @@
           "gender": "M",
           "admissionDate": "2026-06-19",
           "bedNo": "ICU-05",
-          "status": "critical"
+          "status": "critical",
+          "mmhplId": "MMHPL-0024"
         },
         {
           "id": "icu-005",
@@ -260,7 +284,8 @@
           "gender": "F",
           "admissionDate": "2026-06-20",
           "bedNo": "ICU-07",
-          "status": "monitoring"
+          "status": "monitoring",
+          "mmhplId": "MMHPL-0025"
         }
       ]
     },
@@ -278,7 +303,8 @@
           "gender": "M",
           "admissionDate": "2026-06-17",
           "bedNo": "NDU-01",
-          "status": "monitoring"
+          "status": "monitoring",
+          "mmhplId": "MMHPL-0026"
         },
         {
           "id": "ndu-002",
@@ -287,7 +313,8 @@
           "gender": "F",
           "admissionDate": "2026-06-18",
           "bedNo": "NDU-03",
-          "status": "monitoring"
+          "status": "monitoring",
+          "mmhplId": "MMHPL-0027"
         },
         {
           "id": "ndu-003",
@@ -296,7 +323,8 @@
           "gender": "M",
           "admissionDate": "2026-06-16",
           "bedNo": "NDU-05",
-          "status": "critical"
+          "status": "critical",
+          "mmhplId": "MMHPL-0028"
         },
         {
           "id": "ndu-004",
@@ -305,7 +333,8 @@
           "gender": "F",
           "admissionDate": "2026-06-19",
           "bedNo": "NDU-07",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0029"
         }
       ]
     },
@@ -323,7 +352,8 @@
           "gender": "M",
           "admissionDate": "2026-06-19",
           "bedNo": "CCU-01",
-          "status": "critical"
+          "status": "critical",
+          "mmhplId": "MMHPL-0030"
         },
         {
           "id": "ccu-002",
@@ -332,7 +362,8 @@
           "gender": "F",
           "admissionDate": "2026-06-18",
           "bedNo": "CCU-02",
-          "status": "monitoring"
+          "status": "monitoring",
+          "mmhplId": "MMHPL-0031"
         },
         {
           "id": "ccu-003",
@@ -341,7 +372,8 @@
           "gender": "M",
           "admissionDate": "2026-06-17",
           "bedNo": "CCU-04",
-          "status": "critical"
+          "status": "critical",
+          "mmhplId": "MMHPL-0032"
         },
         {
           "id": "ccu-004",
@@ -350,7 +382,8 @@
           "gender": "F",
           "admissionDate": "2026-06-20",
           "bedNo": "CCU-06",
-          "status": "monitoring"
+          "status": "monitoring",
+          "mmhplId": "MMHPL-0033"
         }
       ]
     },
@@ -368,7 +401,8 @@
           "gender": "M",
           "admissionDate": "2026-06-19",
           "bedNo": "SW-02",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0034"
         },
         {
           "id": "sw-002",
@@ -377,7 +411,8 @@
           "gender": "F",
           "admissionDate": "2026-06-20",
           "bedNo": "SW-04",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0035"
         },
         {
           "id": "sw-003",
@@ -386,7 +421,8 @@
           "gender": "M",
           "admissionDate": "2026-06-18",
           "bedNo": "SW-06",
-          "status": "monitoring"
+          "status": "monitoring",
+          "mmhplId": "MMHPL-0036"
         },
         {
           "id": "sw-004",
@@ -395,7 +431,8 @@
           "gender": "F",
           "admissionDate": "2026-06-19",
           "bedNo": "SW-08",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0037"
         },
         {
           "id": "sw-005",
@@ -404,7 +441,8 @@
           "gender": "M",
           "admissionDate": "2026-06-20",
           "bedNo": "SW-10",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0038"
         },
         {
           "id": "sw-006",
@@ -413,7 +451,8 @@
           "gender": "F",
           "admissionDate": "2026-06-17",
           "bedNo": "SW-13",
-          "status": "monitoring"
+          "status": "monitoring",
+          "mmhplId": "MMHPL-0039"
         },
         {
           "id": "sw-007",
@@ -422,7 +461,8 @@
           "gender": "M",
           "admissionDate": "2026-06-18",
           "bedNo": "SW-15",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0040"
         }
       ]
     },
@@ -440,7 +480,8 @@
           "gender": "F",
           "admissionDate": "2026-06-20",
           "bedNo": "MAT-01",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0041"
         },
         {
           "id": "mat-002",
@@ -449,7 +490,8 @@
           "gender": "F",
           "admissionDate": "2026-06-19",
           "bedNo": "MAT-03",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0042"
         },
         {
           "id": "mat-003",
@@ -458,7 +500,8 @@
           "gender": "F",
           "admissionDate": "2026-06-20",
           "bedNo": "MAT-05",
-          "status": "monitoring"
+          "status": "monitoring",
+          "mmhplId": "MMHPL-0043"
         },
         {
           "id": "mat-004",
@@ -467,7 +510,8 @@
           "gender": "F",
           "admissionDate": "2026-06-18",
           "bedNo": "MAT-07",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0044"
         },
         {
           "id": "mat-005",
@@ -476,7 +520,8 @@
           "gender": "F",
           "admissionDate": "2026-06-19",
           "bedNo": "MAT-09",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0045"
         }
       ]
     },
@@ -494,7 +539,8 @@
           "gender": "M",
           "admissionDate": "2026-06-19",
           "bedNo": "PED-02",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0046"
         },
         {
           "id": "ped-002",
@@ -503,7 +549,8 @@
           "gender": "F",
           "admissionDate": "2026-06-20",
           "bedNo": "PED-04",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0047"
         },
         {
           "id": "ped-003",
@@ -512,7 +559,8 @@
           "gender": "M",
           "admissionDate": "2026-06-18",
           "bedNo": "PED-06",
-          "status": "monitoring"
+          "status": "monitoring",
+          "mmhplId": "MMHPL-0048"
         },
         {
           "id": "ped-004",
@@ -521,7 +569,8 @@
           "gender": "F",
           "admissionDate": "2026-06-20",
           "bedNo": "PED-08",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0049"
         },
         {
           "id": "ped-005",
@@ -530,7 +579,8 @@
           "gender": "M",
           "admissionDate": "2026-06-19",
           "bedNo": "PED-10",
-          "status": "stable"
+          "status": "stable",
+          "mmhplId": "MMHPL-0050"
         }
       ]
     }

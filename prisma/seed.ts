@@ -309,7 +309,8 @@ async function main() {
         update: { 
           patientCondition: patient.status, 
           wardId: dbWard.id, 
-          bedId: bedId 
+          bedId: bedId,
+          mmhplId: (patient as any).mmhplId || undefined,
         },
         create: {
           id:               patient.id + '-admission',
@@ -320,6 +321,7 @@ async function main() {
           bedId:            bedId,
           patientCondition: patient.status,
           admittedAt:       getRelativeDate(patient.admissionDate),
+          mmhplId:          (patient as any).mmhplId || undefined,
         },
       });
     }

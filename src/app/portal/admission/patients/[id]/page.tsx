@@ -19,10 +19,42 @@ function toLocalDatetimeValue(date: Date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+function buildBillingUrl(patient: Patient, adm: Admission): string {
+  // Format today's date as DD/MM/YYYY for the bill date field
+  const today = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const billDate = `${pad(today.getDate())}/${pad(today.getMonth() + 1)}/${today.getFullYear()}`;
+
+  // Get primary doctor name
+  const primaryDoc = adm.doctors.find(d => d.role === 'primary');
+  const doctorName = primaryDoc?.doctor.user.name
+    ?? adm.opdSession?.doctor.user.name
+    ?? '';
+
+  // Build bed info
+  const bedNo = adm.bed?.bedNo || adm.bedNo || '';
+
+  // Build case type from admission type
+  const caseType = adm.type === 'OT' && adm.otCase
+    ? adm.otCase.procedureName
+    : adm.type;
+
+  const params = new URLSearchParams();
+  params.set('patientName', patient.name);
+  params.set('patientAge', patient.age ? `${patient.age} Years` : '');
+  params.set('underDoctor', doctorName);
+  params.set('hospitalId', adm.mmhplId ?? '');
+  params.set('bedNo', bedNo);
+  params.set('caseType', caseType);
+  params.set('billDate', billDate);
+
+  return `/billing/index.html?${params.toString()}`;
+}
+
 interface Doctor { id?: string; user: { name: string }; department: { name: string } | null; }
 interface Admission {
   id: string; type: string; status: string; admittedAt: string; dischargedAt: string | null;
-  bedNo: string | null; patientCondition: string | null;
+  bedNo: string | null; patientCondition: string | null; mmhplId: string | null;
   bed: { id: string; bedNo: string } | null;
   ward: { name: string; code: string; accentColor: string } | null;
   opdSession: { doctor: { user: { name: string } }; startTime: string; endTime: string } | null;
@@ -274,17 +306,33 @@ export default function PatientDetailPage() {
                     <span className={styles.admDateLabel}>Admitted</span>
                     {fmtDateTime(activeAdmission.admittedAt)}
                   </span>
+                  {activeAdmission.mmhplId && (
+                    <span className={styles.admDate}>
+                      <span className={styles.admDateLabel}>MMHPL ID</span>
+                      <span style={{ fontWeight: 600, color: '#a78bfa', letterSpacing: '0.02em' }}>{activeAdmission.mmhplId}</span>
+                    </span>
+                  )}
                 </div>
-                {role === 'RECEPTIONIST' && (
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button className={styles.transferBtn} onClick={() => setShowTransfer(true)}>
-                      Transfer
-                    </button>
-                    <button className={styles.dischargeBtn} onClick={() => openDischargeModal(activeAdmission.id)}>
-                      Discharge
-                    </button>
-                  </div>
-                )}
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <a
+                    href={buildBillingUrl(patient, activeAdmission)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.billingBtn}
+                  >
+                    🧾 Generate Bill
+                  </a>
+                  {role === 'RECEPTIONIST' && (
+                    <>
+                      <button className={styles.transferBtn} onClick={() => setShowTransfer(true)}>
+                        Transfer
+                      </button>
+                      <button className={styles.dischargeBtn} onClick={() => openDischargeModal(activeAdmission.id)}>
+                        Discharge
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           ) : (

@@ -50,6 +50,7 @@ export default function NewAdmissionPage() {
     chiefComplaint: '', diagnosis: '',
     emergencyContactName: '', emergencyContactPhone: '',
     insuranceProvider: '', policyNumber: '',
+    mmhplId: '',
     admissionType: 'OPD',
     wardId: '', bedId: '',
     opdSessionId: '',
@@ -260,6 +261,13 @@ export default function NewAdmissionPage() {
               <div className={styles.field}>
                 <label className={styles.label}>Contact Phone</label>
                 <input id="emergency-phone" className={styles.input} value={form.emergencyContactPhone} onChange={e => set('emergencyContactPhone', e.target.value)} placeholder="+91 9876543210" />
+              </div>
+            </div>
+            <div className={styles.sectionDivider}>MMHPL Patient ID (Optional)</div>
+            <div className={styles.grid2}>
+              <div className={styles.field}>
+                <label className={styles.label}>MMHPL ID</label>
+                <input id="mmhpl-id" className={styles.input} value={form.mmhplId} onChange={e => set('mmhplId', e.target.value)} placeholder="e.g. MMHPL-0051" />
               </div>
             </div>
             <div className={styles.sectionDivider}>Insurance (Optional)</div>

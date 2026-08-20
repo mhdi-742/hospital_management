@@ -96,6 +96,8 @@ export async function POST(req: NextRequest) {
     emergencyContactName, emergencyContactPhone,
     // Insurance
     insuranceProvider, policyNumber,
+    // MMHPL ID (optional)
+    mmhplId,
     // Admission
     admissionType, wardId, bedId, opdSessionId, otRoomId,
     doctorIds, // [{ doctorId, role }]
@@ -195,6 +197,7 @@ export async function POST(req: NextRequest) {
         patientId: patient.id,
         type:      admissionType ?? 'OPD',
         status:    'active',
+        mmhplId:   mmhplId?.trim() || undefined,
         wardId:    wardId    || undefined,
         bedId:     bedId     || undefined,
         opdSessionId: resolvedOpdSessionId,

@@ -200,6 +200,7 @@ model Admission {
   patient       Patient         @relation(fields: [patientId], references: [id])
   type          AdmissionType
   status        AdmissionStatus @default(active)
+  mmhplId       String?         // Optional MMHPL patient ID (e.g. "MMHPL-0001")
   admittedAt    DateTime        @default(now())
   dischargedAt  DateTime?
 
