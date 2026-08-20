@@ -448,6 +448,30 @@ async function main() {
   }
   console.log('✅  Announcements seeded.');
 
+  // ── Investigations & Rate Chart ────────────────────────────────────
+  const investigationsData = (await import('../src/data/investigations.json')).default;
+  for (const item of investigationsData) {
+    await prisma.investigationTest.upsert({
+      where: { name: item.name },
+      update: {
+        code: item.code,
+        amount: item.amount,
+        reportTime: item.reportTime,
+        category: item.category,
+        isActive: true,
+      },
+      create: {
+        code: item.code,
+        name: item.name,
+        amount: item.amount,
+        reportTime: item.reportTime,
+        category: item.category,
+        isActive: true,
+      },
+    });
+  }
+  console.log(`✅  Investigation Tests seeded (${investigationsData.length} rate chart entries).`);
+
   // ── Staff accounts ────────────────────────────────────────────────
   const staffPw = await bcrypt.hash('Staff@123', 12);
   await prisma.user.upsert({

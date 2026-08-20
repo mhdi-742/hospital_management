@@ -344,3 +344,55 @@ model HospitalSettings {
 
   updatedAt DateTime @updatedAt
 }
+
+// ─────────────────────────────────────────────
+// Investigations & Diagnostic Rate Chart
+// ─────────────────────────────────────────────
+
+model InvestigationTest {
+  id          String   @id @default(cuid())
+  code        String?  @unique
+  name        String   @unique
+  amount      Float
+  reportTime  String?
+  category    String?  @default("Pathology")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  registrationItems InvestigationRegistrationItem[]
+}
+
+model InvestigationRegistration {
+  id               String   @id @default(cuid())
+  regNo            String   @unique
+  patientName      String
+  patientAge       String?
+  gender           String?
+  contact          String?
+  address          String?
+  referredByDoctor String?
+  totalAmount      Float    @default(0)
+  discount         Float    @default(0)
+  netPayable       Float    @default(0)
+  advancePaid      Float    @default(0)
+  dueAmount        Float    @default(0)
+  status           String   @default("pending") // pending, sample_collected, completed, cancelled
+  registeredAt     DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  items            InvestigationRegistrationItem[]
+}
+
+model InvestigationRegistrationItem {
+  id              String   @id @default(cuid())
+  registrationId  String
+  registration    InvestigationRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  testId          String?
+  test            InvestigationTest? @relation(fields: [testId], references: [id])
+  testName        String
+  qty             Int      @default(1)
+  rate            Float
+  amount          Float
+}

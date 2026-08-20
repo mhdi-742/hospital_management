@@ -1,0 +1,884 @@
+[
+  {
+    "code": "INV-001",
+    "name": "TC, DC",
+    "amount": 80,
+    "reportTime": "R/Afer Same Day",
+    "category": "Haematology"
+  },
+  {
+    "code": "INV-002",
+    "name": "TC,DC,ESR",
+    "amount": 130,
+    "reportTime": "R/Afer Same Day",
+    "category": "Haematology"
+  },
+  {
+    "code": "INV-003",
+    "name": "TC,DC,ESR,HB% (BLOOD)",
+    "amount": 150,
+    "reportTime": "R/Afer Same Day",
+    "category": "Haematology"
+  },
+  {
+    "code": "INV-004",
+    "name": "TC,DC,HB%",
+    "amount": 130,
+    "reportTime": "R/Afer Same Day",
+    "category": "Haematology"
+  },
+  {
+    "code": "INV-005",
+    "name": "ESR",
+    "amount": 50,
+    "reportTime": "R/Afer Same Day",
+    "category": "Haematology"
+  },
+  {
+    "code": "INV-006",
+    "name": "MP",
+    "amount": 100,
+    "reportTime": "R/Afer Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-007",
+    "name": "HB%",
+    "amount": 100,
+    "reportTime": "R/Afer Same Day",
+    "category": "Haematology"
+  },
+  {
+    "code": "INV-008",
+    "name": "BT,CT",
+    "amount": 80,
+    "reportTime": "R/Afer Same Day",
+    "category": "Haematology"
+  },
+  {
+    "code": "INV-009",
+    "name": "APTT,Activated Partial Thromboplastin time",
+    "amount": 300,
+    "reportTime": "R/Afer Same Day",
+    "category": "Haematology"
+  },
+  {
+    "code": "INV-010",
+    "name": "PROTHROMBIN TIME (PT)/INR",
+    "amount": 250,
+    "reportTime": "R/Afer Same Day",
+    "category": "Haematology"
+  },
+  {
+    "code": "INV-011",
+    "name": "PLATELET COUNT",
+    "amount": 100,
+    "reportTime": "R/Afer Same Day",
+    "category": "Haematology"
+  },
+  {
+    "code": "INV-012",
+    "name": "ELECTROPHORESIS(HPLC) THALASSEMIA",
+    "amount": 1000,
+    "reportTime": "R/After 10 DAYS",
+    "category": "Haematology"
+  },
+  {
+    "code": "INV-013",
+    "name": "ABNORMAL CELL",
+    "amount": 150,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-014",
+    "name": "ABSOLUTE EOSINOPHIL COUNT",
+    "amount": 250,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-015",
+    "name": "MCV",
+    "amount": 100,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-016",
+    "name": "C.B.C. (COMPLETE BLOOD COUNT)",
+    "amount": 300,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-017",
+    "name": "MCHC/ PCV",
+    "amount": 100,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-018",
+    "name": "BLOOD GROUPING (ABO)RH TYPING",
+    "amount": 60,
+    "reportTime": "R/After Same Day",
+    "category": "Haematology"
+  },
+  {
+    "code": "INV-019",
+    "name": "MANTOUX TEST (M.T)",
+    "amount": 300,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-020",
+    "name": "ALDEHYDE TEST",
+    "amount": 100,
+    "reportTime": "R/After 1 DAYS",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-021",
+    "name": "WIDAL TEST",
+    "amount": 100,
+    "reportTime": "R/After Same Day",
+    "category": "Microbiology / Serology"
+  },
+  {
+    "code": "INV-022",
+    "name": "ANF",
+    "amount": 300,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-023",
+    "name": "HIV, TEST I & II",
+    "amount": 350,
+    "reportTime": "R/After Same Day",
+    "category": "Microbiology / Serology"
+  },
+  {
+    "code": "INV-024",
+    "name": "RA (TURBIDOMETRY)",
+    "amount": 300,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-025",
+    "name": "ASO (TURBIDOMETRY)",
+    "amount": 300,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-026",
+    "name": "VDRL (RPR) TEST",
+    "amount": 100,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-027",
+    "name": "CRP TEST",
+    "amount": 300,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-028",
+    "name": "HBS Ag.",
+    "amount": 150,
+    "reportTime": "R/After Same Day",
+    "category": "Microbiology / Serology"
+  },
+  {
+    "code": "INV-029",
+    "name": "HBAIC, GLYCOSYLATED HEMOGLOBIN",
+    "amount": 450,
+    "reportTime": "R/After Same Day",
+    "category": "Haematology"
+  },
+  {
+    "code": "INV-030",
+    "name": "Cpk",
+    "amount": 500,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-031",
+    "name": "CPK-MB",
+    "amount": 700,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-032",
+    "name": "LDH",
+    "amount": 600,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-033",
+    "name": "URIC ACID",
+    "amount": 150,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-034",
+    "name": "Sodium, Na+",
+    "amount": 200,
+    "reportTime": "R/After Same Day",
+    "category": "Biochemistry"
+  },
+  {
+    "code": "INV-035",
+    "name": "Potassium, K+",
+    "amount": 200,
+    "reportTime": "R/After Same Day",
+    "category": "Biochemistry"
+  },
+  {
+    "code": "INV-036",
+    "name": "Calcium",
+    "amount": 200,
+    "reportTime": "R/After Same Day",
+    "category": "Biochemistry"
+  },
+  {
+    "code": "INV-037",
+    "name": "Mg+2, serum",
+    "amount": 450,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-038",
+    "name": "Po 4, Serum (PHOSPHORUS)",
+    "amount": 450,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-039",
+    "name": "CHOLORIDE(CL)",
+    "amount": 200,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-040",
+    "name": "LH",
+    "amount": 450,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Hormones / Endocrinology"
+  },
+  {
+    "code": "INV-041",
+    "name": "FSH",
+    "amount": 450,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Hormones / Endocrinology"
+  },
+  {
+    "code": "INV-042",
+    "name": "Free T3. TSH",
+    "amount": 700,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Hormones / Endocrinology"
+  },
+  {
+    "code": "INV-043",
+    "name": "Free T4. TSH",
+    "amount": 700,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Hormones / Endocrinology"
+  },
+  {
+    "code": "INV-044",
+    "name": "Free T3",
+    "amount": 450,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Hormones / Endocrinology"
+  },
+  {
+    "code": "INV-045",
+    "name": "Free T4.",
+    "amount": 450,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Hormones / Endocrinology"
+  },
+  {
+    "code": "INV-046",
+    "name": "T3 & T4",
+    "amount": 500,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Hormones / Endocrinology"
+  },
+  {
+    "code": "INV-047",
+    "name": "T3 & TSH",
+    "amount": 500,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Hormones / Endocrinology"
+  },
+  {
+    "code": "INV-048",
+    "name": "T4 & TSH",
+    "amount": 500,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Hormones / Endocrinology"
+  },
+  {
+    "code": "INV-049",
+    "name": "T3",
+    "amount": 350,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Hormones / Endocrinology"
+  },
+  {
+    "code": "INV-050",
+    "name": "T4",
+    "amount": 350,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Hormones / Endocrinology"
+  },
+  {
+    "code": "INV-051",
+    "name": "TSH",
+    "amount": 300,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Hormones / Endocrinology"
+  },
+  {
+    "code": "INV-052",
+    "name": "T3, T4, TSH",
+    "amount": 700,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Hormones / Endocrinology"
+  },
+  {
+    "code": "INV-053",
+    "name": "FT3, FT4, TSH",
+    "amount": 1000,
+    "reportTime": "R/After Same Day",
+    "category": "Hormones / Endocrinology"
+  },
+  {
+    "code": "INV-054",
+    "name": "PROLACTIN",
+    "amount": 400,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Hormones / Endocrinology"
+  },
+  {
+    "code": "INV-055",
+    "name": "TESTOTARONE",
+    "amount": 800,
+    "reportTime": "R/After 5 DAYS",
+    "category": "Hormones / Endocrinology"
+  },
+  {
+    "code": "INV-056",
+    "name": "TORCH(14PARAMETER)",
+    "amount": 3600,
+    "reportTime": "R/After 5 DAYS",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-057",
+    "name": "TORCH(12PARAMETER)",
+    "amount": 3000,
+    "reportTime": "R/After 5 DAYS",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-058",
+    "name": "TOXOPALASMA - lgG & lgM",
+    "amount": 1000,
+    "reportTime": "R/After 5 DAYS",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-059",
+    "name": "P.S.A.",
+    "amount": 800,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-060",
+    "name": "Vitamin D-25 (OH)",
+    "amount": 1400,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-061",
+    "name": "Vit- B12",
+    "amount": 1400,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-062",
+    "name": "P.FALCIPARAM ANTIGEN",
+    "amount": 350,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-063",
+    "name": "P.F & P.V ANTIGEN",
+    "amount": 350,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-064",
+    "name": "COOMB TEST-DIRECT",
+    "amount": 600,
+    "reportTime": "R/After Same Day",
+    "category": "Haematology"
+  },
+  {
+    "code": "INV-065",
+    "name": "COOMB TEST-INDIRECT",
+    "amount": 600,
+    "reportTime": "R/After Same Day",
+    "category": "Haematology"
+  },
+  {
+    "code": "INV-066",
+    "name": "PUS, CULTURE",
+    "amount": 600,
+    "reportTime": "R/After Same Day",
+    "category": "Clinical Pathology"
+  },
+  {
+    "code": "INV-067",
+    "name": "GRAMS STAINING",
+    "amount": 300,
+    "reportTime": "R/After Same Day",
+    "category": "Microbiology / Serology"
+  },
+  {
+    "code": "INV-068",
+    "name": "G-6 PD",
+    "amount": 700,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-069",
+    "name": "PBS (Peripheral blood smers). (ONLY)",
+    "amount": 250,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-070",
+    "name": "TYPHIDOT",
+    "amount": 400,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-071",
+    "name": "BETA HCG",
+    "amount": 1000,
+    "reportTime": "R/After 5 DAYS",
+    "category": "Hormones / Endocrinology"
+  },
+  {
+    "code": "INV-072",
+    "name": "Lithium",
+    "amount": 450,
+    "reportTime": "R/After 5 DAYS",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-073",
+    "name": "Gama -GT (GGT) GGTP",
+    "amount": 450,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-074",
+    "name": "Anti Ds. DNA",
+    "amount": 900,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-075",
+    "name": "Troponin (l)",
+    "amount": 1000,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-076",
+    "name": "HCV.",
+    "amount": 300,
+    "reportTime": "R/After Same Day",
+    "category": "Microbiology / Serology"
+  },
+  {
+    "code": "INV-077",
+    "name": "Dengue (lgG/lgM)",
+    "amount": 1500,
+    "reportTime": "R/After Same Day",
+    "category": "Microbiology / Serology"
+  },
+  {
+    "code": "INV-078",
+    "name": "Checkungunia",
+    "amount": 1500,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-079",
+    "name": "Iron (Fe++)",
+    "amount": 500,
+    "reportTime": "R/After 5 DAYS",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-080",
+    "name": "Tibc.",
+    "amount": 550,
+    "reportTime": "R/After 5 DAYS",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-081",
+    "name": "Bicarbonate (HCO)",
+    "amount": 450,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-082",
+    "name": "DENGUE Antigen(NS1)",
+    "amount": 1000,
+    "reportTime": "R/After Same Day",
+    "category": "Microbiology / Serology"
+  },
+  {
+    "code": "INV-083",
+    "name": "Anti ccp",
+    "amount": 1400,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-084",
+    "name": "Ige",
+    "amount": 700,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-085",
+    "name": "KFT(CBC,UR,CR,NA,K,CA,CL,U/ACID,URINE RE/ME)",
+    "amount": 1200,
+    "reportTime": "R/After Same Day",
+    "category": "Clinical Pathology"
+  },
+  {
+    "code": "INV-086",
+    "name": "URINE FOR R/E & M/E",
+    "amount": 100,
+    "reportTime": "R/After Same Day",
+    "category": "Clinical Pathology"
+  },
+  {
+    "code": "INV-087",
+    "name": "URINE FOR C/S",
+    "amount": 300,
+    "reportTime": "R/After 3 DAYS",
+    "category": "Clinical Pathology"
+  },
+  {
+    "code": "INV-088",
+    "name": "URINE FOR HCG TEST/ PREGNANCY",
+    "amount": 100,
+    "reportTime": "R/After Same Day",
+    "category": "Clinical Pathology"
+  },
+  {
+    "code": "INV-089",
+    "name": "URINE FOR KETONE BODY",
+    "amount": 100,
+    "reportTime": "R/After Same Day",
+    "category": "Clinical Pathology"
+  },
+  {
+    "code": "INV-090",
+    "name": "URINE FOR ALBUMIN (Micro albumin)",
+    "amount": 300,
+    "reportTime": "R/After Same Day",
+    "category": "Clinical Pathology"
+  },
+  {
+    "code": "INV-091",
+    "name": "URINE FOR ALBUMIN CREATININE RATIO(ACR)",
+    "amount": 800,
+    "reportTime": "R/After Same Day",
+    "category": "Clinical Pathology"
+  },
+  {
+    "code": "INV-092",
+    "name": "URINE FOR 24 HOURS PRITEIN",
+    "amount": 250,
+    "reportTime": "R/After Same Day",
+    "category": "Clinical Pathology"
+  },
+  {
+    "code": "INV-093",
+    "name": "STOOL FOR R/E & M/E(OPC)",
+    "amount": 150,
+    "reportTime": "R/After Same Day",
+    "category": "Clinical Pathology"
+  },
+  {
+    "code": "INV-094",
+    "name": "STOOL FOR OBT",
+    "amount": 200,
+    "reportTime": "R/After Same Day",
+    "category": "Clinical Pathology"
+  },
+  {
+    "code": "INV-095",
+    "name": "STOOL FOR REDUCING SUBSTANCE",
+    "amount": 100,
+    "reportTime": "R/After Same Day",
+    "category": "Clinical Pathology"
+  },
+  {
+    "code": "INV-096",
+    "name": "SEMEN ANALYSIS",
+    "amount": 300,
+    "reportTime": "R/After Same Day",
+    "category": "Clinical Pathology"
+  },
+  {
+    "code": "INV-097",
+    "name": "SPUTAM FOR AFB",
+    "amount": 150,
+    "reportTime": "R/After Same Day",
+    "category": "Clinical Pathology"
+  },
+  {
+    "code": "INV-098",
+    "name": "BLOOD SUGER FBS",
+    "amount": 50,
+    "reportTime": "R/After Same Day",
+    "category": "Biochemistry"
+  },
+  {
+    "code": "INV-099",
+    "name": "BLOOD SUGER PPBS",
+    "amount": 50,
+    "reportTime": "R/After Same Day",
+    "category": "Biochemistry"
+  },
+  {
+    "code": "INV-100",
+    "name": "BLOOD SUGER RBS",
+    "amount": 50,
+    "reportTime": "R/After Same Day",
+    "category": "Biochemistry"
+  },
+  {
+    "code": "INV-101",
+    "name": "UREA/BUN EACH",
+    "amount": 120,
+    "reportTime": "R/After Same Day",
+    "category": "Biochemistry"
+  },
+  {
+    "code": "INV-102",
+    "name": "CREATININE",
+    "amount": 120,
+    "reportTime": "R/After Same Day",
+    "category": "Biochemistry"
+  },
+  {
+    "code": "INV-103",
+    "name": "CHOLESTEROL (Fasting 12hrs)",
+    "amount": 200,
+    "reportTime": "R/After Same Day",
+    "category": "Biochemistry"
+  },
+  {
+    "code": "INV-104",
+    "name": "TRIGLYCERIDES (Fasting 12hrs)",
+    "amount": 220,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-105",
+    "name": "HDL ( Fasting 12hrs)",
+    "amount": 350,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-106",
+    "name": "LIPID PROFILE (Fasting 12hrs)",
+    "amount": 600,
+    "reportTime": "R/After Same Day",
+    "category": "Biochemistry"
+  },
+  {
+    "code": "INV-107",
+    "name": "LDL (Fasting 12hrs)",
+    "amount": 350,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-108",
+    "name": "BILIRUBIN (T)",
+    "amount": 120,
+    "reportTime": "R/After Same Day",
+    "category": "Biochemistry"
+  },
+  {
+    "code": "INV-109",
+    "name": "BILIRUBIN TOTAL & DIRECT Con/uncon",
+    "amount": 220,
+    "reportTime": "R/After Same Day",
+    "category": "Biochemistry"
+  },
+  {
+    "code": "INV-110",
+    "name": "ADA",
+    "amount": 900,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-111",
+    "name": "SGPT(ALT)",
+    "amount": 120,
+    "reportTime": "R/After Same Day",
+    "category": "Biochemistry"
+  },
+  {
+    "code": "INV-112",
+    "name": "SGOT (AST)",
+    "amount": 120,
+    "reportTime": "R/After Same Day",
+    "category": "Biochemistry"
+  },
+  {
+    "code": "INV-113",
+    "name": "ALK. PHOS.",
+    "amount": 120,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-114",
+    "name": "ACID PHOS",
+    "amount": 120,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-115",
+    "name": "TOTAL PROTIEN",
+    "amount": 120,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-116",
+    "name": "TOTAL PROTIEN ALBUMIN",
+    "amount": 120,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-117",
+    "name": "ALBUMIN",
+    "amount": 120,
+    "reportTime": "R/After Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-118",
+    "name": "LIVER FUNCTION TEST (LFT)",
+    "amount": 600,
+    "reportTime": "R/After Same Day",
+    "category": "Biochemistry"
+  },
+  {
+    "code": "INV-119",
+    "name": "AMYLASE",
+    "amount": 400,
+    "reportTime": "R/After Same Day",
+    "category": "Biochemistry"
+  },
+  {
+    "code": "INV-120",
+    "name": "LIPASE",
+    "amount": 400,
+    "reportTime": "R/After Same Day",
+    "category": "Biochemistry"
+  },
+  {
+    "code": "INV-121",
+    "name": "ECG",
+    "amount": 300,
+    "reportTime": "Same Day",
+    "category": "Cardiology"
+  },
+  {
+    "code": "INV-122",
+    "name": "TROP -T",
+    "amount": 1200,
+    "reportTime": "Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-123",
+    "name": "CBNEET SPUTAM FOR",
+    "amount": 4000,
+    "reportTime": "R/After 10 DAYS",
+    "category": "Clinical Pathology"
+  },
+  {
+    "code": "INV-124",
+    "name": "EGFR",
+    "amount": 450,
+    "reportTime": "Same Day",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-125",
+    "name": "ACLA",
+    "amount": 1700,
+    "reportTime": "3 DAYS",
+    "category": "Pathology"
+  },
+  {
+    "code": "INV-126",
+    "name": "APLA",
+    "amount": 1500,
+    "reportTime": "3DAYS",
+    "category": "Pathology"
+  }
+]
