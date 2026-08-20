@@ -281,6 +281,22 @@ window.printInvoice = printInvoice;
 window.togglePrintHeader = togglePrintHeader;
 window.saveBill = saveBill;
 
+function isInvestigationBill() {
+  const caseTypeEl = document.getElementById("caseType");
+  const caseVal = (caseTypeEl?.value || "").toLowerCase().trim();
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlCase = (urlParams.get("caseType") || urlParams.get("billType") || "").toLowerCase().trim();
+
+  return (
+    caseVal.includes("investigation") ||
+    caseVal.includes("diagnostic") ||
+    caseVal.includes("lab") ||
+    urlCase.includes("investigation") ||
+    urlCase.includes("diagnostic") ||
+    urlCase.includes("lab")
+  );
+}
+
 /**
  * Render all table rows
  */
@@ -289,6 +305,8 @@ function renderAll() {
   if (!tbody) return;
 
   tbody.innerHTML = "";
+  const useInvestigationList = isInvestigationBill();
+  const listAttr = useInvestigationList ? 'list="investigationDataList"' : '';
 
   billItems.forEach((item, index) => {
     const serial = index + 1;
@@ -298,7 +316,7 @@ function renderAll() {
     tr.innerHTML = `
       <td class="col-sl">${serial}</td>
       <td class="col-description">
-        <input type="text" class="table-input input-name" list="investigationDataList" data-index="${index}" value="${escapeHtml(item.name)}" placeholder="Item name">
+        <input type="text" class="table-input input-name" ${listAttr} data-index="${index}" value="${escapeHtml(item.name)}" placeholder="Item name">
       </td>
       <td class="col-qty">
         <input type="number" class="table-input text-right input-qty" data-index="${index}" value="${item.qty}" placeholder="" min="0" step="any">
@@ -542,8 +560,8 @@ function initApp() {
       if (e.target.classList.contains("input-name")) {
         row.name = e.target.value;
 
-        // Autocomplete price from Rate Chart if exact match found
-        if (investigationCatalog && investigationCatalog.length > 0) {
+        // Autocomplete price from Rate Chart only for Investigation/Admission bills
+        if (isInvestigationBill() && investigationCatalog && investigationCatalog.length > 0) {
           const matched = investigationCatalog.find(
             t => t.name.trim().toLowerCase() === row.name.trim().toLowerCase()
           );
@@ -594,6 +612,22 @@ function initApp() {
   // Advance input listener
   const advanceInput = document.getElementById("advanceInput");
   if (advanceInput) advanceInput.addEventListener("input", calculateTotals);
+
+  // Case type listener to switch investigation datalist on/off dynamically
+  const caseTypeInput = document.getElementById("caseType");
+  if (caseTypeInput) {
+    caseTypeInput.addEventListener("input", () => {
+      const useList = isInvestigationBill();
+      const listVal = useList ? "investigationDataList" : "";
+      document.querySelectorAll("#billTbody .input-name").forEach(inp => {
+        if (listVal) {
+          inp.setAttribute("list", listVal);
+        } else {
+          inp.removeAttribute("list");
+        }
+      });
+    });
+  }
 
   // Default: header hidden during print (pre-printed pad mode)
   togglePrintHeader(false);
