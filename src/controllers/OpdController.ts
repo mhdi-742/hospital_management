@@ -14,7 +14,12 @@ export class OpdController {
    *   - the GET /api/opd Route Handler (client polling)
    */
   static async getDisplayData(): Promise<OpdApiResponse> {
-    return getOpdFallback();
+    try {
+      return await this._getFromDb();
+    } catch (error) {
+      console.warn('[OpdController] DB query failed, falling back to JSON:', error);
+      return getOpdFallback();
+    }
   }
 
 

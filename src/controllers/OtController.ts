@@ -14,7 +14,12 @@ export class OtController {
    *   - the GET /api/ot Route Handler (client polling)
    */
   static async getDisplayData(): Promise<OtApiResponse> {
-    return getOtFallback();
+    try {
+      return await this._getFromDb();
+    } catch (error) {
+      console.warn('[OtController] DB query failed, falling back to JSON:', error);
+      return getOtFallback();
+    }
   }
 
 

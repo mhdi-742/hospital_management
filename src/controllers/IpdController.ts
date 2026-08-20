@@ -14,7 +14,12 @@ export class IpdController {
    *   - the GET /api/ipd Route Handler (client polling)
    */
   static async getDisplayData(): Promise<IpdApiResponse> {
-    return getIpdFallback();
+    try {
+      return await this._getFromDb();
+    } catch (error) {
+      console.warn('[IpdController] DB query failed, falling back to JSON:', error);
+      return getIpdFallback();
+    }
   }
 
 
