@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-// Auto-generate bill number: BILL-YYYYMMDD-XXXX
-async function generateBillNo(): Promise<string> {
+// Auto-generate investigation bill number: INV-YYYYMMDD-XXXX
+async function generateInvBillNo(): Promise<string> {
   const today = new Date();
   const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
-  const prefix = `BILL-${dateStr}-`;
+  const prefix = `INV-${dateStr}-`;
 
-  const lastBill = await prisma.bill.findFirst({
+  const lastBill = await prisma.investigationBill.findFirst({
     where: { billNo: { startsWith: prefix } },
     orderBy: { billNo: 'desc' },
   });
@@ -28,17 +28,23 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const {
-      patientId,
-      admissionId,
       patientName,
       patientAge,
+      gender,
+      contact,
+      address,
       underDoctor,
+      referredBy,
       noOfDays,
       mmhplId,
       caseType,
       bedNo,
       billDate,
+      reportDate,
+      payMode,
       advance,
+      totalPaid,
+      dueAmount,
       netPayable,
       items,
       discounts,
@@ -54,25 +60,11 @@ export async function POST(req: NextRequest) {
         if (u) userName = u.name || u.email;
       } catch (e) {}
     }
-    if (!userName) userName = 'Billing Staff';
 
-    // Generate bill number
-    const billNo = await generateBillNo();
+    if (!userName) userName = 'Billing Reception';
 
-    // Try to auto-resolve admissionId/patientId if not directly supplied
-    let resolvedAdmissionId = admissionId || null;
-    let resolvedPatientId = patientId || null;
-
-    if (!resolvedAdmissionId && mmhplId) {
-      const activeAdm = await prisma.admission.findFirst({
-        where: { mmhplId: mmhplId.trim() },
-        select: { id: true, patientId: true },
-      });
-      if (activeAdm) {
-        resolvedAdmissionId = activeAdm.id;
-        resolvedPatientId = resolvedPatientId || activeAdm.patientId;
-      }
-    }
+    // Generate investigation bill number
+    const billNo = await generateInvBillNo();
 
     // Calculate sub total from items
     let subTotal = 0;
@@ -90,24 +82,35 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Save bill to the Bill table
-    const bill = await prisma.bill.create({
+    const parsedNetPayable = parseFloat(netPayable) || 0;
+    const parsedTotalPaid = parseFloat(totalPaid !== undefined ? totalPaid : advance) || 0;
+    const parsedDueAmount = parseFloat(dueAmount !== undefined ? dueAmount : (parsedNetPayable - parsedTotalPaid)) || 0;
+    const saveTimestamp = savedAt || new Date().toISOString();
+
+    // Save directly to the dedicated InvestigationBill table
+    const bill = await prisma.investigationBill.create({
       data: {
         billNo,
-        patientId: resolvedPatientId,
-        admissionId: resolvedAdmissionId,
         patientName: patientName || '',
         patientAge: patientAge || null,
+        gender: gender || null,
+        contact: contact || null,
+        address: address || null,
         underDoctor: underDoctor || null,
+        referredBy: referredBy || null,
         noOfDays: noOfDays || null,
         mmhplId: mmhplId || null,
-        caseType: caseType || null,
+        caseType: caseType || 'Investigation',
         bedNo: bedNo || null,
         billDate: billDate || null,
+        reportDate: reportDate || null,
+        payMode: payMode || 'Cash',
         subTotal,
         totalDiscount,
-        advance: parseFloat(advance) || 0,
-        netPayable: parseFloat(netPayable) || 0,
+        advance: parsedTotalPaid,
+        totalPaid: parsedTotalPaid,
+        dueAmount: Math.max(0, parsedDueAmount),
+        netPayable: parsedNetPayable,
         createdById: userId,
         createdByName: userName,
         items: {
@@ -128,10 +131,20 @@ export async function POST(req: NextRequest) {
               amount: d.amount ? String(d.amount) : null,
             })),
         },
+        payments: {
+          create: (Array.isArray(body.payments) ? body.payments : [])
+            .filter((p: any) => p.amount && parseFloat(p.amount) > 0)
+            .map((p: any) => ({
+              mode: p.mode || 'Cash',
+              amount: parseFloat(p.amount) || 0,
+              ref: p.ref || null,
+            })),
+        },
       },
       include: {
         items: true,
         discounts: true,
+        payments: true,
       },
     });
 
@@ -141,41 +154,43 @@ export async function POST(req: NextRequest) {
         await prisma.auditLog.create({
           data: {
             userId,
-            action: 'BILL_GENERATED',
+            action: 'INVESTIGATION_BILL_GENERATED',
             target: billNo,
             metadata: JSON.stringify({
               billId: bill.id,
               billNo,
               patientName,
               mmhplId,
-              caseType,
+              createdByName: userName,
+              caseType: caseType || 'Investigation',
               netPayable,
               itemsCount: bill.items.length,
-              savedAt: savedAt || new Date().toISOString(),
+              savedAt: saveTimestamp,
             }),
           },
         });
       } catch (dbErr) {
-        console.warn('[BILLING_SAVE_AUDIT_WARN]', dbErr);
+        console.warn('[INV_BILLING_SAVE_AUDIT_WARN]', dbErr);
       }
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Bill saved successfully',
+      message: 'Investigation bill saved successfully',
       bill: {
         id: bill.id,
         billNo: bill.billNo,
         patientName: bill.patientName,
         mmhplId: bill.mmhplId,
         netPayable: bill.netPayable,
-        savedAt: savedAt || new Date().toISOString(),
+        createdByName: bill.createdByName,
+        savedAt: saveTimestamp,
       },
     });
   } catch (error: any) {
-    console.error('[BILLING_SAVE_ERR]', error);
+    console.error('[INV_BILLING_SAVE_ERR]', error);
     return NextResponse.json(
-      { error: 'Failed to save bill data' },
+      { error: 'Failed to save investigation bill data' },
       { status: 500 }
     );
   }

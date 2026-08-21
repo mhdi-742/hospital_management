@@ -189,7 +189,7 @@ export default function InvestigationRegistrationPage() {
     if (validItems.length > 0) params.set('items', JSON.stringify(validItems));
     if (autoPrint) params.set('autoPrint', '1');
 
-    return `/billing/index.html?${params.toString()}`;
+    return `/investigation-billing/index.html?${params.toString()}`;
   };
 
   const buildRegistrationBillingLink = (reg: Registration, autoPrint = false) => {
@@ -216,7 +216,7 @@ export default function InvestigationRegistrationPage() {
     if (formattedItems.length > 0) params.set('items', JSON.stringify(formattedItems));
     if (autoPrint) params.set('autoPrint', '1');
 
-    return `/billing/index.html?${params.toString()}`;
+    return `/investigation-billing/index.html?${params.toString()}`;
   };
 
   const [lastSavedReg, setLastSavedReg] = useState<Registration | null>(null);
@@ -313,7 +313,7 @@ export default function InvestigationRegistrationPage() {
         </div>
         <div className={styles.headerBtns}>
           <a
-            href="/billing/index.html"
+            href="/investigation-billing/index.html"
             target="_blank"
             rel="noopener noreferrer"
             className={styles.billingPortalBtn}

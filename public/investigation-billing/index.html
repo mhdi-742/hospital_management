@@ -4,15 +4,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <base href="/billing/">
-  <title>Mikky Megha Hospital - Billing Application</title>
+  <base href="/investigation-billing/">
+  <title>Mikky Megha Hospital - Investigation Billing</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cinzel:wght@700&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="/billing/style.css?v=22">
-  <script src="/billing/app.js?v=22" defer></script>
+  <link rel="stylesheet" href="/investigation-billing/style.css?v=2">
+  <script src="/investigation-billing/app.js?v=2" defer></script>
 </head>
 
 <body>
@@ -22,8 +22,8 @@
     <div class="header-container">
       <div class="brand">
         <div>
-          <h1>Mikky Megha Billing Portal</h1>
-          <p>Multi Speciality Hospital Billing System</p>
+          <h1>Investigation Billing Portal</h1>
+          <p>Diagnostic &amp; Pathology Billing System</p>
         </div>
       </div>
       <div class="header-actions">
@@ -79,7 +79,7 @@
       <!-- Hospital Official Header Section -->
       <div class="bill-header">
         <div class="header-logo-wrapper">
-          <img src="/billing/logo.png" alt="Mikky Megha Hospital Logo" class="bill-logo">
+          <img src="/investigation-billing/logo.png" alt="Mikky Megha Hospital Logo" class="bill-logo">
         </div>
         <div class="header-details-wrapper">
           <h2 class="hospital-name">Mikky Megha Hospital Pvt. Ltd.</h2>
@@ -88,11 +88,9 @@
         </div>
       </div>
 
-      <!-- Date Field (top right aligned) -->
-
       <!-- Bill Title Badge -->
       <div class="bill-badge-container">
-        <span class="bill-title-badge">[ BILL ]</span>
+        <span class="bill-title-badge">[ INVESTIGATION BILL ]</span>
       </div>
 
       <!-- Patient Information Grid -->
@@ -103,34 +101,34 @@
             <input type="text" id="patientName" class="info-input input-bold" placeholder="Patient Full Name" value="">
           </div>
           <div class="info-field field-age">
-            <span class="info-label">AGE :</span>
-            <input type="text" id="patientAge" class="info-input" placeholder="e.g. 62 Years" value="">
+            <span class="info-label">AGE / GENDER :</span>
+            <input type="text" id="patientAge" class="info-input" placeholder="e.g. 35 Yrs / M" value="">
           </div>
         </div>
 
         <div class="info-row row-doctor-id">
           <div class="info-field field-doctor">
-            <span class="info-label">UNDER DOCTOR :</span>
+            <span class="info-label">DOCTOR NAME :</span>
             <input type="text" id="underDoctor" class="info-input" placeholder="Doctor Name" value="">
           </div>
           <div class="info-field field-days">
-            <span class="info-label">NO. OF DAYS :</span>
-            <input type="text" id="noOfDays" class="info-input" placeholder="e.g. 4 Days" value="">
+            <span class="info-label">REFERRED BY :</span>
+            <input type="text" id="referredBy" class="info-input" placeholder="Referred Doctor / Self" value="Self">
           </div>
           <div class="info-field field-id">
-            <span class="info-label">MMH ID :</span>
-            <input type="text" id="hospitalId" class="info-input" placeholder="ID Number" value="">
+            <span class="info-label">BILL ID :</span>
+            <input type="text" id="billId" class="info-input" placeholder="Auto-generated / ID" value="">
           </div>
         </div>
 
         <div class="info-row row-case-bed-date">
           <div class="info-field field-case">
-            <span class="info-label">CASE :</span>
-            <input type="text" id="caseType" class="info-input" placeholder="e.g. Medicine" value="">
+            <span class="info-label">CASE / TYPE :</span>
+            <input type="text" id="caseType" class="info-input" placeholder="e.g. Diagnostic / Pathology" value="OPD Diagnostic Booking">
           </div>
           <div class="info-field field-bed">
-            <span class="info-label">BED NO :</span>
-            <input type="text" id="bedNo" class="info-input" placeholder="Bed No." value="">
+            <span class="info-label">MOBILE NO :</span>
+            <input type="text" id="contact" class="info-input" placeholder="Phone Number" value="">
           </div>
           <div class="info-field field-billdate">
             <span class="info-label">BILL DATE :</span>
@@ -169,16 +167,16 @@
             <!-- Sub Total Row -->
             <tr class="row-summary row-subtotal">
               <td class="col-sl"></td>
-              <td class="col-description summary-title bold-title">SUB TOTAL:</td>
+              <td class="col-description summary-title bold-title">TOTAL BILL AMOUNT:</td>
               <td class="col-qty"></td>
               <td class="col-price"></td>
-              <td class="col-amount text-right final-total-amount" id="subTotalDisplay">0</td>
+              <td class="col-amount text-right final-total-amount" id="subTotalDisplay">0.00</td>
               <td class="col-actions no-print"></td>
             </tr>
             <!-- Dynamic Discount Rows Header -->
             <tr class="row-summary row-discount-header">
               <td class="col-sl"></td>
-              <td class="col-description summary-title discount-badge-label">DISCOUNT</td>
+              <td class="col-description summary-title discount-badge-label">DISCOUNT AMOUNT</td>
               <td class="col-qty"></td>
               <td class="col-price"></td>
               <td class="col-amount"></td>
@@ -192,26 +190,54 @@
               </td>
             </tr>
             <!-- Dynamic Discount Rows (rendered by JS into tfoot directly) -->
-            <!-- Advance Payment Row -->
-            <tr class="row-summary row-advance">
-              <td class="col-sl"></td>
-              <td class="col-description summary-title">
-                <span class="advance-badge-label">ADVANCE PAYMENT:</span>
-              </td>
-              <td class="col-qty"></td>
-              <td class="col-price"></td>
-              <td class="col-amount">
-                <input type="number" id="advanceInput" class="table-input text-right input-advance" placeholder="0" min="0" step="any" value="">
-              </td>
-              <td class="col-actions no-print"></td>
-            </tr>
+            
             <!-- Net Payable Row -->
             <tr class="row-summary row-total highlight-total">
               <td class="col-sl"></td>
-              <td class="col-description summary-title bold-title">NET PAYABLE (IN RS.):</td>
+              <td class="col-description summary-title bold-title">TOTAL NET AMOUNT (IN RS.):</td>
               <td class="col-qty"></td>
               <td class="col-price"></td>
-              <td class="col-amount text-right final-total-amount" id="netPayableDisplay">0</td>
+              <td class="col-amount text-right final-total-amount" id="netPayableDisplay">0.00</td>
+              <td class="col-actions no-print"></td>
+            </tr>
+
+            <!-- Payment Details Header with Split Payment Button -->
+            <tr class="row-summary row-payment-header">
+              <td class="col-sl"></td>
+              <td class="col-description summary-title payment-badge-label">
+                PAYMENT DETAILS / MODES (SPLIT PAYMENTS)
+              </td>
+              <td class="col-qty"></td>
+              <td class="col-price"></td>
+              <td class="col-amount text-right" style="font-size: 0.7rem; color: #0f766e; font-weight: 700;">AMOUNT (₹)</td>
+              <td class="col-actions no-print">
+                <button class="btn-icon-add" onclick="addPaymentRow()" title="Add Split Payment Mode (e.g. Cash + UPI)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+            <!-- Dynamic Payment Rows (rendered by JS into tfoot directly) -->
+
+            <!-- Total Paid Amount Row -->
+            <tr class="row-summary row-paid">
+              <td class="col-sl"></td>
+              <td class="col-description summary-title paid-badge-label">TOTAL PAID AMOUNT:</td>
+              <td class="col-qty"></td>
+              <td class="col-price"></td>
+              <td class="col-amount text-right bold-amount" id="totalPaidDisplay" style="color: #16a34a; font-size: 0.88rem;">0.00</td>
+              <td class="col-actions no-print"></td>
+            </tr>
+
+            <!-- Due / Balance Amount Row -->
+            <tr class="row-summary row-due">
+              <td class="col-sl"></td>
+              <td class="col-description summary-title due-badge-label">DUE / BALANCE AMOUNT:</td>
+              <td class="col-qty"></td>
+              <td class="col-price"></td>
+              <td class="col-amount text-right bold-amount" id="dueAmountDisplay" style="font-size: 0.88rem; color: #16a34a;">0.00</td>
               <td class="col-actions no-print"></td>
             </tr>
           </tfoot>
@@ -237,6 +263,19 @@
         <div class="signature-block text-right">
           <div class="signature-line"></div>
           <p class="signature-label">Accountant Sign.</p>
+        </div>
+      </div>
+
+      <!-- Bill Audit Footer: Created By & Saved Time -->
+      <div class="bill-audit-footer">
+        <div class="audit-item">
+          <span class="audit-label">Bill Created By :</span>
+          <span class="audit-val" id="createdByNameDisplay">Loading...</span>
+        </div>
+        <div class="audit-item">
+          <span class="audit-label">Time :</span>
+          <span class="audit-val" id="savedAtDisplay">—</span>
+          <span class="audit-status-badge" id="saveStatusBadge">Draft</span>
         </div>
       </div>
 

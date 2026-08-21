@@ -1,0 +1,1075 @@
+/* ==========================================================================
+   MIKKY MEGHA HOSPITAL - BILLING APP STYLESHEET (v2)
+   Color Theme derived from logo.png:
+   - Primary Deep Navy Blue: #0f3460 / #16425b
+   - Accent Crimson Red:    #c82333 / #a81c2a
+   - Cyan Accent:           #0096c7 / #0077b6
+   - Light Clean Background: #f4f7f6
+   ========================================================================== */
+
+:root {
+  --primary-color: #0f3460;
+  --primary-hover: #0a2547;
+  --secondary-color: #16425b;
+  --accent-red: #c82333;
+  --accent-red-hover: #b21f2d;
+  --accent-cyan: #0096c7;
+  --bg-gradient: linear-gradient(135deg, #eef2f7 0%, #e4e9f0 100%);
+  --paper-bg: #ffffff;
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --border-dark: #222222;
+  --border-light: #d1d5db;
+  --table-border: #333333;
+  --row-even: #f2f4f7;
+  --row-odd: #ffffff;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --shadow-card: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg-gradient);
+  color: var(--text-main);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   App Header & Control Bar (Screen view)
+   ========================================================================== */
+.app-header {
+  background: #ffffff;
+  border-bottom: 3px solid var(--primary-color);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 0.75rem 1.5rem;
+}
+
+.header-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brand-logo {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+}
+
+.brand h1 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  letter-spacing: -0.02em;
+}
+
+.brand p {
+  font-size: 0.75rem;
+  color: var(--accent-red);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Toggle Switch for Print Header */
+.toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  background: #f8fafc;
+  transition: background 0.2s;
+}
+
+.toggle-label:hover {
+  background: #eef2f7;
+}
+
+.toggle-label input[type="checkbox"] {
+  display: none;
+}
+
+.toggle-slider {
+  width: 36px;
+  height: 20px;
+  background: #cbd5e1;
+  border-radius: 10px;
+  position: relative;
+  transition: background 0.25s;
+  flex-shrink: 0;
+}
+
+.toggle-slider::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.25s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-label input[type="checkbox"]:checked+.toggle-slider {
+  background: var(--primary-color);
+}
+
+.toggle-label input[type="checkbox"]:checked+.toggle-slider::after {
+  transform: translateX(16px);
+}
+
+.toggle-text {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: #ffffff;
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btn-outline:hover {
+  background: #f0f4f8;
+}
+
+.btn-danger-outline {
+  background: #ffffff;
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+.btn-danger-outline:hover {
+  background: #fff5f5;
+}
+
+.btn-success-outline {
+  background: #ffffff;
+  border-color: #16a34a;
+  color: #16a34a;
+}
+
+.btn-success-outline:hover {
+  background: #f0fdf4;
+}
+
+.btn-icon-danger {
+  background: transparent;
+  color: var(--accent-red);
+  border: none;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-icon-danger:hover {
+  background: #ffe3e3;
+}
+
+.btn-icon-add {
+  background: transparent;
+  color: var(--primary-color);
+  border: none;
+  padding: 3px 5px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-icon-add:hover {
+  background: #dbeafe;
+}
+
+/* ==========================================================================
+   Main Container & Bill Paper Frame
+   ========================================================================== */
+.main-container {
+  max-width: 1000px;
+  margin: 1.5rem auto;
+  padding: 0 1rem 3rem 1rem;
+}
+
+.bill-paper {
+  background: var(--paper-bg);
+  border: 4px double var(--table-border);
+  box-shadow: var(--shadow-card);
+  padding: 1.2rem 1.4rem;
+  margin: 0 auto;
+  border-radius: 2px;
+  position: relative;
+}
+
+/* Hide double border on screen when pre-printed pad mode is active */
+.bill-paper.hide-border-print {
+  border: 1px solid var(--border-light);
+}
+
+/* Header Section inside Bill */
+.bill-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1rem;
+  padding-top: 0.5cm;
+  padding-bottom: 0.5cm;
+  margin-bottom: 0.35rem;
+  margin-left: -1.1rem;
+  margin-right: -1.1rem;
+  padding-left: 1.1rem;
+  padding-right: 1.1rem;
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.bill-logo {
+  height: 105px;
+  width: auto;
+  object-fit: contain;
+}
+
+.header-details-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.1rem;
+}
+
+.hospital-name {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.hospital-subtitle {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #222222;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+}
+
+
+
+
+
+
+
+/* Date field row (right-aligned, above bill badge) */
+.date-field-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 0 0.2rem 0;
+}
+
+.date-field {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+/* Bill Badge */
+.bill-badge-container {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.bill-title-badge {
+  font-family: 'Cinzel', serif, sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 2px;
+}
+
+/* ==========================================================================
+   Patient Information Grid & Fields
+   ========================================================================== */
+/* ==========================================================================
+   Patient Information Grid & Fields
+   ========================================================================== */
+.patient-info-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin-bottom: 0.2rem;
+  border: 1.5px solid var(--table-border);
+  padding: 0.17rem 0.35rem;
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+}
+
+.row-patient-age {
+  grid-template-columns: 2.8fr 1fr;
+}
+
+.row-doctor-id {
+  grid-template-columns: 1.8fr 1fr 1.2fr;
+}
+
+.row-case-bed-date {
+  grid-template-columns: 1.4fr 1fr 1.4fr;
+}
+
+.info-field {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  font-size: 0.74rem;
+  min-width: 0;
+}
+
+.info-label {
+  font-weight: 700;
+  color: #111111;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: 0.72rem;
+}
+
+.info-input {
+  flex-grow: 1;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: #000000;
+  border: none;
+  border-bottom: 1px dotted #888888;
+  background: transparent;
+  padding: 0px 1px;
+  outline: none;
+  transition: border-color 0.2s;
+  min-width: 28px;
+}
+
+.info-input:focus {
+  border-bottom: 2px solid var(--primary-color);
+  background: #f8fafc;
+}
+
+.input-bold {
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--primary-color);
+}
+
+/* ==========================================================================
+   Bill Table Styling
+   ========================================================================== */
+.table-responsive {
+  overflow-x: auto;
+  margin-bottom: 0.22rem;
+}
+
+.bill-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 2px solid var(--table-border);
+  font-size: 0.74rem;
+}
+
+.bill-table th,
+.bill-table td {
+  border: 1px solid var(--table-border);
+  padding: 0.5px 2px;
+  vertical-align: middle;
+}
+
+.bill-table th {
+  background: #e8ecf1;
+  color: #0f172a;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  text-align: center;
+  padding: 1.5px 2px;
+}
+
+/* Column Width Adjustments */
+.col-sl {
+  width: 38px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.74rem;
+}
+
+.col-description {
+  min-width: 180px;
+}
+
+.col-qty {
+  width: 52px;
+  text-align: center;
+}
+
+.col-price {
+  width: 78px;
+}
+
+.col-amount {
+  width: 90px;
+}
+
+.col-actions {
+  width: 38px;
+  text-align: center;
+}
+
+/* Zebra striping for data rows */
+.row-odd {
+  background: var(--row-odd);
+}
+
+.row-even {
+  background: var(--row-even);
+}
+
+.data-row:hover {
+  background: #e6ecf5;
+}
+
+/* Section Header Rows */
+.section-header-row td {
+  background: #dfe4eb;
+  font-weight: 800;
+  font-size: 0.74rem;
+  color: #0f172a;
+  padding: 1px 3px;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--table-border);
+}
+
+.section-header-cell {
+  text-align: left;
+}
+
+/* Table Inputs */
+.table-input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: #000000;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 0px 1px;
+  border-radius: 2px;
+  outline: none;
+  line-height: 1.0;
+}
+
+.table-input:focus,
+.table-input:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.table-input:focus {
+  border-color: var(--primary-color);
+}
+
+.text-right {
+  text-align: right;
+}
+
+.bold-amount {
+  font-weight: 700;
+  color: #000000;
+  font-size: 0.76rem;
+}
+
+/* Table Footer / Summary Rows */
+.row-summary td {
+  background: #fafafa;
+  padding: 0.5px 2px;
+}
+
+.summary-title {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 0.74rem;
+}
+
+.bold-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--primary-color);
+}
+
+.highlight-total td {
+  background: #eaf0f8 !important;
+}
+
+.final-total-amount {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--primary-color);
+}
+
+/* Discount & Advance Payment Badges and Formatting */
+.discount-badge-label {
+  font-weight: 800;
+  color: #c82333;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+  letter-spacing: 0.02em;
+}
+
+.payment-badge-label {
+  font-weight: 800;
+  color: #0f766e;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+  letter-spacing: 0.02em;
+}
+
+.row-payment-header td {
+  background: #f0fdfa !important;
+  border-top: 1.5px solid #99f6e4 !important;
+}
+
+.row-payment td {
+  background: #f8fafc !important;
+}
+
+.input-payment-mode {
+  font-weight: 700 !important;
+  color: #0f766e !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  font-size: 0.74rem !important;
+  cursor: pointer;
+}
+
+.input-payment-mode:focus,
+.input-payment-mode:hover {
+  border-color: #99f6e4 !important;
+  background: #ffffff !important;
+}
+
+.due-badge-label {
+  font-weight: 800;
+  color: #dc2626;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+}
+
+.paid-badge-label {
+  font-weight: 800;
+  color: #16a34a;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+}
+
+/* Editable discount label input — looks like the badge but is an editable field */
+.input-discount-label {
+  font-weight: 800 !important;
+  color: #c82333 !important;
+  text-transform: uppercase;
+  font-size: 0.74rem !important;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  width: 100%;
+  cursor: text;
+}
+
+.input-discount-label:focus,
+.input-discount-label:hover {
+  border-color: #f5c6cb !important;
+  background: #fff5f5 !important;
+}
+
+.advance-badge-label {
+  font-weight: 800;
+  color: #0077b6;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+  letter-spacing: 0.02em;
+}
+
+.input-deduction {
+  color: #c82333 !important;
+  font-weight: 700;
+}
+
+.input-advance {
+  color: #0077b6 !important;
+  font-weight: 700;
+}
+
+.input-payment-amount {
+  color: #0f766e !important;
+  font-weight: 700;
+}
+
+.row-discount td {
+  background: #fff8f8 !important;
+}
+
+.row-discount-header td {
+  background: #fff0f0 !important;
+  border-top: 1px solid #f5c6cb;
+}
+
+.row-advance td {
+  background: #f4f9ff !important;
+}
+
+.discount-pct-input:focus {
+  border-bottom: 2px solid var(--primary-color);
+  background: #f8fafc;
+}
+
+/* ==========================================================================
+   Amount in Words Section
+   ========================================================================== */
+.amount-in-words-box {
+  background: #f8fafc;
+  border: 1.5px solid var(--table-border);
+  padding: 0.15rem 0.35rem;
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.words-label {
+  font-weight: 800;
+  color: #0f172a;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.words-value {
+  font-weight: 700;
+  color: var(--primary-color);
+  font-size: 0.78rem;
+  font-style: italic;
+}
+
+/* ==========================================================================
+   Signatures / Footer Section
+   ========================================================================== */
+.signature-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 0.3rem;
+  padding: 0 0.3rem;
+}
+
+.signature-block {
+  width: 170px;
+}
+
+.seal-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.seal-placeholder {
+  width: 45px;
+  height: 45px;
+  border: 2px dashed #bbbbbb;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signature-line {
+  border-top: 1.5px solid var(--table-border);
+  margin-bottom: 0.4rem;
+}
+
+.signature-label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #111111;
+  text-align: center;
+}
+
+/* ==========================================================================
+   PRINT STYLESHEET
+   ========================================================================== */
+@page {
+  size: A4 portrait;
+  margin: 4mm;
+}
+
+@media print {
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    width: 100% !important;
+    height: 100% !important;
+    font-size: 10pt;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .main-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .bill-paper {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: 98vh !important;
+    min-height: 98vh !important;
+    border: 3px double #000000 !important;
+    box-shadow: none !important;
+    padding: 6mm 8mm 5mm 8mm !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    page-break-after: avoid;
+  }
+
+  .bill-header {
+    border-bottom: 2px solid #000000 !important;
+    padding-top: 0.5cm !important;
+    padding-bottom: 0.5cm !important;
+  }
+
+  /* Hide outer double border when printing on pre-printed letterhead pad */
+  .bill-paper.hide-border-print {
+    border: none !important;
+  }
+
+  /* Hide hospital header when printing on pre-printed letterhead pad */
+  /* Uses visibility:hidden to preserve the blank space for the pre-printed header */
+  .bill-header.hide-header-print {
+    visibility: hidden !important;
+  }
+
+  .hospital-name {
+    color: #000000 !important;
+  }
+
+  .hospital-subtitle {
+    color: #000000 !important;
+  }
+
+  .bill-title-badge {
+    color: #000000 !important;
+    border-bottom-color: #000000 !important;
+  }
+
+  /* Hide placeholders when printing */
+  ::placeholder {
+    color: transparent !important;
+    opacity: 0 !important;
+  }
+
+  ::-webkit-input-placeholder {
+    color: transparent !important;
+    opacity: 0 !important;
+  }
+
+  ::-moz-placeholder {
+    color: transparent !important;
+    opacity: 0 !important;
+  }
+
+  :-ms-input-placeholder {
+    color: transparent !important;
+    opacity: 0 !important;
+  }
+
+  input::placeholder {
+    color: transparent !important;
+    opacity: 0 !important;
+  }
+
+  /* Flatten inputs into print text */
+  .info-input,
+  .table-input,
+  .discount-pct-input {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  .info-input:focus,
+  .table-input:focus {
+    background: transparent !important;
+  }
+
+  .bill-table {
+    border: 1.5px solid #000000 !important;
+  }
+
+  .bill-table th,
+  .bill-table td {
+    border: 1px solid #000000 !important;
+    padding: 0.5px 2px !important;
+    /* font-size: 7.2pt !important; */
+    /* line-height: 1.25 !important; */
+  }
+
+  /* Force background colors (zebra striping) in print/PDF output */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .bill-table th {
+    background-color: #e2e8f0 !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Zebra stripes in print */
+  .row-even td {
+    background-color: #eef2f7 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .row-odd td {
+    background-color: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .section-header-row td {
+    background-color: #d1d9e6 !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .highlight-total td {
+    background-color: #e2e8f0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .row-discount td {
+    background-color: #fff0f0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .row-advance td {
+    background-color: #f0f7ff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .amount-in-words-box {
+    border: 1.5px solid #000000 !important;
+    background: #ffffff !important;
+  }
+
+  .words-value {
+    color: #000000 !important;
+  }
+
+  .patient-info-box {
+    border-color: #000 !important;
+  }
+
+  .seal-placeholder {
+    border-color: #999 !important;
+  }
+
+  .bill-audit-footer {
+    border-top: 1px dotted #888888 !important;
+    color: #444444 !important;
+  }
+}
+
+/* ==========================================================================
+   Bill Audit Footer (Created By & Time)
+   ========================================================================== */
+.bill-audit-footer {
+  margin-top: 0.35rem;
+  padding-top: 0.18rem;
+  border-top: 1px dashed #cbd5e1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.68rem;
+  color: #64748b;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.audit-item {
+  display: flex;
+  gap: 0.3rem;
+  align-items: baseline;
+}
+
+.audit-label {
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  font-size: 0.64rem;
+  letter-spacing: 0.02em;
+}
+
+.audit-val {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.audit-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.audit-status-badge[data-saved="true"] {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+
+  /* Pin signature section at bottom */
+  .signature-section {
+    margin-top: auto !important;
+    padding-top: 1rem !important;
+    margin-bottom: 2mm !important;
+  }
+
+  .signature-line {
+    border-top-color: #000000 !important;
+  }
+}
+
+/* Responsiveness on small screens */
+@media (max-width: 640px) {
+  .info-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .row-doctor-id,
+  .row-case-bed-date {
+    grid-template-columns: 1fr;
+  }
+
+  .bill-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .signature-section {
+    flex-direction: column;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  .bill-paper {
+    padding: 1rem;
+  }
+}
+
+/* Remove number input spinners for cleaner look */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}

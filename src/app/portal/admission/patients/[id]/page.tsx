@@ -39,6 +39,13 @@ function buildBillingUrl(patient: Patient, adm: Admission): string {
     ? adm.otCase.procedureName
     : adm.type;
 
+  // Calculate days admitted
+  const admitDate = new Date(adm.admittedAt);
+  const diffDays = Math.max(1, Math.ceil((today.getTime() - admitDate.getTime()) / (1000 * 60 * 60 * 24)));
+
+  // Calculate total advance collected for this admission
+  const totalAdvance = (adm.advancePayments || []).reduce((sum, a) => sum + (a.amount || 0), 0);
+
   const params = new URLSearchParams();
   params.set('patientName', patient.name);
   params.set('patientAge', patient.age ? `${patient.age} Years` : '');
@@ -47,11 +54,62 @@ function buildBillingUrl(patient: Patient, adm: Admission): string {
   params.set('bedNo', bedNo);
   params.set('caseType', caseType);
   params.set('billDate', billDate);
+  params.set('noOfDays', `${diffDays} Days`);
+  if (totalAdvance > 0) {
+    params.set('advance', String(totalAdvance));
+  }
+  params.set('admissionId', adm.id);
+  params.set('patientId', patient.id);
 
   return `/billing/index.html?${params.toString()}`;
 }
 
+function buildAdvancePaymentUrl(patient: Patient, adm: Admission): string {
+  const today = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const receiptDate = `${pad(today.getDate())}/${pad(today.getMonth() + 1)}/${today.getFullYear()}`;
+
+  const primaryDoc = adm.doctors.find(d => d.role === 'primary');
+  const doctorName = primaryDoc?.doctor.user.name
+    ?? adm.opdSession?.doctor.user.name
+    ?? '';
+
+  const bedNo = (adm.ward?.name ? `${adm.ward.name} / ` : '') + (adm.bed?.bedNo || adm.bedNo || '');
+
+  const params = new URLSearchParams();
+  params.set('patientName', patient.name);
+  params.set('patientAge', patient.age ? `${patient.age} Yrs / ${patient.gender || 'M'}` : '');
+  params.set('contact', patient.contact || '');
+  params.set('underDoctor', doctorName);
+  params.set('hospitalId', adm.mmhplId ?? '');
+  params.set('bedNo', bedNo);
+  params.set('caseType', 'IPD Admission Advance');
+  params.set('receiptDate', receiptDate);
+  params.set('admissionId', adm.id);
+  params.set('patientId', patient.id);
+
+  return `/advance-billing/index.html?${params.toString()}`;
+}
+
 interface Doctor { id?: string; user: { name: string }; department: { name: string } | null; }
+interface AdvancePaymentRecord {
+  id: string;
+  receiptNo: string;
+  amount: number;
+  payMode: string;
+  receiptDate: string | null;
+  createdAt: string;
+  remarks?: string | null;
+}
+interface BillRecord {
+  id: string;
+  billNo: string;
+  subTotal: number;
+  advance: number;
+  netPayable: number;
+  billDate: string | null;
+  createdAt: string;
+}
 interface Admission {
   id: string; type: string; status: string; admittedAt: string; dischargedAt: string | null;
   bedNo: string | null; patientCondition: string | null; mmhplId: string | null;
@@ -60,6 +118,8 @@ interface Admission {
   opdSession: { doctor: { user: { name: string } }; startTime: string; endTime: string } | null;
   otCase: { procedureName: string; status: string; otRoom: { roomNo: string } | null } | null;
   doctors: { role: string; doctor: Doctor }[];
+  advancePayments?: AdvancePaymentRecord[];
+  bills?: BillRecord[];
 }
 interface Patient {
   id: string; name: string; age: number | null; gender: string | null; contact: string | null;
@@ -67,6 +127,8 @@ interface Patient {
   diagnosis: string | null; emergencyContactName: string | null; emergencyContactPhone: string | null;
   insuranceProvider: string | null; policyNumber: string | null;
   admissions: Admission[];
+  advancePayments?: AdvancePaymentRecord[];
+  bills?: BillRecord[];
 }
 interface Bed {
   id: string;
@@ -299,6 +361,39 @@ export default function PatientDetailPage() {
                 </div>
               )}
 
+              {/* IPD Advance Payments Summary */}
+              {activeAdmission.type === 'IPD' && (
+                <div style={{ marginTop: '14px', padding: '12px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      💰 Advance Payments &amp; Deposits
+                    </span>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#4ade80' }}>
+                      Total Deposit: ₹{((activeAdmission.advancePayments || []).reduce((sum, a) => sum + (a.amount || 0), 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+
+                  {activeAdmission.advancePayments && activeAdmission.advancePayments.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '120px', overflowY: 'auto' }}>
+                      {activeAdmission.advancePayments.map((adv) => (
+                        <div key={adv.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.76rem', padding: '4px 8px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px' }}>
+                          <span style={{ color: '#94a3b8' }}>
+                            <strong style={{ color: '#a78bfa' }}>{adv.receiptNo}</strong> • {adv.receiptDate || new Date(adv.createdAt).toLocaleDateString('en-IN')} ({adv.payMode || 'Cash'})
+                          </span>
+                          <span style={{ fontWeight: 700, color: '#4ade80' }}>
+                            ₹{adv.amount.toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ margin: 0, fontSize: '0.76rem', color: '#64748b' }}>
+                      No advance payments recorded yet for this IPD admission.
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Admitted date + discharge */}
               <div className={styles.admFooter}>
                 <div className={styles.admDates}>
@@ -314,13 +409,24 @@ export default function PatientDetailPage() {
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  {activeAdmission.type === 'IPD' && (
+                    <a
+                      href={buildAdvancePaymentUrl(patient, activeAdmission)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.billingBtn}
+                      style={{ background: 'linear-gradient(135deg, #10b981, #059669)', borderColor: '#059669' }}
+                    >
+                      💰 Record Advance
+                    </a>
+                  )}
                   <a
                     href={buildBillingUrl(patient, activeAdmission)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={styles.billingBtn}
                   >
-                    🧾 Generate Bill
+                    🧾 {activeAdmission.type === 'IPD' ? 'Final IPD Bill' : 'Generate Bill'}
                   </a>
                   {role === 'RECEPTIONIST' && (
                     <>

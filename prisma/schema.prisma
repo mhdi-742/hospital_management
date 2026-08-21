@@ -170,7 +170,9 @@ model Patient {
   insuranceProvider    String?
   policyNumber         String?
 
-  admissions Admission[]
+  admissions      Admission[]
+  bills           Bill[]
+  advancePayments AdvancePayment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -224,6 +226,8 @@ model Admission {
   otCase        OtCase?
 
   transferRequests TransferRequest[]
+  bills            Bill[]
+  advancePayments  AdvancePayment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -396,3 +400,157 @@ model InvestigationRegistrationItem {
   rate            Float
   amount          Float
 }
+
+// ─────────────────────────────────────────────
+// Hospital Bills (Main Hospital Billing App)
+// ─────────────────────────────────────────────
+
+model Bill {
+  id            String      @id @default(cuid())
+  billNo        String      @unique
+  patientId     String?
+  patient       Patient?    @relation(fields: [patientId], references: [id])
+  admissionId   String?
+  admission     Admission?  @relation(fields: [admissionId], references: [id])
+  patientName   String
+  patientAge    String?
+  underDoctor   String?
+  noOfDays      String?
+  mmhplId       String?
+  caseType      String?
+  bedNo         String?
+  billDate      String?
+  subTotal      Float       @default(0)
+  totalDiscount Float       @default(0)
+  advance       Float       @default(0)
+  netPayable    Float       @default(0)
+  createdById   String?
+  createdByName String?
+
+  items         BillItem[]
+  discounts     BillDiscount[]
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model BillItem {
+  id         String  @id @default(cuid())
+  billId     String
+  bill       Bill    @relation(fields: [billId], references: [id], onDelete: Cascade)
+  name       String
+  qty        String?
+  priceUnit  String?
+  amount     String?
+}
+
+model BillDiscount {
+  id         String  @id @default(cuid())
+  billId     String
+  bill       Bill    @relation(fields: [billId], references: [id], onDelete: Cascade)
+  label      String?
+  amount     String?
+}
+
+// ─────────────────────────────────────────────
+// Investigation Bills (Dedicated Investigation App)
+// ─────────────────────────────────────────────
+
+model InvestigationBill {
+  id           String   @id @default(cuid())
+  billNo       String   @unique
+  patientName  String
+  patientAge   String?
+  gender       String?
+  contact      String?
+  address      String?
+  underDoctor  String?
+  referredBy   String?
+  noOfDays     String?
+  mmhplId      String?
+  caseType     String?  @default("Investigation")
+  bedNo        String?
+  billDate     String?
+  reportDate   String?
+  payMode       String?  @default("Cash")
+  subTotal      Float    @default(0)
+  totalDiscount Float    @default(0)
+  advance       Float    @default(0)
+  totalPaid     Float    @default(0)
+  dueAmount     Float    @default(0)
+  netPayable    Float    @default(0)
+  createdById   String?
+  createdByName String?
+
+  items         InvestigationBillItem[]
+  discounts     InvestigationBillDiscount[]
+  payments      InvestigationBillPayment[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model InvestigationBillItem {
+  id         String            @id @default(cuid())
+  billId     String
+  bill       InvestigationBill @relation(fields: [billId], references: [id], onDelete: Cascade)
+  name       String
+  qty        String?
+  priceUnit  String?
+  amount     String?
+}
+
+model InvestigationBillDiscount {
+  id         String            @id @default(cuid())
+  billId     String
+  bill       InvestigationBill @relation(fields: [billId], references: [id], onDelete: Cascade)
+  label      String?
+  amount     String?
+}
+
+model InvestigationBillPayment {
+  id         String            @id @default(cuid())
+  billId     String
+  bill       InvestigationBill @relation(fields: [billId], references: [id], onDelete: Cascade)
+  mode       String            @default("Cash") // Cash, UPI / Online, Debit Card, Credit Card, Cheque, etc.
+  amount     Float
+  ref        String?           // Transaction ID / Cheque No / Notes
+  createdAt  DateTime          @default(now())
+}
+
+
+// ─────────────────────────────────────────────
+// Advance Payments (Dedicated Advance Receipt App)
+// ─────────────────────────────────────────────
+
+model AdvancePayment {
+  id            String      @id @default(cuid())
+  receiptNo     String      @unique
+  patientId     String?
+  patient       Patient?    @relation(fields: [patientId], references: [id])
+  admissionId   String?
+  admission     Admission?  @relation(fields: [admissionId], references: [id])
+  patientName   String
+  patientAge    String?
+  gender        String?
+  contact       String?
+  address       String?
+  underDoctor   String?
+  mmhplId       String?
+  caseType      String?     @default("IPD Advance")
+  wardNo        String?
+  bedNo         String?
+  receiptDate   String?
+  amount        Float       @default(0)
+  payMode       String?     @default("Cash")
+  transactionId String?
+  remarks       String?
+  createdById   String?
+  createdByName String?
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+
+

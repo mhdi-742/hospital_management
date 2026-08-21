@@ -25,7 +25,21 @@ export async function GET(_: NextRequest, { params }: Ctx) {
           doctors: {
             include: { doctor: { include: { user: true, department: true } } },
           },
+          bills: {
+            include: { items: true, discounts: true },
+            orderBy: { createdAt: 'desc' },
+          },
+          advancePayments: {
+            orderBy: { createdAt: 'desc' },
+          },
         },
+      },
+      bills: {
+        include: { items: true, discounts: true },
+        orderBy: { createdAt: 'desc' },
+      },
+      advancePayments: {
+        orderBy: { createdAt: 'desc' },
       },
     },
   });

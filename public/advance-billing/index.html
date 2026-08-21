@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="/advance-billing/">
+  <title>Mikky Megha Hospital - Advance Payment Receipt</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Cinzel:wght@700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/advance-billing/style.css?v=1">
+  <script src="/advance-billing/app.js?v=1" defer></script>
+</head>
+
+<body>
+
+  <!-- Top App Navigation / Control Bar (Hidden when printing) -->
+  <header class="app-header no-print">
+    <div class="header-container">
+      <div class="brand">
+        <div>
+          <h1>Advance Payment Portal</h1>
+          <p>Money Receipt &amp; Deposit Management System</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <label class="toggle-label"
+          title="Enable to print hospital header. Disable if using pre-printed letterhead pad.">
+          <input type="checkbox" id="toggleHeader" onchange="togglePrintHeader(this.checked)">
+          <span class="toggle-slider"></span>
+          <span class="toggle-text">Print Header</span>
+        </label>
+        <button id="btnReset" class="btn btn-danger-outline" onclick="resetForm()" title="Clear all input fields">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <polyline points="23 20 23 14 17 14"></polyline>
+            <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+          </svg>
+          Reset Form
+        </button>
+        <a href="/portal/admission/bills" target="_blank" class="btn btn-outline" title="View all saved bills & advance receipts">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+          Saved Receipts
+        </a>
+        <button id="btnSave" class="btn btn-success-outline" onclick="saveAdvanceReceipt()" title="Save advance receipt to hospital database">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          Save Receipt
+        </button>
+        <button id="btnPrint" class="btn btn-primary" onclick="printInvoice()"
+          title="Print formal A4 Money Receipt or download PDF">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          Print / Save PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+
+    <!-- Printable Money Receipt Frame -->
+    <div class="bill-paper" id="billPaper">
+
+      <!-- Hospital Official Header Section -->
+      <div class="bill-header">
+        <div class="header-logo-wrapper">
+          <img src="/advance-billing/logo.png" alt="Mikky Megha Hospital Logo" class="bill-logo">
+        </div>
+        <div class="header-details-wrapper">
+          <h2 class="hospital-name">Mikky Megha Hospital Pvt. Ltd.</h2>
+          <p class="hospital-subtitle">Chhotparua, Karnajora, Raiganj, Uttar Dinajpur, PIN- 733130, West Bengal, MOB. :
+            8653870222</p>
+        </div>
+      </div>
+
+      <!-- Money Receipt Title Badge -->
+      <div class="bill-badge-container">
+        <span class="bill-title-badge">[ MONEY RECEIPT / ADVANCE PAYMENT ]</span>
+      </div>
+
+      <!-- Patient Information Grid -->
+      <div class="patient-info-box">
+        <div class="info-row row-patient-age">
+          <div class="info-field field-patient-name">
+            <span class="info-label">RECEIVED WITH THANKS FROM :</span>
+            <input type="text" id="patientName" class="info-input input-bold" placeholder="Patient / Depositor Full Name" value="">
+          </div>
+          <div class="info-field field-age">
+            <span class="info-label">AGE / GENDER :</span>
+            <input type="text" id="patientAge" class="info-input" placeholder="e.g. 45 Yrs / M" value="">
+          </div>
+        </div>
+
+        <div class="info-row row-doctor-id">
+          <div class="info-field field-doctor">
+            <span class="info-label">UNDER DOCTOR :</span>
+            <input type="text" id="underDoctor" class="info-input" placeholder="Doctor Name" value="">
+          </div>
+          <div class="info-field field-days">
+            <span class="info-label">CONTACT NO :</span>
+            <input type="text" id="contact" class="info-input" placeholder="Phone Number" value="">
+          </div>
+          <div class="info-field field-id">
+            <span class="info-label">MMHPL ID :</span>
+            <input type="text" id="hospitalId" class="info-input" placeholder="Patient ID" value="">
+          </div>
+        </div>
+
+        <div class="info-row row-case-bed-date">
+          <div class="info-field field-case">
+            <span class="info-label">PURPOSE / CASE :</span>
+            <input type="text" id="caseType" class="info-input" placeholder="e.g. IPD Admission Advance" value="IPD Admission Advance">
+          </div>
+          <div class="info-field field-bed">
+            <span class="info-label">WARD / BED NO :</span>
+            <input type="text" id="bedNo" class="info-input" placeholder="Ward & Bed No." value="">
+          </div>
+          <div class="info-field field-billdate">
+            <span class="info-label">RECEIPT DATE :</span>
+            <input type="text" id="receiptDate" class="info-input" placeholder="DD/MM/YYYY" value="">
+          </div>
+        </div>
+      </div>
+
+      <!-- Advance Details Table / Box -->
+      <div class="table-responsive" style="margin-top: 10px;">
+        <table class="bill-table" id="advanceTable">
+          <thead>
+            <tr>
+              <th style="width: 60px;">SL NO</th>
+              <th>DESCRIPTION / PARTICULARS</th>
+              <th style="width: 140px;">PAYMENT MODE</th>
+              <th style="width: 160px;" class="text-right">AMOUNT RECEIVED (₹)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="col-sl" style="text-align: center; font-weight: 700;">1</td>
+              <td>
+                <input type="text" id="advanceDescription" class="table-input" style="font-weight: 600;" 
+                  value="ADVANCE DEPOSIT TOWARDS HOSPITALIZATION / TREATMENT" placeholder="Description of advance payment">
+              </td>
+              <td>
+                <select id="payMode" class="table-input" style="font-weight: 600; cursor: pointer;">
+                  <option value="Cash">Cash</option>
+                  <option value="Online / UPI">Online / UPI</option>
+                  <option value="Debit Card">Debit Card</option>
+                  <option value="Credit Card">Credit Card</option>
+                  <option value="Cheque / DD">Cheque / DD</option>
+                  <option value="Bank Transfer (NEFT/RTGS)">Bank Transfer</option>
+                </select>
+              </td>
+              <td>
+                <input type="number" id="advanceAmount" class="table-input text-right bold-amount" 
+                  style="font-size: 1.05rem; color: #0f3460; font-weight: 800;" placeholder="0.00" min="0" step="any" oninput="updateTotals()">
+              </td>
+            </tr>
+            <tr>
+              <td class="col-sl" style="text-align: center; font-weight: 700;">2</td>
+              <td colspan="2">
+                <input type="text" id="transactionId" class="table-input" 
+                  placeholder="Transaction Ref / Cheque No / Bank Details (if applicable)...">
+              </td>
+              <td class="text-right" style="color: #64748b; font-size: 0.72rem; padding-right: 8px;">
+                Reference Info
+              </td>
+            </tr>
+            <tr>
+              <td class="col-sl" style="text-align: center; font-weight: 700;">3</td>
+              <td colspan="2">
+                <input type="text" id="remarks" class="table-input" 
+                  placeholder="Additional remarks or notes (e.g. Non-refundable / Adjust in Final Bill)..." value="To be adjusted against final hospitalization bill">
+              </td>
+              <td class="text-right" style="color: #64748b; font-size: 0.72rem; padding-right: 8px;">
+                Adjustment Note
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="row-summary row-total highlight-total">
+              <td></td>
+              <td colspan="2" class="summary-title bold-title" style="font-size: 0.85rem;">
+                TOTAL ADVANCE RECEIVED (IN RS.):
+              </td>
+              <td class="col-amount text-right final-total-amount" id="totalAdvanceDisplay" style="font-size: 1.15rem; color: #0f3460;">
+                ₹0.00
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Amount in Words Banner -->
+      <div class="amount-in-words-box" style="margin-top: 10px;">
+        <span class="words-label">Amount in Words :</span>
+        <span class="words-value" id="amountInWords">Rupees Zero Only</span>
+      </div>
+
+      <!-- Important Notice / Note -->
+      <div style="border: 1px dashed #94a3b8; padding: 6px 10px; margin-top: 8px; border-radius: 4px; font-size: 0.68rem; color: #334155; line-height: 1.4;">
+        <strong>Note:</strong> This is an official advance money deposit receipt. Please retain this receipt and present it at the time of final bill settlement for adjustment.
+      </div>
+
+      <!-- Footer: Authorized Seal & Signatory -->
+      <div class="signature-section" style="margin-top: 2rem;">
+        <div class="signature-block text-left">
+          <div class="signature-line"></div>
+          <p class="signature-label">Depositor / Patient Sign.</p>
+        </div>
+        <div class="signature-block seal-block">
+          <div class="seal-placeholder"></div>
+          <p class="signature-label">AUTHORIZED SEAL & SIGNATORY</p>
+        </div>
+        <div class="signature-block text-right">
+          <div class="signature-line"></div>
+          <p class="signature-label">Cashier / Accountant Sign.</p>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</body>
+
+</html>
