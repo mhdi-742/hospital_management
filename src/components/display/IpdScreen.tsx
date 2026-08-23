@@ -12,9 +12,12 @@ import {
 import { useTransliterate } from '../../hooks/useTransliterate';
 import PatientMarquee from './PatientMarquee';
 import MarqueeTicker from './MarqueeTicker';
+import OpdDoctorsScreen from './OpdDoctorsScreen';
 import styles from './IpdScreen.module.css';
 
 const REFRESH_INTERVAL_MS = 30_000;
+const IPD_DISPLAY_DURATION_SEC = 60; // 1 minute of IPD census
+const AD_DISPLAY_DURATION_SEC = 20;  // 20 seconds of OPD Doctor timetable ad
 
 interface Props {
   initialData: IpdApiResponse;
@@ -25,6 +28,37 @@ interface Props {
 export default function IpdScreen({ initialData, theme = 'dark' }: Props) {
   const [data, setData] = useState<IpdApiResponse>(initialData);
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
+
+  // ── OPD Doctor Timetable Ad Overlay State (triggers after 1 min) ───────────
+  const [showDoctorAd, setShowDoctorAd] = useState(false);
+  const [adRemainingSeconds, setAdRemainingSeconds] = useState(AD_DISPLAY_DURATION_SEC);
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    let countdownId: NodeJS.Timeout;
+
+    if (!showDoctorAd) {
+      timeoutId = setTimeout(() => {
+        setAdRemainingSeconds(AD_DISPLAY_DURATION_SEC);
+        setShowDoctorAd(true);
+      }, IPD_DISPLAY_DURATION_SEC * 1000);
+    } else {
+      countdownId = setInterval(() => {
+        setAdRemainingSeconds((prev) => {
+          if (prev <= 1) {
+            setShowDoctorAd(false);
+            return AD_DISPLAY_DURATION_SEC;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(countdownId);
+    };
+  }, [showDoctorAd]);
 
   // ── Language state — toggles after longest marquee scroll completes ──────
   const [lang, setLang] = useState<Lang>('en');
@@ -145,13 +179,21 @@ export default function IpdScreen({ initialData, theme = 'dark' }: Props) {
   };
 
   return (
-    <div
-      className={styles.screen}
-      style={{
-        opacity: isLangTransitioning ? 0 : 1,
-        transition: 'opacity 0.5s ease',
-      }}
-    >
+    <>
+      {showDoctorAd && (
+        <OpdDoctorsScreen
+          isAdOverlay={true}
+          remainingSeconds={adRemainingSeconds}
+          onCloseAd={() => setShowDoctorAd(false)}
+        />
+      )}
+      <div
+        className={styles.screen}
+        style={{
+          opacity: isLangTransitioning ? 0 : 1,
+          transition: 'opacity 0.5s ease',
+        }}
+      >
 
       {/* ── Header ── */}
       <header className={styles.header}>
@@ -318,5 +360,6 @@ export default function IpdScreen({ initialData, theme = 'dark' }: Props) {
         <MarqueeTicker announcements={data.announcements} />
       </footer>
     </div>
+  </>
   );
 }

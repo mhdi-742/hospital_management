@@ -1,0 +1,297 @@
+{
+  "hospitalName": "MIKKY MEGHA HOSPITAL PVT. LTD.",
+  "hospitalSubName": "MULTI SPECIALITY HOSPITAL",
+  "tagline": "Your Health Our Mission",
+  "phoneNumbers": [
+    "7477722718",
+    "7477722721",
+    "7477722726",
+    "8635870222",
+    "7478250664",
+    "7501798319"
+  ],
+  "titleBn": "আমাদের বিশেষজ্ঞ চিকিৎসকবৃন্দ",
+  "footerNoteBn": "বিশদে জানতে এবং নাম লেখাতে ফোন করুন-",
+  "departments": [
+    {
+      "id": "general_medicine",
+      "name": "GENERAL MEDICINE",
+      "nameBn": "সাধারণ চিকিৎসক",
+      "headerBg": "#272757",
+      "borderColor": "#272757",
+      "doctors": [
+        {
+          "name": "Dr. Saddam Hossain",
+          "nameBn": "ডাঃ সাদ্দাম হোসেন",
+          "degree": "MBBS, DNB, CCEBDM, ADA (Regd. No. 74687)",
+          "timeScheduleBn": "প্রতি মঙ্গলবার ও শুক্রবার বিকাল ৫টা থেকে",
+          "colorTheme": "blue"
+        },
+        {
+          "name": "Dr. Souradeep Saha",
+          "nameBn": "ডাঃ সৌরদীপ সাহা",
+          "degree": "MBBS (Regd. No. 88541)",
+          "timeScheduleBn": "প্রতি মঙ্গলবার ও শুক্রবার বিকাল ৫টা থেকে",
+          "colorTheme": "blue"
+        },
+        {
+          "name": "Dr. Utsav Joardar",
+          "nameBn": "ডাঃ উৎসব জোয়ারদার",
+          "degree": "MBBS, MD (Regd. No. 76576)",
+          "timeScheduleBn": "প্রতিদিন",
+          "colorTheme": "blue"
+        },
+        {
+          "name": "Dr. Bappa Das",
+          "nameBn": "ডাঃ বাপ্পা দাস",
+          "degree": "MBBS, MD (Regd. No. 69786)",
+          "timeScheduleBn": "প্রতি মঙ্গলবার বিকাল ৭টা ও বুধবার সকাল ১১টা থেকে",
+          "colorTheme": "blue"
+        },
+        {
+          "name": "Dr. Pritam Das",
+          "nameBn": "ডাঃ প্রীতম দাস",
+          "degree": "MBBS (Regd. No.: 91485)",
+          "timeScheduleBn": "প্রতি মঙ্গলবার ও শুক্রবার বিকাল ৫টা থেকে",
+          "colorTheme": "blue"
+        }
+      ]
+    },
+    {
+      "id": "surgery",
+      "name": "SURGERY",
+      "nameBn": "শল্য চিকিৎসক",
+      "headerBg": "#7f1d1d",
+      "borderColor": "#7f1d1d",
+      "doctors": [
+        {
+          "name": "Dr. Utsav Saha",
+          "nameBn": "ডাঃ উৎসব সাহা",
+          "degree": "MBBS, MS, General Surgeon & Laproscopic Surgeon (Regd. No. 75864)",
+          "timeScheduleBn": "প্রতিদিন বিকাল ৫টা থেকে",
+          "colorTheme": "red"
+        },
+        {
+          "name": "Dr. Sanjoy Seth",
+          "nameBn": "ডাঃ সঞ্জয় শেঠ",
+          "degree": "MBBS, MS, General Surgeon (Regd. No. 53609)",
+          "timeScheduleBn": "প্রতিদিন বৃহস্পতিবার বিকাল ৫টা থেকে",
+          "colorTheme": "red"
+        },
+        {
+          "name": "Dr. Kishor Kumar Roy",
+          "nameBn": "ডাঃ কিশোর কুমার রায়",
+          "degree": "MBBS, MS, General Surgeon & Onco Surgeon [Kolkata] (Regd. No. 66072)",
+          "timeScheduleBn": "প্রতিদিন বৃহস্পতিবার বিকাল ৫টা থেকে",
+          "colorTheme": "red"
+        },
+        {
+          "name": "Dr. Firoz Chowdhury",
+          "nameBn": "ডাঃ ফিরোজ চৌধুরী",
+          "degree": "MBBS, MS, General Surgeon, Associate Professor Raiganj Govt. MCH (Regd. No. 75864)",
+          "timeScheduleBn": "প্রতিদিন শুক্রবার ও শনিবার এবং রবিবার",
+          "colorTheme": "red"
+        },
+        {
+          "name": "Dr. Raja Basak",
+          "nameBn": "ডাঃ রাজা বসাক",
+          "degree": "MBBS, MS, General Surgeon (Regd. No. 67096)",
+          "timeScheduleBn": "",
+          "colorTheme": "red"
+        }
+      ]
+    },
+    {
+      "id": "gynaecology",
+      "name": "GYNAECOLOGY",
+      "nameBn": "স্ত্রী রোগ ও প্রসূতি চিকিৎসক",
+      "headerBg": "#047857",
+      "borderColor": "#047857",
+      "doctors": [
+        {
+          "name": "Dr. Md. Mehebub Alam",
+          "nameBn": "ডাঃ মোঃ মেহবুব আলম",
+          "degree": "MBBS, MS, Gynaecologist, Infertility Specialist (Regd. No. 76612)",
+          "timeScheduleBn": "প্রতি বুধবার বিকাল ৫টা থেকে",
+          "colorTheme": "teal"
+        },
+        {
+          "name": "Dr. Somali Dey",
+          "nameBn": "ডাঃ সোমালী দে",
+          "degree": "MBBS, DGO, NBEMS, Gynaecologist & Obstetrician (Regd. No. 84205)",
+          "timeScheduleBn": "প্রতি বুধবার বিকাল ৫.৩০, বৃহঃ সকাল ১০টা ও শুক্রবার সকাল ৯টা",
+          "colorTheme": "teal"
+        },
+        {
+          "name": "Dr. Utpal Panja",
+          "nameBn": "ডাঃ উৎপল পাঁজা",
+          "degree": "MBBS, MS, Gynaecologist, Infertility Specialist (Regd. No.: 54166)",
+          "timeScheduleBn": "প্রতি বৃহস্পতিবার বিকাল ৫টা থেকে",
+          "colorTheme": "teal"
+        },
+        {
+          "name": "Dr. Mijanur Rahaman",
+          "nameBn": "ডাঃ মিজানুর রহমান",
+          "degree": "MBBS, MS, Gynaecologist & Obstetrician (Regd. No. 84933)",
+          "timeScheduleBn": "প্রতি মঙ্গলবার সকাল ১০টা থেকে",
+          "colorTheme": "teal"
+        },
+        {
+          "name": "Dr. P.K Mondol",
+          "nameBn": "ডাঃ পি.কে মণ্ডল",
+          "degree": "MBBS, MTP(T), WBHS (Regd. No. 76576)",
+          "timeScheduleBn": "",
+          "colorTheme": "teal"
+        }
+      ]
+    },
+    {
+      "id": "paediatrics",
+      "name": "PAEDIATRICS",
+      "nameBn": "শিশু ও নবজাতক চিকিৎসক",
+      "headerBg": "#c2410c",
+      "borderColor": "#c2410c",
+      "doctors": [
+        {
+          "name": "Dr. Sarful Ali",
+          "nameBn": "ডাঃ সারফুল আলি",
+          "degree": "MBBS, MD, Paediatric & Neonatology (Regd. No. 74694)",
+          "timeScheduleBn": "প্রতিদিন",
+          "colorTheme": "purple"
+        },
+        {
+          "name": "Dr. Proloy Saha",
+          "nameBn": "ডাঃ প্রলয় সাহা",
+          "degree": "MBBS, MD, Paediatrics (Regd. No. 76374)",
+          "timeScheduleBn": "প্রতিদিন সকাল ১০টা থেকে",
+          "colorTheme": "purple"
+        }
+      ]
+    },
+    {
+      "id": "dermatology",
+      "name": "DERMATOLOGY",
+      "nameBn": "চর্মরোগের চিকিৎসক",
+      "headerBg": "#b91c1c",
+      "borderColor": "#b91c1c",
+      "doctors": [
+        {
+          "name": "Dr. Pinki Bardhan",
+          "nameBn": "ডাঃ পিঙ্কি বর্ধন",
+          "degree": "MBBS, MD, Dermatology & Laprosylogy (Regd. No. 76576)",
+          "timeScheduleBn": "প্রতি সোম, মঙ্গল ও বুধবার সকাল ১১টা থেকে",
+          "colorTheme": "red"
+        },
+        {
+          "name": "Dr. Tikli Banerjee",
+          "nameBn": "ডাঃ টিকলি ব্যানার্জী",
+          "degree": "MBBS, MD, Dermatology (Regd. No. 88834)",
+          "timeScheduleBn": "প্রতি বৃহস্পতিবার দুপুর ২.৩০ থেকে",
+          "colorTheme": "red"
+        }
+      ]
+    },
+    {
+      "id": "neurology",
+      "name": "NEUROLOGY",
+      "nameBn": "স্নায়ু রোগ চিকিৎসক",
+      "headerBg": "#6b21a8",
+      "borderColor": "#6b21a8",
+      "doctors": [
+        {
+          "name": "Dr. D. Ray Barman",
+          "nameBn": "ডাঃ ডি. রায় বর্মন",
+          "degree": "MBBS, MCh. Neurosurgery (Regd. No. 53418)",
+          "timeScheduleBn": "",
+          "colorTheme": "purple"
+        },
+        {
+          "name": "Dr. S. S. Mahapatra",
+          "nameBn": "ডাঃ এস. এস. মহাপাত্র",
+          "degree": "MBBS, M.D, DM, Medicine, Neuromedicine (Regd. No. 68554)",
+          "timeScheduleBn": "",
+          "colorTheme": "purple"
+        }
+      ]
+    },
+    {
+      "id": "orthopedics",
+      "name": "ORTHOPEDICS",
+      "nameBn": "হাড় বা অস্থি চিকিৎসক",
+      "headerBg": "#854d0e",
+      "borderColor": "#854d0e",
+      "doctors": [
+        {
+          "name": "Dr. Wasim Uddin Sardar",
+          "nameBn": "ডাঃ ওয়াসিম উদ্দিন সরদার",
+          "degree": "MBBS, MS- Orthopedic (Regd. No. 82341)",
+          "timeScheduleBn": "প্রতি শুক্রবার বিকাল ৫টা থেকে",
+          "colorTheme": "red"
+        },
+        {
+          "name": "Dr. Mrinmoy Dhar",
+          "nameBn": "ডাঃ মৃন্ময় ধর",
+          "degree": "MBBS, MS- Orthopedic (Regd. No. 99944)",
+          "timeScheduleBn": "প্রতি সোমবার ও বৃহস্পতিবার থেকে",
+          "colorTheme": "red"
+        },
+        {
+          "name": "Dr. B. Dutta",
+          "nameBn": "ডাঃ বি. দত্ত",
+          "degree": "MBBS, MS, DNB- Orthopedic (Regd. No. 99116)",
+          "timeScheduleBn": "",
+          "colorTheme": "red"
+        }
+      ]
+    },
+    {
+      "id": "ent",
+      "name": "ENT",
+      "nameBn": "নাক, কান ও গলার চিকিৎসক",
+      "headerBg": "#0e7490",
+      "borderColor": "#0e7490",
+      "doctors": [
+        {
+          "name": "Dr. Arnab Pal",
+          "nameBn": "ডাঃ অর্ণব পাল",
+          "degree": "MBBS, MS, ENT (Regd. No. 91357)",
+          "timeScheduleBn": "প্রতি বৃহস্পতি ও শুক্রবার বিকাল ৫টা থেকে",
+          "colorTheme": "red"
+        }
+      ]
+    },
+    {
+      "id": "gastroenterology",
+      "name": "GASTRO ENTEROLOGY",
+      "nameBn": "গ্যাস্ট্রো এন্টারোলজি চিকিৎসক",
+      "headerBg": "#312e81",
+      "borderColor": "#312e81",
+      "doctors": [
+        {
+          "name": "Dr. Avijit BR",
+          "nameBn": "ডাঃ অভিজিৎ বিআর",
+          "degree": "MD, DM, Medical Gastroenterology (Regd. No. 80792)",
+          "timeScheduleBn": "প্রতি মাসে একবার",
+          "colorTheme": "red"
+        }
+      ]
+    },
+    {
+      "id": "cardiology",
+      "name": "CARDIOLOGY",
+      "nameBn": "হৃদরোগের চিকিৎসক",
+      "headerBg": "#475569",
+      "borderColor": "#475569",
+      "doctors": [
+        {
+          "name": "Dr. Sushil Kumar",
+          "nameBn": "ডাঃ সুশীল কুমার",
+          "subAffiliation": "(Kolkata R. N. Tagore Hospital)",
+          "degree": "MBBS, Dip. in Clinical Cardiology, PGDCC, CCEBDM (Regd. No. 63618)",
+          "timeScheduleBn": "প্রতি মাসের চতুর্থ সপ্তাহে শুক্রবার বা শনিবার",
+          "colorTheme": "blue"
+        }
+      ]
+    }
+  ]
+}
