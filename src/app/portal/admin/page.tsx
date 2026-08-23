@@ -113,6 +113,9 @@ export default async function AdminDashboard() {
               <Link href="/portal/admin/investigations" className={styles.actionBtn}>
                 🔬 Manage Investigations
               </Link>
+              <Link href="/portal/admin/reports" className={styles.actionBtn}>
+                📊 Financial Reports
+              </Link>
               <Link href="/portal/admin/users" className={styles.actionBtn}>
                 👥 Manage Staff
               </Link>
