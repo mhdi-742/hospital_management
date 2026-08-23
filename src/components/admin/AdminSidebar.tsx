@@ -40,6 +40,16 @@ const NAV = [
     ),
   },
   {
+    href: '/portal/admin/investigations',
+    label: 'Investigations',
+    icon: (
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+        <path d="M9 3h6M12 3v6m0 0l4 8.5a2 2 0 0 1-1.8 2.9H9.8a2 2 0 0 1-1.8-2.9L12 9z"/>
+        <path d="M8.5 14h7"/>
+      </svg>
+    ),
+  },
+  {
     href: '/portal/admin/announcements',
     label: 'Announcements',
     icon: (

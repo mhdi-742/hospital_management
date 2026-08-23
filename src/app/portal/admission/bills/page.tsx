@@ -45,6 +45,7 @@ interface BillRecord {
   createdAt: string;
   items: BillItem[];
   discounts: BillDiscount[];
+  payments?: { id?: string; mode: string; amount: number; ref?: string | null }[];
 }
 
 export default function BillsHistoryPage() {
@@ -133,14 +134,22 @@ export default function BillsHistoryPage() {
     const baseUrl = isInv ? '/investigation-billing/index.html' : '/billing/index.html';
 
     const params = new URLSearchParams();
+    if (bill.id) params.set('billId', bill.id);
+    if (bill.billNo) params.set('billNo', bill.billNo);
+    if (bill.createdAt) params.set('savedAt', bill.createdAt);
     if (bill.patientName) params.set('patientName', bill.patientName);
     if (bill.patientAge) params.set('patientAge', bill.patientAge);
+    if (bill.gender) params.set('gender', bill.gender);
+    if (bill.contact) params.set('contact', bill.contact);
+    if (bill.address) params.set('address', bill.address);
     if (bill.underDoctor) params.set('underDoctor', bill.underDoctor);
+    if (bill.referredBy) params.set('referredBy', bill.referredBy);
     if (bill.noOfDays) params.set('noOfDays', bill.noOfDays);
     if (bill.mmhplId) params.set('hospitalId', bill.mmhplId);
     if (bill.caseType) params.set('caseType', bill.caseType);
     if (bill.bedNo) params.set('bedNo', bill.bedNo);
     if (bill.billDate) params.set('billDate', bill.billDate);
+    if (bill.reportDate) params.set('reportDate', bill.reportDate);
     if (bill.advance > 0) params.set('advance', String(bill.advance));
     if (bill.totalDiscount > 0) params.set('discount', String(bill.totalDiscount));
 
@@ -152,6 +161,10 @@ export default function BillsHistoryPage() {
         amount: i.amount ? parseFloat(i.amount) : 0,
       }));
       params.set('items', JSON.stringify(formattedItems));
+    }
+
+    if (bill.payments && bill.payments.length > 0) {
+      params.set('payments', JSON.stringify(bill.payments));
     }
 
     return `${baseUrl}?${params.toString()}`;

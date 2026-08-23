@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const {
+      billId,
       patientName,
       patientAge,
       gender,
@@ -63,9 +64,6 @@ export async function POST(req: NextRequest) {
 
     if (!userName) userName = 'Billing Reception';
 
-    // Generate investigation bill number
-    const billNo = await generateInvBillNo();
-
     // Calculate sub total from items
     let subTotal = 0;
     if (Array.isArray(items)) {
@@ -87,8 +85,131 @@ export async function POST(req: NextRequest) {
     const parsedDueAmount = parseFloat(dueAmount !== undefined ? dueAmount : (parsedNetPayable - parsedTotalPaid)) || 0;
     const saveTimestamp = savedAt || new Date().toISOString();
 
-    // Save directly to the dedicated InvestigationBill table
-    const bill = await prisma.investigationBill.create({
+    const formattedItems = (Array.isArray(items) ? items : [])
+      .filter((i: any) => i.name || i.amount)
+      .map((i: any) => ({
+        name: i.name || '',
+        qty: i.qty ? String(i.qty) : null,
+        priceUnit: i.priceUnit ? String(i.priceUnit) : null,
+        amount: i.amount ? String(i.amount) : null,
+      }));
+
+    const formattedDiscounts = (Array.isArray(discounts) ? discounts : [])
+      .filter((d: any) => d.amount)
+      .map((d: any) => ({
+        label: d.label || 'DISCOUNT:',
+        amount: d.amount ? String(d.amount) : null,
+      }));
+
+    const formattedPayments = (Array.isArray(body.payments) ? body.payments : [])
+      .filter((p: any) => p.amount && parseFloat(p.amount) > 0)
+      .map((p: any) => ({
+        mode: p.mode || 'Cash',
+        amount: parseFloat(p.amount) || 0,
+        ref: p.ref || null,
+      }));
+
+    // If billId is provided, check if it exists for updating
+    let existingBill = null;
+    if (billId) {
+      existingBill = await prisma.investigationBill.findUnique({
+        where: { id: billId },
+        include: { items: true, discounts: true, payments: true },
+      });
+    }
+
+    let bill;
+    if (existingBill) {
+      // UPDATE EXISTING BILL
+      bill = await prisma.$transaction(async (tx) => {
+        // Delete old related items, discounts, payments
+        await tx.investigationBillItem.deleteMany({ where: { billId: existingBill.id } });
+        await tx.investigationBillDiscount.deleteMany({ where: { billId: existingBill.id } });
+        await tx.investigationBillPayment.deleteMany({ where: { billId: existingBill.id } });
+
+        // Update the main record
+        return tx.investigationBill.update({
+          where: { id: existingBill.id },
+          data: {
+            patientName: patientName || '',
+            patientAge: patientAge || null,
+            gender: gender || null,
+            contact: contact || null,
+            address: address || null,
+            underDoctor: underDoctor || null,
+            referredBy: referredBy || null,
+            noOfDays: noOfDays || null,
+            mmhplId: mmhplId || null,
+            caseType: caseType || 'Investigation',
+            bedNo: bedNo || null,
+            billDate: billDate || null,
+            reportDate: reportDate || null,
+            payMode: payMode || 'Cash',
+            subTotal,
+            totalDiscount,
+            advance: parsedTotalPaid,
+            totalPaid: parsedTotalPaid,
+            dueAmount: Math.max(0, parsedDueAmount),
+            netPayable: parsedNetPayable,
+            createdByName: userName || existingBill.createdByName,
+            items: { create: formattedItems },
+            discounts: { create: formattedDiscounts },
+            payments: { create: formattedPayments },
+          },
+          include: {
+            items: true,
+            discounts: true,
+            payments: true,
+          },
+        });
+      });
+
+      // Audit Log for update
+      if (userId) {
+        try {
+          await prisma.auditLog.create({
+            data: {
+              userId,
+              action: 'INVESTIGATION_BILL_UPDATED',
+              target: bill.billNo,
+              metadata: JSON.stringify({
+                billId: bill.id,
+                billNo: bill.billNo,
+                patientName,
+                mmhplId,
+                createdByName: userName,
+                caseType: caseType || 'Investigation',
+                netPayable,
+                itemsCount: bill.items.length,
+                updatedAt: new Date().toISOString(),
+              }),
+            },
+          });
+        } catch (dbErr) {
+          console.warn('[INV_BILLING_UPDATE_AUDIT_WARN]', dbErr);
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        isUpdate: true,
+        message: `Investigation bill ${bill.billNo} updated successfully`,
+        bill: {
+          id: bill.id,
+          billNo: bill.billNo,
+          patientName: bill.patientName,
+          mmhplId: bill.mmhplId,
+          netPayable: bill.netPayable,
+          createdByName: bill.createdByName,
+          savedAt: saveTimestamp,
+        },
+      });
+    }
+
+    // CREATE NEW BILL
+    const billNo = await generateInvBillNo();
+
+    bill = await prisma.investigationBill.create({
       data: {
         billNo,
         patientName: patientName || '',
@@ -113,33 +234,9 @@ export async function POST(req: NextRequest) {
         netPayable: parsedNetPayable,
         createdById: userId,
         createdByName: userName,
-        items: {
-          create: (Array.isArray(items) ? items : [])
-            .filter((i: any) => i.name || i.amount)
-            .map((i: any) => ({
-              name: i.name || '',
-              qty: i.qty ? String(i.qty) : null,
-              priceUnit: i.priceUnit ? String(i.priceUnit) : null,
-              amount: i.amount ? String(i.amount) : null,
-            })),
-        },
-        discounts: {
-          create: (Array.isArray(discounts) ? discounts : [])
-            .filter((d: any) => d.amount)
-            .map((d: any) => ({
-              label: d.label || 'DISCOUNT:',
-              amount: d.amount ? String(d.amount) : null,
-            })),
-        },
-        payments: {
-          create: (Array.isArray(body.payments) ? body.payments : [])
-            .filter((p: any) => p.amount && parseFloat(p.amount) > 0)
-            .map((p: any) => ({
-              mode: p.mode || 'Cash',
-              amount: parseFloat(p.amount) || 0,
-              ref: p.ref || null,
-            })),
-        },
+        items: { create: formattedItems },
+        discounts: { create: formattedDiscounts },
+        payments: { create: formattedPayments },
       },
       include: {
         items: true,
@@ -176,6 +273,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      isUpdate: false,
       message: 'Investigation bill saved successfully',
       bill: {
         id: bill.id,

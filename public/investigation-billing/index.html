@@ -282,6 +282,60 @@
     </div>
 
   </main>
+
+  <!-- Save Decision Modal (Update Existing vs Create New) -->
+  <div id="saveDecisionModal" class="modal-backdrop no-print">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header-custom">
+        <h3 id="modalTitle">
+          <span>💾</span>
+          <span>Bill Already Saved</span>
+        </h3>
+        <button type="button" class="modal-close-btn" onclick="closeSaveModal()" title="Close">&times;</button>
+      </div>
+      <div class="modal-body-custom">
+        <div class="modal-alert-box">
+          <div class="modal-alert-title">Existing Record Detected</div>
+          <div class="modal-alert-desc">
+            This bill was previously saved. Choose how you would like to proceed with your changes:
+          </div>
+        </div>
+
+        <div class="modal-bill-meta">
+          <div class="modal-meta-row">
+            <span class="modal-meta-label">Bill Number :</span>
+            <span class="modal-meta-val" id="modalBillNoVal">—</span>
+          </div>
+          <div class="modal-meta-row">
+            <span class="modal-meta-label">Last Saved At :</span>
+            <span class="modal-meta-val" id="modalSavedAtVal">—</span>
+          </div>
+        </div>
+
+        <div class="modal-actions-list">
+          <button type="button" class="btn-modal-action btn-modal-update" onclick="confirmSaveExisting()">
+            <span class="btn-action-icon">🔄</span>
+            <span class="btn-action-text">
+              <span>Update Existing Bill</span>
+              <span class="btn-action-sub">Overwrite changes on the same Bill ID (<span id="modalUpdateBillNo">...</span>)</span>
+            </span>
+          </button>
+
+          <button type="button" class="btn-modal-action btn-modal-new" onclick="confirmSaveAsNew()">
+            <span class="btn-action-icon">➕</span>
+            <span class="btn-action-text">
+              <span>Create as New Bill</span>
+              <span class="btn-action-sub">Generate a new separate Bill No for this record</span>
+            </span>
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer-custom">
+        <button type="button" class="btn-modal-cancel" onclick="closeSaveModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 
 </html>

@@ -26,12 +26,22 @@ let currentUserName = "Billing Reception";
 let isBillSaved = false;
 let isSavingInProgress = false;
 
+// Active saved bill tracking for avoiding duplicate saves
+let activeBillId = null;
+let activeBillNo = null;
+let activeSavedAt = null;
+
 function markAsUnsaved() {
   isBillSaved = false;
   const statusBadge = document.getElementById("saveStatusBadge");
   if (statusBadge) {
-    statusBadge.textContent = "Unsaved Draft";
-    statusBadge.removeAttribute("data-saved");
+    if (activeBillNo) {
+      statusBadge.textContent = `Edited (${activeBillNo}*)`;
+      statusBadge.removeAttribute("data-saved");
+    } else {
+      statusBadge.textContent = "Unsaved Draft";
+      statusBadge.removeAttribute("data-saved");
+    }
   }
 }
 
@@ -107,6 +117,10 @@ function resetForm() {
 
   const savedAtEl = document.getElementById("savedAtDisplay");
   if (savedAtEl) savedAtEl.textContent = "—";
+
+  activeBillId = null;
+  activeBillNo = null;
+  activeSavedAt = null;
 
   isBillSaved = false;
   const statusBadge = document.getElementById("saveStatusBadge");
@@ -216,9 +230,64 @@ function togglePrintHeader(checked) {
 }
 
 /**
+ * Open Save Decision Modal if bill is already saved
+ */
+function openSaveModal() {
+  const modal = document.getElementById("saveDecisionModal");
+  if (!modal) {
+    executeSave("update");
+    return;
+  }
+
+  const billNoVal = document.getElementById("modalBillNoVal");
+  const savedAtVal = document.getElementById("modalSavedAtVal");
+  const updateBillNoSpan = document.getElementById("modalUpdateBillNo");
+
+  if (billNoVal) billNoVal.textContent = activeBillNo || "Existing Record";
+  if (savedAtVal) savedAtVal.textContent = activeSavedAt ? formatDateTime(activeSavedAt) : "Earlier Today";
+  if (updateBillNoSpan) updateBillNoSpan.textContent = activeBillNo || "Existing";
+
+  modal.classList.add("active");
+}
+
+function closeSaveModal() {
+  const modal = document.getElementById("saveDecisionModal");
+  if (modal) modal.classList.remove("active");
+}
+
+function confirmSaveExisting() {
+  closeSaveModal();
+  executeSave("update");
+}
+
+function confirmSaveAsNew() {
+  closeSaveModal();
+  executeSave("new");
+}
+
+/**
  * Save investigation bill to database (Returns Promise<boolean>)
+ * If bill has already been saved or loaded with an ID, presents modal to choose.
  */
 function saveBill() {
+  if (isSavingInProgress) {
+    return Promise.resolve(false);
+  }
+
+  // If already saved or loaded from existing database bill, prompt user
+  if (activeBillId) {
+    openSaveModal();
+    return Promise.resolve(false);
+  }
+
+  return executeSave("new");
+}
+
+/**
+ * Actual execution of save / update
+ * @param {"new"|"update"} mode
+ */
+function executeSave(mode = "new") {
   if (isSavingInProgress) {
     return Promise.resolve(false);
   }
@@ -286,6 +355,11 @@ function saveBill() {
     savedAt: new Date().toISOString(),
   };
 
+  // If updating existing record, pass the database billId
+  if (mode === "update" && activeBillId) {
+    payload.billId = activeBillId;
+  }
+
   return fetch("/api/portal/investigation-billing/save", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -298,11 +372,18 @@ function saveBill() {
       if (r.ok) {
         return r.json().then(data => {
           isBillSaved = true;
-          showToast(`✅ Investigation Bill Saved! (${data.bill?.billNo || 'Saved'})`, "success");
+
+          // Track active bill details
+          if (data.bill?.id) activeBillId = data.bill.id;
+          if (data.bill?.billNo) activeBillNo = data.bill.billNo;
+          if (data.bill?.savedAt) activeSavedAt = data.bill.savedAt;
+
+          const actionMsg = data.isUpdate ? "Updated" : "Saved";
+          showToast(`✅ Investigation Bill ${actionMsg}! (${activeBillNo || 'Saved'})`, "success");
           
           const billIdEl = document.getElementById("billId");
-          if (billIdEl && data.bill?.billNo) {
-            billIdEl.value = data.bill.billNo;
+          if (billIdEl && activeBillNo) {
+            billIdEl.value = activeBillNo;
           }
 
           const createdByEl = document.getElementById("createdByNameDisplay");
@@ -311,13 +392,13 @@ function saveBill() {
           }
 
           const savedAtEl = document.getElementById("savedAtDisplay");
-          if (savedAtEl && data.bill?.savedAt) {
-            savedAtEl.textContent = formatDateTime(data.bill.savedAt);
+          if (savedAtEl && activeSavedAt) {
+            savedAtEl.textContent = formatDateTime(activeSavedAt);
           }
 
           const statusBadge = document.getElementById("saveStatusBadge");
           if (statusBadge) {
-            statusBadge.textContent = "Saved ✓";
+            statusBadge.textContent = activeBillNo ? `Saved (${activeBillNo}) ✓` : "Saved ✓";
             statusBadge.setAttribute("data-saved", "true");
           }
 
@@ -376,6 +457,7 @@ function initFromQueryParams() {
     referredBy: "referredBy",
     billId: "billId",
     hospitalId: "billId",
+    billNo: "billId",
     caseType: "caseType",
     contact: "contact",
     billDate: "billDate",
@@ -386,6 +468,33 @@ function initFromQueryParams() {
     if (value) {
       const el = document.getElementById(elementId);
       if (el) el.value = decodeURIComponent(value);
+    }
+  }
+
+  // Load active saved state if opened from Bills History tab
+  const paramBillId = params.get("billId");
+  const paramBillNo = params.get("billNo");
+  const paramSavedAt = params.get("savedAt");
+
+  if (paramBillId) activeBillId = decodeURIComponent(paramBillId);
+  if (paramBillNo) activeBillNo = decodeURIComponent(paramBillNo);
+  if (paramSavedAt) activeSavedAt = decodeURIComponent(paramSavedAt);
+
+  // If savedAt is provided, display it immediately
+  if (activeSavedAt) {
+    const savedAtEl = document.getElementById("savedAtDisplay");
+    if (savedAtEl) {
+      savedAtEl.textContent = formatDateTime(activeSavedAt);
+    }
+  }
+
+  // If bill is from existing record, mark badge as saved
+  if (activeBillNo || activeBillId) {
+    isBillSaved = true;
+    const statusBadge = document.getElementById("saveStatusBadge");
+    if (statusBadge) {
+      statusBadge.textContent = activeBillNo ? `Saved (${activeBillNo}) ✓` : "Saved ✓";
+      statusBadge.setAttribute("data-saved", "true");
     }
   }
 
@@ -422,11 +531,24 @@ function initFromQueryParams() {
     }
   }
 
-  // Advance / Payment amounts
-  const advanceVal = params.get("advance");
-  if (advanceVal && parseFloat(advanceVal) > 0) {
-    paymentItems = [createPaymentItem("Advance Deposit / Paid", decodeURIComponent(advanceVal), "")];
-    renderPayments();
+  // Payments / Advance parameter
+  const paymentsParam = params.get("payments");
+  if (paymentsParam) {
+    try {
+      const parsedPayments = JSON.parse(decodeURIComponent(paymentsParam));
+      if (Array.isArray(parsedPayments) && parsedPayments.length > 0) {
+        paymentItems = parsedPayments.map(p => createPaymentItem(p.mode || "Cash", String(p.amount || ""), p.ref || ""));
+        renderPayments();
+      }
+    } catch (e) {
+      console.warn("Could not parse payments parameter:", e);
+    }
+  } else {
+    const advanceVal = params.get("advance");
+    if (advanceVal && parseFloat(advanceVal) > 0) {
+      paymentItems = [createPaymentItem("Advance Deposit / Paid", decodeURIComponent(advanceVal), "")];
+      renderPayments();
+    }
   }
 
   calculateTotals();
@@ -450,6 +572,10 @@ window.deletePaymentRow = deletePaymentRow;
 window.printInvoice = printInvoice;
 window.togglePrintHeader = togglePrintHeader;
 window.saveBill = saveBill;
+window.openSaveModal = openSaveModal;
+window.closeSaveModal = closeSaveModal;
+window.confirmSaveExisting = confirmSaveExisting;
+window.confirmSaveAsNew = confirmSaveAsNew;
 
 /**
  * Render all table rows
