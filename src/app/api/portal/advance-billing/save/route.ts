@@ -28,6 +28,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const {
+      receiptId,
+      billId,
       patientId,
       admissionId,
       patientName,
@@ -47,6 +49,8 @@ export async function POST(req: NextRequest) {
       remarks,
       savedAt,
     } = body;
+
+    const targetReceiptId = receiptId || billId || null;
 
     const parsedAmount = parseFloat(amount);
     if (!patientName || isNaN(parsedAmount) || parsedAmount <= 0) {
@@ -82,11 +86,90 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Generate receipt number
+    const saveTimestamp = savedAt || new Date().toISOString();
+
+    // Check if targetReceiptId exists for updating
+    let existingReceipt = null;
+    if (targetReceiptId) {
+      existingReceipt = await prisma.advancePayment.findUnique({
+        where: { id: targetReceiptId },
+      });
+    }
+
+    let receipt;
+    if (existingReceipt) {
+      // UPDATE EXISTING ADVANCE RECEIPT
+      receipt = await prisma.advancePayment.update({
+        where: { id: existingReceipt.id },
+        data: {
+          patientId: resolvedPatientId || existingReceipt.patientId,
+          admissionId: resolvedAdmissionId || existingReceipt.admissionId,
+          patientName: patientName.trim(),
+          patientAge: patientAge || null,
+          gender: gender || null,
+          contact: contact || null,
+          address: address || null,
+          underDoctor: underDoctor || null,
+          mmhplId: mmhplId || null,
+          caseType: caseType || 'IPD Advance',
+          wardNo: wardNo || null,
+          bedNo: bedNo || null,
+          receiptDate: receiptDate || null,
+          amount: parsedAmount,
+          payMode: payMode || 'Cash',
+          transactionId: transactionId || null,
+          remarks: remarks || null,
+          createdByName: userName || existingReceipt.createdByName,
+        },
+      });
+
+      // Audit Log for update
+      if (userId) {
+        try {
+          await prisma.auditLog.create({
+            data: {
+              userId,
+              action: 'ADVANCE_PAYMENT_UPDATED',
+              target: receipt.receiptNo,
+              metadata: JSON.stringify({
+                receiptId: receipt.id,
+                receiptNo: receipt.receiptNo,
+                patientName,
+                mmhplId,
+                amount: parsedAmount,
+                payMode,
+                createdByName: userName,
+                savedAt: saveTimestamp,
+                updatedAt: new Date().toISOString(),
+              }),
+            },
+          });
+        } catch (dbErr) {
+          console.warn('[ADV_BILLING_UPDATE_AUDIT_WARN]', dbErr);
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        isUpdate: true,
+        message: `Advance payment receipt ${receipt.receiptNo} updated successfully`,
+        receipt: {
+          id: receipt.id,
+          receiptNo: receipt.receiptNo,
+          patientName: receipt.patientName,
+          mmhplId: receipt.mmhplId,
+          amount: receipt.amount,
+          createdByName: receipt.createdByName,
+          savedAt: saveTimestamp,
+        },
+      });
+    }
+
+    // CREATE NEW RECEIPT
     const receiptNo = await generateReceiptNo();
 
     // Save to AdvancePayment table
-    const receipt = await prisma.advancePayment.create({
+    receipt = await prisma.advancePayment.create({
       data: {
         receiptNo,
         patientId: resolvedPatientId,
@@ -126,7 +209,8 @@ export async function POST(req: NextRequest) {
               mmhplId,
               amount: parsedAmount,
               payMode,
-              savedAt: savedAt || new Date().toISOString(),
+              createdByName: userName,
+              savedAt: saveTimestamp,
             }),
           },
         });
@@ -137,6 +221,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      isUpdate: false,
       message: 'Advance payment receipt saved successfully',
       receipt: {
         id: receipt.id,
@@ -144,7 +229,8 @@ export async function POST(req: NextRequest) {
         patientName: receipt.patientName,
         mmhplId: receipt.mmhplId,
         amount: receipt.amount,
-        savedAt: savedAt || new Date().toISOString(),
+        createdByName: receipt.createdByName,
+        savedAt: saveTimestamp,
       },
     });
   } catch (error: any) {

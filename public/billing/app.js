@@ -42,12 +42,66 @@ function createItem(name) {
 
 let billItems = [];
 let discountItems = [];
+let currentUserName = "Billing Staff";
+let isBillSaved = false;
+let isSavingInProgress = false;
+
+// Active saved bill tracking for avoiding duplicate saves
+let activeBillId = null;
+let activeBillNo = null;
+let activeSavedAt = null;
+
+function markAsUnsaved() {
+  isBillSaved = false;
+  const statusBadge = document.getElementById("saveStatusBadge");
+  if (statusBadge) {
+    if (activeBillNo) {
+      statusBadge.textContent = `Edited (${activeBillNo}*)`;
+      statusBadge.removeAttribute("data-saved");
+    } else {
+      statusBadge.textContent = "Unsaved Draft";
+      statusBadge.removeAttribute("data-saved");
+    }
+  }
+}
+
+function formatDateTime(isoString) {
+  const d = isoString ? new Date(isoString) : new Date();
+  return d.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+}
+
+function loadCurrentUserSession() {
+  fetch("/api/auth/session")
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.user && data.user.name) {
+        currentUserName = data.user.name;
+      } else if (data && data.user && data.user.email) {
+        currentUserName = data.user.email.split('@')[0];
+      }
+      const el = document.getElementById("createdByNameDisplay");
+      if (el) el.textContent = currentUserName;
+    })
+    .catch(() => {
+      const el = document.getElementById("createdByNameDisplay");
+      if (el) el.textContent = currentUserName;
+    });
+}
 
 /**
  * Add new row to bill items
  */
 function addRow() {
   billItems.push(createItem(""));
+  markAsUnsaved();
   renderAll();
 }
 
@@ -57,6 +111,7 @@ function addRow() {
 function deleteRow(index) {
   if (index >= 0 && index < billItems.length) {
     billItems.splice(index, 1);
+    markAsUnsaved();
     renderAll();
   }
 }
@@ -75,6 +130,20 @@ function resetForm() {
     if (el) el.value = "";
   });
 
+  activeBillId = null;
+  activeBillNo = null;
+  activeSavedAt = null;
+  isBillSaved = false;
+
+  const statusBadge = document.getElementById("saveStatusBadge");
+  if (statusBadge) {
+    statusBadge.textContent = "Draft";
+    statusBadge.removeAttribute("data-saved");
+  }
+
+  const savedAtEl = document.getElementById("savedAtDisplay");
+  if (savedAtEl) savedAtEl.textContent = "—";
+
   billItems = DEFAULT_ITEMS.map(p => createItem(p.name));
   discountItems = [createDiscountItem()];
   renderAll();
@@ -86,6 +155,7 @@ function resetForm() {
  */
 function addDiscountRow() {
   discountItems.push(createDiscountItem());
+  markAsUnsaved();
   renderDiscounts();
 }
 
@@ -99,6 +169,7 @@ function deleteDiscountRow(index) {
   } else {
     discountItems.splice(index, 1);
   }
+  markAsUnsaved();
   renderDiscounts();
 }
 
@@ -128,8 +199,69 @@ function togglePrintHeader(checked) {
   }
 }
 
-// Save bill to hospital database
+/**
+ * Open Save Decision Modal if bill is already saved
+ */
+function openSaveModal() {
+  const modal = document.getElementById("saveDecisionModal");
+  if (!modal) {
+    executeSave("update");
+    return;
+  }
+
+  const billNoVal = document.getElementById("modalBillNoVal");
+  const savedAtVal = document.getElementById("modalSavedAtVal");
+  const updateBillNoSpan = document.getElementById("modalUpdateBillNo");
+
+  if (billNoVal) billNoVal.textContent = activeBillNo || "Existing Record";
+  if (savedAtVal) savedAtVal.textContent = activeSavedAt ? formatDateTime(activeSavedAt) : "Earlier Today";
+  if (updateBillNoSpan) updateBillNoSpan.textContent = activeBillNo || "Existing";
+
+  modal.classList.add("active");
+}
+
+function closeSaveModal() {
+  const modal = document.getElementById("saveDecisionModal");
+  if (modal) modal.classList.remove("active");
+}
+
+function confirmSaveExisting() {
+  closeSaveModal();
+  executeSave("update");
+}
+
+function confirmSaveAsNew() {
+  closeSaveModal();
+  executeSave("new");
+}
+
+/**
+ * Save bill to hospital database (Returns Promise<boolean>)
+ * If bill has already been saved or loaded with an ID, presents modal to choose.
+ */
 function saveBill() {
+  if (isSavingInProgress) {
+    return Promise.resolve(false);
+  }
+
+  // If already saved or loaded from existing database bill, prompt user
+  if (activeBillId) {
+    openSaveModal();
+    return Promise.resolve(false);
+  }
+
+  return executeSave("new");
+}
+
+/**
+ * Actual execution of save / update
+ * @param {"new"|"update"} mode
+ */
+function executeSave(mode = "new") {
+  if (isSavingInProgress) {
+    return Promise.resolve(false);
+  }
+
   const patientName  = document.getElementById("patientName")?.value || "";
   const patientAge   = document.getElementById("patientAge")?.value || "";
   const underDoctor  = document.getElementById("underDoctor")?.value || "";
@@ -151,26 +283,89 @@ function saveBill() {
     .filter(d => d.amount)
     .map(d => ({ label: d.label, amount: d.amount }));
 
+  isSavingInProgress = true;
+  const saveBtn = document.getElementById("btnSave");
+  if (saveBtn) saveBtn.disabled = true;
+
   const payload = {
-    patientName, patientAge, underDoctor, noOfDays,
-    mmhplId: hospitalId, caseType, bedNo, billDate,
-    advance, netPayable, items, discounts,
+    patientName,
+    patientAge,
+    underDoctor,
+    noOfDays,
+    mmhplId: hospitalId,
+    caseType,
+    bedNo,
+    billDate,
+    advance,
+    netPayable,
+    items,
+    discounts,
+    createdByName: currentUserName,
     savedAt: new Date().toISOString(),
   };
 
-  fetch("/api/portal/billing/save", {
+  // If updating existing record, pass the database billId
+  if (mode === "update" && activeBillId) {
+    payload.billId = activeBillId;
+  }
+
+  return fetch("/api/portal/billing/save", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   })
     .then(r => {
+      isSavingInProgress = false;
+      if (saveBtn) saveBtn.disabled = false;
+
       if (r.ok) {
-        showToast("✅ Bill saved successfully!", "success");
+        return r.json().then(data => {
+          isBillSaved = true;
+
+          // Track active bill details
+          if (data.bill?.id) activeBillId = data.bill.id;
+          if (data.bill?.billNo) activeBillNo = data.bill.billNo;
+          if (data.bill?.savedAt) activeSavedAt = data.bill.savedAt;
+
+          const actionMsg = data.isUpdate ? "Updated" : "Saved";
+          showToast(`✅ Hospital Bill ${actionMsg}! (${activeBillNo || 'Saved'})`, "success");
+
+          const createdByEl = document.getElementById("createdByNameDisplay");
+          if (createdByEl && data.bill?.createdByName) {
+            createdByEl.textContent = data.bill.createdByName;
+          }
+
+          const savedAtEl = document.getElementById("savedAtDisplay");
+          if (savedAtEl && activeSavedAt) {
+            savedAtEl.textContent = formatDateTime(activeSavedAt);
+          }
+
+          const statusBadge = document.getElementById("saveStatusBadge");
+          if (statusBadge) {
+            statusBadge.textContent = activeBillNo ? `Saved (${activeBillNo}) ✓` : "Saved ✓";
+            statusBadge.setAttribute("data-saved", "true");
+          }
+
+          return true;
+        });
       } else {
-        r.json().then(d => showToast("❌ " + (d.error || "Failed to save"), "error")).catch(() => showToast("❌ Failed to save", "error"));
+        isBillSaved = false;
+        return r.json().then(d => {
+          showToast("❌ " + (d.error || "Failed to save"), "error");
+          return false;
+        }).catch(() => {
+          showToast("❌ Failed to save", "error");
+          return false;
+        });
       }
     })
-    .catch(() => showToast("❌ Network error — bill not saved", "error"));
+    .catch(() => {
+      isSavingInProgress = false;
+      if (saveBtn) saveBtn.disabled = false;
+      isBillSaved = false;
+      showToast("❌ Network error — bill not saved", "error");
+      return false;
+    });
 }
 
 function showToast(message, type) {
@@ -205,6 +400,7 @@ function initFromQueryParams() {
     underDoctor: "underDoctor",
     noOfDays:    "noOfDays",
     hospitalId:  "hospitalId",
+    mmhplId:     "hospitalId",
     caseType:    "caseType",
     bedNo:       "bedNo",
     billDate:    "billDate",
@@ -215,6 +411,33 @@ function initFromQueryParams() {
     if (value) {
       const el = document.getElementById(elementId);
       if (el) el.value = decodeURIComponent(value);
+    }
+  }
+
+  // Load active saved state if opened from Bills History or Reports tab
+  const paramBillId = params.get("billId");
+  const paramBillNo = params.get("billNo");
+  const paramSavedAt = params.get("savedAt");
+
+  if (paramBillId) activeBillId = decodeURIComponent(paramBillId);
+  if (paramBillNo) activeBillNo = decodeURIComponent(paramBillNo);
+  if (paramSavedAt) activeSavedAt = decodeURIComponent(paramSavedAt);
+
+  // If savedAt is provided, display it immediately
+  if (activeSavedAt) {
+    const savedAtEl = document.getElementById("savedAtDisplay");
+    if (savedAtEl) {
+      savedAtEl.textContent = formatDateTime(activeSavedAt);
+    }
+  }
+
+  // If bill is from existing record, mark badge as saved
+  if (activeBillNo || activeBillId) {
+    isBillSaved = true;
+    const statusBadge = document.getElementById("saveStatusBadge");
+    if (statusBadge) {
+      statusBadge.textContent = activeBillNo ? `Saved (${activeBillNo}) ✓` : "Saved ✓";
+      statusBadge.setAttribute("data-saved", "true");
     }
   }
 
@@ -280,6 +503,10 @@ window.deleteOutsideRow = deleteRow;
 window.printInvoice = printInvoice;
 window.togglePrintHeader = togglePrintHeader;
 window.saveBill = saveBill;
+window.openSaveModal = openSaveModal;
+window.closeSaveModal = closeSaveModal;
+window.confirmSaveExisting = confirmSaveExisting;
+window.confirmSaveAsNew = confirmSaveAsNew;
 
 function isInvestigationBill() {
   const caseTypeEl = document.getElementById("caseType");
@@ -532,10 +759,21 @@ function loadInvestigationCatalog() {
     .catch(() => {});
 }
 
+// Bind input change listeners to mark as unsaved
+function setupChangeListeners() {
+  const inputs = document.querySelectorAll(".patient-info-box input, .patient-info-box select");
+  inputs.forEach(input => {
+    input.addEventListener("input", markAsUnsaved);
+    input.addEventListener("change", markAsUnsaved);
+  });
+}
+
 /**
  * Initialize application
  */
 function initApp() {
+  loadCurrentUserSession();
+
   billItems = DEFAULT_ITEMS.map(p => createItem(p.name));
   discountItems = [createDiscountItem()];
   renderAll();
@@ -547,10 +785,14 @@ function initApp() {
   // Autofill patient details from URL parameters
   initFromQueryParams();
 
+  // Setup form inputs change listeners
+  setupChangeListeners();
+
   // Delegated event listener for all bill table inputs
   const tbody = document.getElementById("billTbody");
   if (tbody) {
     tbody.addEventListener("input", (e) => {
+      markAsUnsaved();
       const index = parseInt(e.target.getAttribute("data-index"), 10);
       if (isNaN(index)) return;
 
@@ -597,6 +839,7 @@ function initApp() {
   const tfoot = document.querySelector("#billTable tfoot");
   if (tfoot) {
     tfoot.addEventListener("input", (e) => {
+      markAsUnsaved();
       const index = parseInt(e.target.getAttribute("data-di"), 10);
       if (isNaN(index) || !discountItems[index]) return;
 
@@ -611,12 +854,18 @@ function initApp() {
 
   // Advance input listener
   const advanceInput = document.getElementById("advanceInput");
-  if (advanceInput) advanceInput.addEventListener("input", calculateTotals);
+  if (advanceInput) {
+    advanceInput.addEventListener("input", () => {
+      markAsUnsaved();
+      calculateTotals();
+    });
+  }
 
   // Case type listener to switch investigation datalist on/off dynamically
   const caseTypeInput = document.getElementById("caseType");
   if (caseTypeInput) {
     caseTypeInput.addEventListener("input", () => {
+      markAsUnsaved();
       const useList = isInvestigationBill();
       const listVal = useList ? "investigationDataList" : "";
       document.querySelectorAll("#billTbody .input-name").forEach(inp => {

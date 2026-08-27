@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     const {
+      billId,
       patientId,
       admissionId,
       patientName,
@@ -55,9 +56,6 @@ export async function POST(req: NextRequest) {
       } catch (e) {}
     }
     if (!userName) userName = 'Billing Staff';
-
-    // Generate bill number
-    const billNo = await generateBillNo();
 
     // Try to auto-resolve admissionId/patientId if not directly supplied
     let resolvedAdmissionId = admissionId || null;
@@ -90,8 +88,118 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    const saveTimestamp = savedAt || new Date().toISOString();
+
+    const formattedItems = (Array.isArray(items) ? items : [])
+      .filter((i: any) => i.name || i.amount)
+      .map((i: any) => ({
+        name: i.name || '',
+        qty: i.qty ? String(i.qty) : null,
+        priceUnit: i.priceUnit ? String(i.priceUnit) : null,
+        amount: i.amount ? String(i.amount) : null,
+      }));
+
+    const formattedDiscounts = (Array.isArray(discounts) ? discounts : [])
+      .filter((d: any) => d.amount)
+      .map((d: any) => ({
+        label: d.label || 'DISCOUNT:',
+        amount: d.amount ? String(d.amount) : null,
+      }));
+
+    // If billId is provided, check if it exists for updating
+    let existingBill = null;
+    if (billId) {
+      existingBill = await prisma.bill.findUnique({
+        where: { id: billId },
+        include: { items: true, discounts: true },
+      });
+    }
+
+    let bill;
+    if (existingBill) {
+      // UPDATE EXISTING BILL
+      bill = await prisma.$transaction(async (tx) => {
+        // Delete old items and discounts
+        await tx.billItem.deleteMany({ where: { billId: existingBill.id } });
+        await tx.billDiscount.deleteMany({ where: { billId: existingBill.id } });
+
+        // Update the main record
+        return tx.bill.update({
+          where: { id: existingBill.id },
+          data: {
+            patientId: resolvedPatientId || existingBill.patientId,
+            admissionId: resolvedAdmissionId || existingBill.admissionId,
+            patientName: patientName || '',
+            patientAge: patientAge || null,
+            underDoctor: underDoctor || null,
+            noOfDays: noOfDays || null,
+            mmhplId: mmhplId || null,
+            caseType: caseType || null,
+            bedNo: bedNo || null,
+            billDate: billDate || null,
+            subTotal,
+            totalDiscount,
+            advance: parseFloat(advance) || 0,
+            netPayable: parseFloat(netPayable) || 0,
+            createdByName: userName || existingBill.createdByName,
+            items: { create: formattedItems },
+            discounts: { create: formattedDiscounts },
+          },
+          include: {
+            items: true,
+            discounts: true,
+          },
+        });
+      });
+
+      // Audit Log for update
+      if (userId) {
+        try {
+          await prisma.auditLog.create({
+            data: {
+              userId,
+              action: 'BILL_UPDATED',
+              target: bill.billNo,
+              metadata: JSON.stringify({
+                billId: bill.id,
+                billNo: bill.billNo,
+                patientName,
+                mmhplId,
+                caseType,
+                netPayable: bill.netPayable,
+                itemsCount: bill.items.length,
+                createdByName: userName,
+                savedAt: saveTimestamp,
+                updatedAt: new Date().toISOString(),
+              }),
+            },
+          });
+        } catch (dbErr) {
+          console.warn('[BILLING_UPDATE_AUDIT_WARN]', dbErr);
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        isUpdate: true,
+        message: `Hospital bill ${bill.billNo} updated successfully`,
+        bill: {
+          id: bill.id,
+          billNo: bill.billNo,
+          patientName: bill.patientName,
+          mmhplId: bill.mmhplId,
+          netPayable: bill.netPayable,
+          createdByName: bill.createdByName,
+          savedAt: saveTimestamp,
+        },
+      });
+    }
+
+    // CREATE NEW BILL
+    const billNo = await generateBillNo();
+
     // Save bill to the Bill table
-    const bill = await prisma.bill.create({
+    bill = await prisma.bill.create({
       data: {
         billNo,
         patientId: resolvedPatientId,
@@ -111,22 +219,10 @@ export async function POST(req: NextRequest) {
         createdById: userId,
         createdByName: userName,
         items: {
-          create: (Array.isArray(items) ? items : [])
-            .filter((i: any) => i.name || i.amount)
-            .map((i: any) => ({
-              name: i.name || '',
-              qty: i.qty ? String(i.qty) : null,
-              priceUnit: i.priceUnit ? String(i.priceUnit) : null,
-              amount: i.amount ? String(i.amount) : null,
-            })),
+          create: formattedItems,
         },
         discounts: {
-          create: (Array.isArray(discounts) ? discounts : [])
-            .filter((d: any) => d.amount)
-            .map((d: any) => ({
-              label: d.label || 'DISCOUNT:',
-              amount: d.amount ? String(d.amount) : null,
-            })),
+          create: formattedDiscounts,
         },
       },
       include: {
@@ -149,9 +245,10 @@ export async function POST(req: NextRequest) {
               patientName,
               mmhplId,
               caseType,
-              netPayable,
+              netPayable: bill.netPayable,
               itemsCount: bill.items.length,
-              savedAt: savedAt || new Date().toISOString(),
+              createdByName: userName,
+              savedAt: saveTimestamp,
             }),
           },
         });
@@ -162,6 +259,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      isUpdate: false,
       message: 'Bill saved successfully',
       bill: {
         id: bill.id,
@@ -169,7 +267,8 @@ export async function POST(req: NextRequest) {
         patientName: bill.patientName,
         mmhplId: bill.mmhplId,
         netPayable: bill.netPayable,
-        savedAt: savedAt || new Date().toISOString(),
+        createdByName: bill.createdByName,
+        savedAt: saveTimestamp,
       },
     });
   } catch (error: any) {

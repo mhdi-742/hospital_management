@@ -504,7 +504,7 @@ export default function ReportsClient({ initialStartDate, initialEndDate }: Prop
                         </a>
                       ) : t.type === 'ADVANCE' ? (
                         <a
-                          href={`/advance-billing/index.html?patientName=${encodeURIComponent(t.patientName || '')}&amount=${t.netAmount}`}
+                          href={`/advance-billing/index.html?receiptId=${t.id}&receiptNo=${t.refNo}&savedAt=${t.createdAt}&patientName=${encodeURIComponent(t.patientName || '')}&amount=${t.netAmount}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className={styles.actionLink}
@@ -513,7 +513,7 @@ export default function ReportsClient({ initialStartDate, initialEndDate }: Prop
                         </a>
                       ) : (
                         <a
-                          href={`/billing/index.html?patientName=${encodeURIComponent(t.patientName || '')}`}
+                          href={`/billing/index.html?billId=${t.id}&billNo=${t.refNo}&savedAt=${t.createdAt}&patientName=${encodeURIComponent(t.patientName || '')}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className={styles.actionLink}

@@ -114,10 +114,21 @@ export default function BillsHistoryPage() {
   const getReprintUrl = (bill: BillRecord) => {
     if (activeTab === 'advance') {
       const params = new URLSearchParams();
+      if (bill.id) {
+        params.set('receiptId', bill.id);
+        params.set('billId', bill.id);
+      }
+      if (bill.billNo) {
+        params.set('receiptNo', bill.billNo);
+        params.set('billNo', bill.billNo);
+      }
+      if (bill.createdAt) params.set('savedAt', bill.createdAt);
       if (bill.patientName) params.set('patientName', bill.patientName);
       if (bill.patientAge) params.set('patientAge', bill.patientAge);
+      if (bill.gender) params.set('gender', bill.gender);
       if (bill.underDoctor) params.set('underDoctor', bill.underDoctor);
       if (bill.contact) params.set('contact', bill.contact);
+      if (bill.address) params.set('address', bill.address);
       if (bill.mmhplId) params.set('hospitalId', bill.mmhplId);
       if (bill.caseType) params.set('caseType', bill.caseType);
       if (bill.bedNo) params.set('bedNo', bill.bedNo);

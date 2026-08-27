@@ -1,6 +1,61 @@
 /**
- * MIKKY MEGHA HOSPITAL - ADVANCE PAYMENT / MONEY RECEIPT LOGIC
+ * MIKKY MEGHA HOSPITAL - ADVANCE PAYMENT / MONEY RECEIPT LOGIC (v2)
+ * Money Receipt & Advance Payment Management with Save & Update Existing Support
  */
+
+let currentUserName = "Billing Reception";
+let isBillSaved = false;
+let isSavingInProgress = false;
+
+// Active saved receipt tracking for avoiding duplicate saves
+let activeBillId = null;
+let activeBillNo = null;
+let activeSavedAt = null;
+
+function markAsUnsaved() {
+  isBillSaved = false;
+  const statusBadge = document.getElementById("saveStatusBadge");
+  if (statusBadge) {
+    if (activeBillNo) {
+      statusBadge.textContent = `Edited (${activeBillNo}*)`;
+      statusBadge.removeAttribute("data-saved");
+    } else {
+      statusBadge.textContent = "Unsaved Draft";
+      statusBadge.removeAttribute("data-saved");
+    }
+  }
+}
+
+function formatDateTime(isoString) {
+  const d = isoString ? new Date(isoString) : new Date();
+  return d.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+}
+
+function loadCurrentUserSession() {
+  fetch("/api/auth/session")
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.user && data.user.name) {
+        currentUserName = data.user.name;
+      } else if (data && data.user && data.user.email) {
+        currentUserName = data.user.email.split('@')[0];
+      }
+      const el = document.getElementById("createdByNameDisplay");
+      if (el) el.textContent = currentUserName;
+    })
+    .catch(() => {
+      const el = document.getElementById("createdByNameDisplay");
+      if (el) el.textContent = currentUserName;
+    });
+}
 
 function printInvoice() {
   window.print();
@@ -107,6 +162,20 @@ function resetForm() {
   const remarks = document.getElementById("remarks");
   if (remarks) remarks.value = "To be adjusted against final hospitalization bill";
 
+  activeBillId = null;
+  activeBillNo = null;
+  activeSavedAt = null;
+  isBillSaved = false;
+
+  const statusBadge = document.getElementById("saveStatusBadge");
+  if (statusBadge) {
+    statusBadge.textContent = "Draft";
+    statusBadge.removeAttribute("data-saved");
+  }
+
+  const savedAtEl = document.getElementById("savedAtDisplay");
+  if (savedAtEl) savedAtEl.textContent = "—";
+
   setDefaultDate();
   updateTotals();
 }
@@ -120,7 +189,69 @@ function setDefaultDate() {
   }
 }
 
+/**
+ * Open Save Decision Modal if receipt is already saved
+ */
+function openSaveModal() {
+  const modal = document.getElementById("saveDecisionModal");
+  if (!modal) {
+    executeSave("update");
+    return;
+  }
+
+  const billNoVal = document.getElementById("modalBillNoVal");
+  const savedAtVal = document.getElementById("modalSavedAtVal");
+  const updateBillNoSpan = document.getElementById("modalUpdateBillNo");
+
+  if (billNoVal) billNoVal.textContent = activeBillNo || "Existing Record";
+  if (savedAtVal) savedAtVal.textContent = activeSavedAt ? formatDateTime(activeSavedAt) : "Earlier Today";
+  if (updateBillNoSpan) updateBillNoSpan.textContent = activeBillNo || "Existing";
+
+  modal.classList.add("active");
+}
+
+function closeSaveModal() {
+  const modal = document.getElementById("saveDecisionModal");
+  if (modal) modal.classList.remove("active");
+}
+
+function confirmSaveExisting() {
+  closeSaveModal();
+  executeSave("update");
+}
+
+function confirmSaveAsNew() {
+  closeSaveModal();
+  executeSave("new");
+}
+
+/**
+ * Save advance receipt (Returns Promise<boolean>)
+ * If receipt has already been saved or loaded with an ID, presents modal to choose.
+ */
 function saveAdvanceReceipt() {
+  if (isSavingInProgress) {
+    return Promise.resolve(false);
+  }
+
+  // If already saved or loaded from existing database receipt, prompt user
+  if (activeBillId) {
+    openSaveModal();
+    return Promise.resolve(false);
+  }
+
+  return executeSave("new");
+}
+
+/**
+ * Actual execution of save / update
+ * @param {"new"|"update"} mode
+ */
+function executeSave(mode = "new") {
+  if (isSavingInProgress) {
+    return Promise.resolve(false);
+  }
+
   const patientName = document.getElementById("patientName")?.value || "";
   const patientAge = document.getElementById("patientAge")?.value || "";
   const underDoctor = document.getElementById("underDoctor")?.value || "";
@@ -136,13 +267,17 @@ function saveAdvanceReceipt() {
 
   if (!patientName.trim()) {
     showToast("⚠️ Please enter patient name", "error");
-    return;
+    return Promise.resolve(false);
   }
 
   if (amount <= 0) {
     showToast("⚠️ Please enter a valid advance amount", "error");
-    return;
+    return Promise.resolve(false);
   }
+
+  isSavingInProgress = true;
+  const saveBtn = document.getElementById("btnSave");
+  if (saveBtn) saveBtn.disabled = true;
 
   const payload = {
     patientName,
@@ -157,24 +292,72 @@ function saveAdvanceReceipt() {
     payMode,
     transactionId,
     remarks,
+    createdByName: currentUserName,
     savedAt: new Date().toISOString(),
   };
 
-  fetch("/api/portal/advance-billing/save", {
+  // If updating existing record, pass the database receiptId
+  if (mode === "update" && activeBillId) {
+    payload.receiptId = activeBillId;
+  }
+
+  return fetch("/api/portal/advance-billing/save", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   })
     .then(r => {
+      isSavingInProgress = false;
+      if (saveBtn) saveBtn.disabled = false;
+
       if (r.ok) {
         return r.json().then(data => {
-          showToast(`✅ Advance Receipt Saved! (${data.receipt?.receiptNo || 'Saved'})`, "success");
+          isBillSaved = true;
+
+          // Track active receipt details
+          if (data.receipt?.id) activeBillId = data.receipt.id;
+          if (data.receipt?.receiptNo) activeBillNo = data.receipt.receiptNo;
+          if (data.receipt?.savedAt) activeSavedAt = data.receipt.savedAt;
+
+          const actionMsg = data.isUpdate ? "Updated" : "Saved";
+          showToast(`✅ Advance Receipt ${actionMsg}! (${activeBillNo || 'Saved'})`, "success");
+
+          const createdByEl = document.getElementById("createdByNameDisplay");
+          if (createdByEl && data.receipt?.createdByName) {
+            createdByEl.textContent = data.receipt.createdByName;
+          }
+
+          const savedAtEl = document.getElementById("savedAtDisplay");
+          if (savedAtEl && activeSavedAt) {
+            savedAtEl.textContent = formatDateTime(activeSavedAt);
+          }
+
+          const statusBadge = document.getElementById("saveStatusBadge");
+          if (statusBadge) {
+            statusBadge.textContent = activeBillNo ? `Saved (${activeBillNo}) ✓` : "Saved ✓";
+            statusBadge.setAttribute("data-saved", "true");
+          }
+
+          return true;
         });
       } else {
-        return r.json().then(d => showToast("❌ " + (d.error || "Failed to save"), "error"));
+        isBillSaved = false;
+        return r.json().then(d => {
+          showToast("❌ " + (d.error || "Failed to save"), "error");
+          return false;
+        }).catch(() => {
+          showToast("❌ Failed to save", "error");
+          return false;
+        });
       }
     })
-    .catch(() => showToast("❌ Network error — receipt not saved", "error"));
+    .catch(() => {
+      isSavingInProgress = false;
+      if (saveBtn) saveBtn.disabled = false;
+      isBillSaved = false;
+      showToast("❌ Network error — receipt not saved", "error");
+      return false;
+    });
 }
 
 function showToast(message, type) {
@@ -209,10 +392,12 @@ function initFromQueryParams() {
     underDoctor: "underDoctor",
     contact: "contact",
     hospitalId: "hospitalId",
+    mmhplId: "hospitalId",
     caseType: "caseType",
     bedNo: "bedNo",
     receiptDate: "receiptDate",
     amount: "advanceAmount",
+    advanceAmount: "advanceAmount",
     payMode: "payMode",
     transactionId: "transactionId",
     remarks: "remarks"
@@ -226,6 +411,33 @@ function initFromQueryParams() {
     }
   }
 
+  // Load active saved state if opened from Bills History or Reports tab
+  const paramReceiptId = params.get("receiptId") || params.get("billId");
+  const paramReceiptNo = params.get("receiptNo") || params.get("billNo");
+  const paramSavedAt = params.get("savedAt");
+
+  if (paramReceiptId) activeBillId = decodeURIComponent(paramReceiptId);
+  if (paramReceiptNo) activeBillNo = decodeURIComponent(paramReceiptNo);
+  if (paramSavedAt) activeSavedAt = decodeURIComponent(paramSavedAt);
+
+  // If savedAt is provided, display it immediately
+  if (activeSavedAt) {
+    const savedAtEl = document.getElementById("savedAtDisplay");
+    if (savedAtEl) {
+      savedAtEl.textContent = formatDateTime(activeSavedAt);
+    }
+  }
+
+  // If receipt is from existing record, mark badge as saved
+  if (activeBillNo || activeBillId) {
+    isBillSaved = true;
+    const statusBadge = document.getElementById("saveStatusBadge");
+    if (statusBadge) {
+      statusBadge.textContent = activeBillNo ? `Saved (${activeBillNo}) ✓` : "Saved ✓";
+      statusBadge.setAttribute("data-saved", "true");
+    }
+  }
+
   setDefaultDate();
   updateTotals();
 
@@ -236,13 +448,29 @@ function initFromQueryParams() {
   }
 }
 
+// Bind input change listeners to mark as unsaved
+function setupChangeListeners() {
+  const inputs = document.querySelectorAll("input, select, textarea");
+  inputs.forEach(input => {
+    input.addEventListener("input", markAsUnsaved);
+    input.addEventListener("change", markAsUnsaved);
+  });
+}
+
+// Expose to window
 window.printInvoice = printInvoice;
 window.togglePrintHeader = togglePrintHeader;
 window.updateTotals = updateTotals;
 window.resetForm = resetForm;
 window.saveAdvanceReceipt = saveAdvanceReceipt;
+window.openSaveModal = openSaveModal;
+window.closeSaveModal = closeSaveModal;
+window.confirmSaveExisting = confirmSaveExisting;
+window.confirmSaveAsNew = confirmSaveAsNew;
 
 document.addEventListener("DOMContentLoaded", () => {
+  loadCurrentUserSession();
   initFromQueryParams();
   togglePrintHeader(false);
+  setupChangeListeners();
 });
